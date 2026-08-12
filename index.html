@@ -3,18 +3,243 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RC Garage LK</title>
-</head>
-<body>
-  <h1>Welcome to RC Garage LK</h1>
-  <button id="loginBtn">Sign in with Google</button>
-  <p id="user"></p>
+  <title>R/C Garage LK</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  
+  <!-- Tailwind CSS & FontAwesome Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet Maps CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@500;600;700&display=swap');
+    
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background-color: #0b132b;
+      color: #f8fafc;
+    }
+    .font-orbitron { font-family: 'Orbitron', sans-serif; }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    .glow-blue {
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+    }
+    #map { height: 380px; border-radius: 1rem; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-20">
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-blue-600/30 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center glow-blue text-white text-xl font-bold">
+        <i class="fa-solid fa-car-side"></i>
+      </div>
+      <div>
+        <h1 class="font-orbitron text-lg font-bold tracking-wider text-blue-400">R/C GARAGE <span class="text-white">LK</span></h1>
+        <p class="text-xs text-slate-400">Sri Lanka's Ultimate RC Hub</p>
+      </div>
+    </div>
+    <div id="authSection">
+      <button id="loginBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition glow-blue">
+        <i class="fa-brands fa-google"></i> Sign In
+      </button>
+      <div id="userInfo" class="hidden flex items-center gap-2">
+        <span id="userName" class="text-sm font-semibold text-blue-300"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- PWA Install Custom Modal Popup -->
+  <div id="pwaModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="glass-card rounded-2xl max-w-sm w-full p-6 text-center border-2 border-blue-500/50 shadow-2xl">
+      <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 glow-blue animate-bounce">
+        <i class="fa-solid fa-download text-2xl text-white"></i>
+      </div>
+      <h3 class="font-orbitron text-xl font-bold text-white mb-2">Install R/C Garage LK App</h3>
+      <p class="text-slate-300 text-sm mb-6">Install app to your home screen for high performance & offline tools!</p>
+
+      <!-- Dynamic Download Bar Animation -->
+      <div id="installProgress" class="hidden mb-4">
+        <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden border border-blue-500/30">
+          <div id="progressBar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
+        </div>
+        <p id="progressText" class="text-xs text-blue-400 mt-2">Downloading app assets...</p>
+      </div>
+
+      <div id="pwaButtons" class="flex gap-3">
+        <button id="cancelPWA" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold">Later</button>
+        <button id="installPWA" class="w-1/2 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold glow-blue">Install App</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <nav class="flex overflow-x-auto gap-2 p-3 bg-slate-900/60 border-b border-slate-800 text-sm no-scrollbar">
+    <button onclick="switchTab('mapTab')" class="tab-btn px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-map-location-dot"></i> RC Community Map</button>
+    <button onclick="switchTab('calcTab')" class="tab-btn px-4 py-2 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-xl font-semibold flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-calculator"></i> Tech Calculators</button>
+    <button onclick="switchTab('aiTab')" class="tab-btn px-4 py-2 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-xl font-semibold flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-robot"></i> AI Mechanic</button>
+    <button onclick="switchTab('specsTab')" class="tab-btn px-4 py-2 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-xl font-semibold flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-database"></i> Global RC Specs</button>
+    <button onclick="switchTab('newsTab')" class="tab-btn px-4 py-2 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-xl font-semibold flex items-center gap-2 whitespace-nowrap"><i class="fa-solid fa-newspaper"></i> RC News</button>
+  </nav>
+
+  <!-- Main Content Areas -->
+  <main class="max-w-4xl mx-auto p-4">
+    
+    <!-- Tab 1: RC Map -->
+    <section id="mapTab" class="tab-content space-y-4">
+      <div class="glass-card p-4 rounded-2xl">
+        <h2 class="font-orbitron text-lg font-bold text-blue-400 mb-2"><i class="fa-solid fa-location-crosshairs"></i> Sri Lanka RC Drivers & Clubs Map</h2>
+        <p class="text-xs text-slate-400 mb-4">Find MN Models, TRX4, FMS, and Crawler owners near you. Add your location to join!</p>
+        
+        <div id="map" class="w-full mb-4 z-10"></div>
+
+        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-3">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">Add Your RC Spot to Map</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input type="text" id="ownerName" placeholder="Your Name / Display Name" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            <select id="rcBrand" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+              <option value="MN Models (MN99s, D90, etc.)">MN Models (MN99s / D90)</option>
+              <option value="Traxxas TRX-4 / TRX-4M">Traxxas (TRX-4 / TRX-4M)</option>
+              <option value="FMS (FCX24 / Rochobby)">FMS Models</option>
+              <option value="WPL RC Crawlers">WPL Series</option>
+              <option value="Axial SCX10 / SCX24">Axial Series</option>
+              <option value="Custom Built Crawler/Buggy">Custom Built</option>
+            </select>
+          </div>
+          <button id="addLocationBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-sm glow-blue transition">
+            <i class="fa-solid fa-plus-location"></i> Pin My Current GPS Location
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 2: Calculators -->
+    <section id="calcTab" class="tab-content hidden space-y-6">
+      
+      <!-- Gear Ratio Calculator -->
+      <div class="glass-card p-5 rounded-2xl">
+        <h2 class="font-orbitron text-lg font-bold text-blue-400 mb-4"><i class="fa-solid fa-gears"></i> RC Gear Ratio & Final Drive Calculator</h2>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <label class="text-xs text-slate-400">Pinion Gear Teeth</label>
+            <input type="number" id="pinionTeeth" value="15" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 mt-1 text-white">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Spur Gear Teeth</label>
+            <input type="number" id="spurTeeth" value="80" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 mt-1 text-white">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Internal Axle/Gearbox Ratio</label>
+            <input type="number" id="internalRatio" value="2.6" step="0.1" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 mt-1 text-white">
+          </div>
+          <div class="flex items-end">
+            <button onclick="calculateGearRatio()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl">Calculate</button>
+          </div>
+        </div>
+        <div id="gearResult" class="mt-4 p-3 bg-blue-950/50 border border-blue-500/30 rounded-xl text-center hidden">
+          <p class="text-xs text-slate-300">Final Drive Ratio (FDR):</p>
+          <p id="fdrValue" class="font-orbitron text-2xl font-bold text-blue-400">0.0 : 1</p>
+        </div>
+      </div>
+
+      <!-- Battery mAh / Runtime Calculator -->
+      <div class="glass-card p-5 rounded-2xl">
+        <h2 class="font-orbitron text-lg font-bold text-blue-400 mb-4"><i class="fa-solid fa-battery-full"></i> LiPo Battery Runtime Calculator</h2>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <label class="text-xs text-slate-400">Battery Capacity (mAh)</label>
+            <input type="number" id="batMah" value="2200" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 mt-1 text-white">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Motor Current Draw (Avg Amps)</label>
+            <input type="number" id="avgAmps" value="15" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 mt-1 text-white">
+          </div>
+        </div>
+        <button onclick="calculateBattery()" class="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl">Calculate Estimated Runtime</button>
+        <div id="batResult" class="mt-4 p-3 bg-blue-950/50 border border-blue-500/30 rounded-xl text-center hidden">
+          <p class="text-xs text-slate-300">Estimated Run Time:</p>
+          <p id="runtimeValue" class="font-orbitron text-2xl font-bold text-emerald-400">0 mins</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 3: AI Mechanic -->
+    <section id="aiTab" class="tab-content hidden space-y-4">
+      <div class="glass-card p-4 rounded-2xl flex flex-col h-[480px]">
+        <h2 class="font-orbitron text-lg font-bold text-blue-400 mb-2"><i class="fa-solid fa-robot"></i> RC AI Mechanic & Troubleshooting Assistant</h2>
+        <p class="text-xs text-slate-400 mb-3">Ask questions about differential clicking, ESC overheating, servo stripping, or gear mesh setup.</p>
+        
+        <div id="chatBox" class="flex-1 bg-slate-900/80 rounded-xl p-3 overflow-y-auto space-y-3 border border-slate-800 text-sm">
+          <div class="bg-blue-900/40 p-3 rounded-xl border border-blue-500/20 max-w-[85%]">
+            <p class="text-blue-300 font-bold text-xs mb-1">AI Mechanic</p>
+            <p class="text-slate-200">Hello! I am your RC Garage Assistant. Ask me anything about RC crawlers, electronics, motor KV ratings, or mechanical repairs!</p>
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-3">
+          <input type="text" id="aiInput" placeholder="e.g. My MN99s gearbox is making a grinding noise..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+          <button id="sendAiBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-bold text-sm glow-blue"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Global Specs Specs Database -->
+    <section id="specsTab" class="tab-content hidden space-y-4">
+      <div class="glass-card p-5 rounded-2xl">
+        <h2 class="font-orbitron text-lg font-bold text-blue-400 mb-4"><i class="fa-solid fa-database"></i> World RC Models Specs Database</h2>
+        
+        <div class="space-y-3">
+          <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+            <h3 class="font-bold text-blue-300">MN Model D90 / MN99S Defender</h3>
+            <p class="text-xs text-slate-400">Scale: 1/12 | Motor: 260 Brushed | Drivetrain: 4WD | Wheelbase: 190mm</p>
+          </div>
+          <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+            <h3 class="font-bold text-blue-300">Traxxas TRX-4 Defender Scale Crawler</h3>
+            <p class="text-xs text-slate-400">Scale: 1/10 | Motor: Titan 21T 550 | Axles: Portal Axles | Locking Diffs: Remote T-Lock</p>
+          </div>
+          <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+            <h3 class="font-bold text-blue-300">FMS FCX24 Power Wagon</h3>
+            <p class="text-xs text-slate-400">Scale: 1/24 | Transmission: 2-Speed | Drivetrain: Portal Axle 4WD</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 5: News Feed -->
+    <section id="newsTab" class="tab-content hidden space-y-4">
+      <div class="glass-card p-5 rounded-2xl">
+        <h2 class="font-orbitron text-lg font-bold text-blue-400 mb-4"><i class="fa-solid fa-newspaper"></i> Latest Global RC News & Releases</h2>
+        <div class="space-y-4 text-sm">
+          <div class="border-b border-slate-800 pb-3">
+            <span class="text-[10px] bg-blue-600/30 text-blue-400 px-2 py-0.5 rounded font-mono">NEW RELEASE</span>
+            <h3 class="font-bold text-white mt-1">Traxxas Releases Upgraded Micro Crawler Accessories</h3>
+            <p class="text-xs text-slate-400 mt-1">New metal gears and oil-filled aluminum shocks announced for 1/18 and 1/24 scale builds.</p>
+          </div>
+          <div class="border-b border-slate-800 pb-3">
+            <span class="text-[10px] bg-emerald-600/30 text-emerald-400 px-2 py-0.5 rounded font-mono">COMMUNITY</span>
+            <h3 class="font-bold text-white mt-1">Sri Lanka RC Crawler Trail Meetup Scheduled</h3>
+            <p class="text-xs text-slate-400 mt-1">Local clubs preparing for custom rock crawler trailing events this season.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Firebase & App Script Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getDatabase } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDc3kDN1KPnXK98NI2NvwZyxCvDZxLa13w",
@@ -29,14 +254,175 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const rtdb = getDatabase(app);
-
     const provider = new GoogleAuthProvider();
 
+    let currentUser = null;
+
+    // Google Sign In
     document.getElementById('loginBtn').addEventListener('click', () => {
-      signInWithPopup(auth, provider).then((result) => {
-        document.getElementById('user').innerText = "Logged in as: " + result.user.displayName;
-      }).catch(err => console.error(err));
+      signInWithPopup(auth, provider).catch(err => console.error(err));
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('loginBtn').classList.add('hidden');
+        document.getElementById('userInfo').classList.remove('hidden');
+        document.getElementById('userName').innerText = user.displayName;
+        document.getElementById('ownerName').value = user.displayName;
+      }
+    });
+
+    // Map Setup
+    const map = L.map('map').setView([7.8731, 80.7718], 8); // Sri Lanka Center
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // Sync Locations from Firestore
+    onSnapshot(collection(db, "rc_locations"), (snapshot) => {
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if(data.lat && data.lng) {
+          L.marker([data.lat, data.lng]).addTo(map)
+           .bindPopup(`<b>${data.name}</b><br>Model: ${data.brand}`);
+        }
+      });
+    });
+
+    // Add current user GPS location to map
+    document.getElementById('addLocationBtn').addEventListener('click', () => {
+      const name = document.getElementById('ownerName').value || 'RC Enthusiast';
+      const brand = document.getElementById('rcBrand').value;
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          addDoc(collection(db, "rc_locations"), {
+            name: name,
+            brand: brand,
+            lat: lat,
+            lng: lng,
+            timestamp: new Date()
+          }).then(() => {
+            alert("Your RC Location added to map!");
+            map.setView([lat, lng], 12);
+          });
+        }, () => alert("GPS access denied or unavailable."));
+      }
+    });
+
+    // Simple Rule-based AI Mechanic Chat Engine
+    document.getElementById('sendAiBtn').addEventListener('click', () => {
+      const input = document.getElementById('aiInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chatBox = document.getElementById('chatBox');
+      chatBox.innerHTML += `
+        <div class="bg-slate-800 p-3 rounded-xl ml-auto max-w-[85%] border border-slate-700">
+          <p class="text-xs text-slate-400 mb-1">You</p>
+          <p class="text-white">${text}</p>
+        </div>
+      `;
+
+      let reply = "I recommend checking your drive shafts, gear mesh clearance, and motor temperatures. Make sure your ESC is properly calibrated!";
+      const query = text.toLowerCase();
+      if (query.includes("noise") || query.includes("grinding")) {
+        reply = "Grinding noises usually mean stripped pinion/spur gear teeth or loose gear mesh. Adjust your motor mounting screws and check internal gearbox teeth!";
+      } else if (query.includes("servo") || query.includes("steering")) {
+        reply = "If steering stops or stutters, check if your metal steering linkage is bound, or if your servo horn plastic splines are rounded off. Upgrading to a metal servo horn is recommended!";
+      } else if (query.includes("heat") || query.includes("hot")) {
+        reply = "If motor/ESC is overheating, your gear ratio is too high (pinion gear too large) or your drivetrain has mechanical resistance/binding.";
+      }
+
+      setTimeout(() => {
+        chatBox.innerHTML += `
+          <div class="bg-blue-900/40 p-3 rounded-xl border border-blue-500/20 max-w-[85%]">
+            <p class="text-blue-300 font-bold text-xs mb-1">AI Mechanic</p>
+            <p class="text-slate-200">${reply}</p>
+          </div>
+        `;
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }, 500);
+
+      input.value = '';
+    });
+  </script>
+
+  <!-- Navigation & PWA Handler Scripts -->
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+      
+      if (tabId === 'mapTab') {
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
+      }
+    }
+
+    function calculateGearRatio() {
+      const pinion = parseFloat(document.getElementById('pinionTeeth').value);
+      const spur = parseFloat(document.getElementById('spurTeeth').value);
+      const internal = parseFloat(document.getElementById('internalRatio').value);
+      
+      if (pinion > 0) {
+        const fdr = (spur / pinion) * internal;
+        document.getElementById('fdrValue').innerText = fdr.toFixed(2) + " : 1";
+        document.getElementById('gearResult').classList.remove('hidden');
+      }
+    }
+
+    function calculateBattery() {
+      const mah = parseFloat(document.getElementById('batMah').value);
+      const amps = parseFloat(document.getElementById('avgAmps').value);
+      
+      if (amps > 0) {
+        const hours = (mah / 1000) / amps;
+        const mins = Math.round(hours * 60);
+        document.getElementById('runtimeValue').innerText = mins + " mins";
+        document.getElementById('batResult').classList.remove('hidden');
+      }
+    }
+
+    // PWA Service Worker & Install Dialog Logic
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('pwaModal').classList.remove('hidden');
+    });
+
+    document.getElementById('cancelPWA').addEventListener('click', () => {
+      document.getElementById('pwaModal').classList.add('hidden');
+    });
+
+    document.getElementById('installPWA').addEventListener('click', () => {
+      document.getElementById('pwaButtons').classList.add('hidden');
+      document.getElementById('installProgress').classList.remove('hidden');
+
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 20;
+        document.getElementById('progressBar').style.width = progress + '%';
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          document.getElementById('progressText').innerText = "Installation Complete!";
+          setTimeout(() => {
+            document.getElementById('pwaModal').classList.add('hidden');
+            if (deferredPrompt) {
+              deferredPrompt.prompt();
+            }
+          }, 600);
+        }
+      }, 200);
     });
   </script>
 </body>

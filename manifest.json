@@ -1,0 +1,21 @@
+{
+  "short_name": "RC Garage",
+  "name": "R/C Garage LK",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3085/3085336.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3085/3085336.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0d1117",
+  "theme_color": "#2563eb",
+  "display": "standalone",
+  "orientation": "portrait"
+}

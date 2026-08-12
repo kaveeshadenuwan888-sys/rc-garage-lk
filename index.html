@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RC Garage LK</title>
+</head>
+<body>
+  <h1>Welcome to RC Garage LK</h1>
+  <button id="loginBtn">Sign in with Google</button>
+  <p id="user"></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getDatabase } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDc3kDN1KPnXK98NI2NvwZyxCvDZxLa13w",
+      authDomain: "rc-garage-lk-4092e.firebaseapp.com",
+      databaseURL: "https://rc-garage-lk-4092e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "rc-garage-lk-4092e",
+      storageBucket: "rc-garage-lk-4092e.firebasestorage.app",
+      messagingSenderId: "109607090814",
+      appId: "1:109607090814:web:f581ad97ddc9ae7c4d762f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const rtdb = getDatabase(app);
+
+    const provider = new GoogleAuthProvider();
+
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      signInWithPopup(auth, provider).then((result) => {
+        document.getElementById('user').innerText = "Logged in as: " + result.user.displayName;
+      }).catch(err => console.error(err));
+    });
+  </script>
+</body>
+</html>

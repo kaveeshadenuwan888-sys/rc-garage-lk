@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>R/C Garage LK</title>
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#2563eb">
+  <meta name="theme-color" content="#000000">
   
   <!-- Tailwind CSS & FontAwesome Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -23,47 +23,67 @@
     }
     .font-orbitron { font-family: 'Orbitron', sans-serif; }
 
-    /* Apple-style Mesh Gradient Background */
+    /* Deep Obsidian Black Background with Subtle Pearl Ambient Mesh */
     body {
-      background: #090d16;
+      background: #000000;
       background-image: 
-        radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.25) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.2) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(29, 78, 216, 0.15) 0px, transparent 50%);
+        radial-gradient(at 10% 10%, rgba(255, 255, 255, 0.07) 0px, transparent 40%),
+        radial-gradient(at 90% 20%, rgba(200, 210, 255, 0.05) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(180, 180, 200, 0.04) 0px, transparent 50%);
       background-attachment: fixed;
       color: #f8fafc;
       min-height: 100vh;
     }
 
-    /* Magic Glassmorphism Style */
+    /* Apple Obsidian Glassmorphism */
     .apple-glass {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(25px) saturate(180%);
-      -webkit-backdrop-filter: blur(25px) saturate(180%);
+      background: rgba(18, 18, 20, 0.65);
+      backdrop-filter: blur(30px) saturate(200%);
+      -webkit-backdrop-filter: blur(30px) saturate(200%);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
     }
 
     .apple-glass-pill {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(30px) saturate(200%);
-      -webkit-backdrop-filter: blur(30px) saturate(200%);
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(35px) saturate(210%);
+      -webkit-backdrop-filter: blur(35px) saturate(210%);
       border: 1px solid rgba(255, 255, 255, 0.18);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.25);
     }
 
-    /* Active Nav Button Animation */
+    /* Magic Iridescent Pearl White Text & Accent Gradient */
+    .magic-white-text {
+      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 40%, #cbd5e1 70%, #ffffff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.25));
+    }
+
+    .magic-white-btn {
+      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+      color: #000000;
+      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .magic-white-btn:hover {
+      background: #ffffff;
+      box-shadow: 0 6px 25px rgba(255, 255, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 1);
+      transform: translateY(-1px);
+    }
+
+    /* Active Nav Button Animation with Pearl Glow */
     .nav-btn {
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      color: rgba(255, 255, 255, 0.6);
+      color: rgba(255, 255, 255, 0.5);
     }
     .nav-btn.active {
-      color: #ffffff;
-      background: rgba(37, 99, 235, 0.8);
-      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+      color: #000000;
+      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.35);
     }
 
-    #map { height: 380px; border-radius: 1.5rem; }
+    #map { height: 380px; border-radius: 1.5rem; filter: brightness(0.9) contrast(1.1); }
     
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
@@ -74,49 +94,49 @@
   <!-- Header Section -->
   <header class="max-w-4xl mx-auto apple-glass rounded-3xl p-4 mb-6 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <div class="w-11 h-11 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 text-white text-xl font-bold">
+      <div class="w-11 h-11 magic-white-btn rounded-2xl flex items-center justify-center text-black text-xl font-bold">
         <i class="fa-solid fa-car-side"></i>
       </div>
       <div>
-        <h1 class="font-orbitron text-lg font-extrabold tracking-wider text-white">R/C GARAGE <span class="text-blue-400">LK</span></h1>
-        <p class="text-[11px] text-blue-200/60 font-medium">Sri Lanka's Premium RC Community Hub</p>
+        <h1 class="font-orbitron text-lg font-extrabold tracking-wider magic-white-text">R/C GARAGE <span class="text-slate-400">LK</span></h1>
+        <p class="text-[11px] text-slate-400 font-medium">Sri Lanka's Premium RC Community Hub</p>
       </div>
     </div>
 
     <div id="authSection">
-      <button id="loginBtn" class="bg-blue-600/80 hover:bg-blue-500 text-white px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 transition apple-glass-pill">
+      <button id="loginBtn" class="magic-white-btn px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2">
         <i class="fa-brands fa-google text-sm"></i> Sign In
       </button>
       <div id="userInfo" class="hidden flex items-center gap-2">
-        <span id="userName" class="text-xs font-bold text-blue-300"></span>
+        <span id="userName" class="text-xs font-bold text-slate-200"></span>
       </div>
     </div>
   </header>
 
-  <!-- Sleek Apple Glass PWA Install Modal -->
-  <div id="pwaModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
+  <!-- Sleek Magic Pearl Glass PWA Install Modal -->
+  <div id="pwaModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
     <div class="apple-glass rounded-3xl max-w-sm w-full p-6 text-center border border-white/20 shadow-2xl relative overflow-hidden">
-      <!-- Background Ambient Glow -->
-      <div class="absolute -top-10 -left-10 w-32 h-32 bg-blue-500/30 rounded-full blur-2xl pointer-events-none"></div>
+      <!-- Magic White Ambient Aura Glow -->
+      <div class="absolute -top-12 -left-12 w-36 h-36 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
       
-      <div class="w-16 h-16 bg-gradient-to-tr from-blue-600 to-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-500/40 animate-pulse border border-white/20">
-        <i class="fa-solid fa-download text-2xl text-white"></i>
+      <div class="w-16 h-16 magic-white-btn rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse border border-white/40">
+        <i class="fa-solid fa-download text-2xl text-black"></i>
       </div>
       
-      <h3 class="font-orbitron text-lg font-extrabold text-white mb-1.5 tracking-wide">Install R/C Garage LK</h3>
+      <h3 class="font-orbitron text-lg font-extrabold magic-white-text mb-1.5 tracking-wide">Install R/C Garage LK</h3>
       <p class="text-slate-300 text-xs mb-6 font-medium leading-relaxed">Add to your Home Screen for instant launch, full screen experience, & fast tools access!</p>
 
       <!-- Dynamic Download Bar Animation -->
       <div id="installProgress" class="hidden mb-5">
         <div class="w-full bg-white/10 h-2.5 rounded-full overflow-hidden p-0.5 border border-white/10">
-          <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-sky-400 h-full w-0 rounded-full transition-all duration-300 shadow-md shadow-blue-500/50"></div>
+          <div id="progressBar" class="bg-gradient-to-r from-white via-slate-200 to-slate-400 h-full w-0 rounded-full transition-all duration-300 shadow-md shadow-white/30"></div>
         </div>
-        <p id="progressText" class="text-[11px] font-semibold text-blue-300 mt-2.5">Downloading app components...</p>
+        <p id="progressText" class="text-[11px] font-semibold text-slate-300 mt-2.5">Downloading app components...</p>
       </div>
 
       <div id="pwaButtons" class="flex gap-3">
         <button id="cancelPWA" class="w-1/2 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-2xl text-xs font-bold transition">Later</button>
-        <button id="installPWA" class="w-1/2 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/40 transition">Install App</button>
+        <button id="installPWA" class="w-1/2 py-2.5 magic-white-btn rounded-2xl text-xs font-bold transition">Install App</button>
       </div>
     </div>
   </div>
@@ -127,7 +147,7 @@
     <!-- Tab 1: RC Map -->
     <section id="mapTab" class="tab-content apple-glass rounded-3xl p-5 space-y-4">
       <div>
-        <h2 class="font-orbitron text-base font-bold text-blue-400 flex items-center gap-2">
+        <h2 class="font-orbitron text-base font-bold magic-white-text flex items-center gap-2">
           <i class="fa-solid fa-map-location-dot"></i> Sri Lanka RC Drivers Map
         </h2>
         <p class="text-xs text-slate-400 mt-1">Explore MN Models, Traxxas, FMS, and custom crawler owners around you.</p>
@@ -138,8 +158,8 @@
       <div class="apple-glass-pill p-4 rounded-2xl space-y-3">
         <h3 class="text-xs font-bold text-white uppercase tracking-wider">Pin Your Location & Vehicle</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input type="text" id="ownerName" placeholder="Your Display Name" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-400">
-          <select id="rcBrand" class="bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-400">
+          <input type="text" id="ownerName" placeholder="Your Display Name" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white/40">
+          <select id="rcBrand" class="bg-black border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white/40">
             <option value="MN Models (MN99s, D90, etc.)">MN Models (MN99s / D90)</option>
             <option value="Traxxas TRX-4 / TRX-4M">Traxxas (TRX-4 / TRX-4M)</option>
             <option value="FMS (FCX24 / Rochobby)">FMS Models</option>
@@ -148,7 +168,7 @@
             <option value="Custom Built Crawler/Buggy">Custom Built</option>
           </select>
         </div>
-        <button id="addLocationBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-blue-600/30 transition">
+        <button id="addLocationBtn" class="w-full magic-white-btn py-2.5 rounded-xl text-xs font-bold">
           <i class="fa-solid fa-location-crosshairs"></i> Add My Location To Map
         </button>
       </div>
@@ -158,7 +178,7 @@
     <section id="calcTab" class="tab-content hidden space-y-6">
       <!-- Gear Ratio Calculator -->
       <div class="apple-glass rounded-3xl p-5 space-y-4">
-        <h2 class="font-orbitron text-base font-bold text-blue-400 flex items-center gap-2">
+        <h2 class="font-orbitron text-base font-bold magic-white-text flex items-center gap-2">
           <i class="fa-solid fa-gears"></i> RC Gear Ratio Calculator
         </h2>
         <div class="grid grid-cols-2 gap-3 text-xs">
@@ -175,16 +195,16 @@
             <input type="number" id="internalRatio" value="2.6" step="0.1" class="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 mt-1 text-white">
           </div>
         </div>
-        <button onclick="calculateGearRatio()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-blue-600/30">Calculate Final Drive Ratio</button>
-        <div id="gearResult" class="hidden p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-center">
+        <button onclick="calculateGearRatio()" class="w-full magic-white-btn py-2.5 rounded-xl text-xs font-bold">Calculate Final Drive Ratio</button>
+        <div id="gearResult" class="hidden p-3 bg-white/5 border border-white/15 rounded-xl text-center">
           <p class="text-xs text-slate-300">Final Drive Ratio (FDR):</p>
-          <p id="fdrValue" class="font-orbitron text-xl font-bold text-blue-400 mt-1">0.0 : 1</p>
+          <p id="fdrValue" class="font-orbitron text-xl font-bold magic-white-text mt-1">0.0 : 1</p>
         </div>
       </div>
 
       <!-- Battery Calculator -->
       <div class="apple-glass rounded-3xl p-5 space-y-4">
-        <h2 class="font-orbitron text-base font-bold text-blue-400 flex items-center gap-2">
+        <h2 class="font-orbitron text-base font-bold magic-white-text flex items-center gap-2">
           <i class="fa-solid fa-battery-full"></i> LiPo Battery Runtime
         </h2>
         <div class="grid grid-cols-2 gap-3 text-xs">
@@ -197,10 +217,10 @@
             <input type="number" id="avgAmps" value="15" class="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 mt-1 text-white">
           </div>
         </div>
-        <button onclick="calculateBattery()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-blue-600/30">Calculate Estimated Time</button>
-        <div id="batResult" class="hidden p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+        <button onclick="calculateBattery()" class="w-full magic-white-btn py-2.5 rounded-xl text-xs font-bold">Calculate Estimated Time</button>
+        <div id="batResult" class="hidden p-3 bg-white/5 border border-white/15 rounded-xl text-center">
           <p class="text-xs text-slate-300">Estimated Runtime:</p>
-          <p id="runtimeValue" class="font-orbitron text-xl font-bold text-emerald-400 mt-1">0 mins</p>
+          <p id="runtimeValue" class="font-orbitron text-xl font-bold magic-white-text mt-1">0 mins</p>
         </div>
       </div>
     </section>
@@ -208,27 +228,27 @@
     <!-- Tab 3: AI Mechanic -->
     <section id="aiTab" class="tab-content hidden">
       <div class="apple-glass rounded-3xl p-5 flex flex-col h-[460px]">
-        <h2 class="font-orbitron text-base font-bold text-blue-400 mb-2 flex items-center gap-2">
+        <h2 class="font-orbitron text-base font-bold magic-white-text mb-2 flex items-center gap-2">
           <i class="fa-solid fa-robot"></i> RC AI Assistant
         </h2>
         
-        <div id="chatBox" class="flex-1 bg-black/20 rounded-2xl p-3 overflow-y-auto space-y-3 border border-white/5 text-xs">
-          <div class="bg-blue-600/20 p-3 rounded-2xl border border-blue-500/20 max-w-[85%]">
-            <p class="text-blue-300 font-bold mb-1">AI Mechanic</p>
-            <p class="text-slate-200">Ask me anything about gear mesh, clicking differentials, motor KV, or ESC troubleshooting!</p>
+        <div id="chatBox" class="flex-1 bg-black/40 rounded-2xl p-3 overflow-y-auto space-y-3 border border-white/5 text-xs">
+          <div class="bg-white/10 p-3 rounded-2xl border border-white/15 max-w-[85%]">
+            <p class="text-slate-200 font-bold mb-1">AI Mechanic</p>
+            <p class="text-slate-300">Ask me anything about gear mesh, clicking differentials, motor KV, or ESC troubleshooting!</p>
           </div>
         </div>
 
         <div class="flex gap-2 mt-3">
-          <input type="text" id="aiInput" placeholder="Ask mechanic a question..." class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-400">
-          <button id="sendAiBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-2xl font-bold text-xs shadow-lg shadow-blue-600/30"><i class="fa-solid fa-paper-plane"></i></button>
+          <input type="text" id="aiInput" placeholder="Ask mechanic a question..." class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white/40">
+          <button id="sendAiBtn" class="magic-white-btn px-4 py-2 rounded-2xl font-bold text-xs"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
       </div>
     </section>
 
     <!-- Tab 4: Specs Database -->
     <section id="specsTab" class="tab-content hidden apple-glass rounded-3xl p-5 space-y-4">
-      <h2 class="font-orbitron text-base font-bold text-blue-400 flex items-center gap-2">
+      <h2 class="font-orbitron text-base font-bold magic-white-text flex items-center gap-2">
         <i class="fa-solid fa-database"></i> Global RC Specs
       </h2>
       <div class="space-y-3">
@@ -245,12 +265,12 @@
 
     <!-- Tab 5: News Feed -->
     <section id="newsTab" class="tab-content hidden apple-glass rounded-3xl p-5 space-y-4">
-      <h2 class="font-orbitron text-base font-bold text-blue-400 flex items-center gap-2">
+      <h2 class="font-orbitron text-base font-bold magic-white-text flex items-center gap-2">
         <i class="fa-solid fa-newspaper"></i> Community News
       </h2>
       <div class="space-y-3">
         <div class="apple-glass-pill p-3.5 rounded-2xl">
-          <span class="text-[9px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full font-semibold">LATEST</span>
+          <span class="text-[9px] bg-white/10 text-slate-200 border border-white/20 px-2 py-0.5 rounded-full font-semibold">LATEST</span>
           <h3 class="font-bold text-xs text-white mt-1.5">New Crawler Trail Events in Sri Lanka</h3>
           <p class="text-[11px] text-slate-400 mt-1">Local clubs setting up custom scale trail tracks for 1/10 and 1/12 scale crawlers.</p>
         </div>
@@ -367,9 +387,9 @@
 
       setTimeout(() => {
         chatBox.innerHTML += `
-          <div class="bg-blue-600/20 p-2.5 rounded-2xl border border-blue-500/20 max-w-[85%]">
-            <p class="text-blue-300 font-bold text-[10px] mb-0.5">AI Mechanic</p>
-            <p class="text-slate-200">${reply}</p>
+          <div class="bg-white/10 p-2.5 rounded-2xl border border-white/20 max-w-[85%]">
+            <p class="text-slate-200 font-bold text-[10px] mb-0.5">AI Mechanic</p>
+            <p class="text-slate-300">${reply}</p>
           </div>
         `;
         chatBox.scrollTop = chatBox.scrollHeight;

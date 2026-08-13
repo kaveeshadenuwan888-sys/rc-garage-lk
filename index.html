@@ -800,7 +800,7 @@
       
       if (!apiKey) {
         document.getElementById(loadingId).outerHTML = 
-          `<div class="chat-msg bot">⚠️ <strong>Gemini API Key Missing!</strong><br>Please click your profile avatar at top right, add your Gemini API Key in Profile Settings, and click Save.</div>`;
+          `<div class="chat-msg bot">⚠️ <strong>Gemini API Key Missing!</strong><br>Profile Avatar එක මත ක්ලික් කර ඔබගේ Gemini API Key එක එකතු කර Save කරන්න.</div>`;
         return;
       }
 
@@ -822,7 +822,7 @@
 
         document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">${aiReply.replace(/\n/g, '<br>')}</div>`;
       } catch(e) {
-        document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">❌ Network Error. Please check your Gemini API key and connection.</div>`;
+        document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">❌ Connection error or invalid Gemini API Key.</div>`;
       }
       chatBox.scrollTop = chatBox.scrollHeight;
     }

@@ -7,9 +7,6 @@
   <meta name="theme-color" content="#0b0e14">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Google Sign-In SDK -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
     :root {
@@ -147,7 +144,7 @@
       cursor: pointer;
     }
 
-    /* Downloading Progress Overlay */
+    /* Downloading Progress Overlay Screen */
     .download-anim-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -321,8 +318,8 @@
       object-fit: cover;
     }
 
-    /* Custom Google Button UI Fallback */
-    .custom-google-btn {
+    /* Official Google Sign In Button Styling */
+    .google-auth-btn {
       width: 100%;
       background: #ffffff;
       color: #333333;
@@ -336,7 +333,13 @@
       justify-content: center;
       gap: 10px;
       cursor: pointer;
-      margin-top: 8px;
+      margin-top: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: background 0.2s;
+    }
+
+    .google-auth-btn:hover {
+      background: #f1f5f9;
     }
 
     /* Bottom Nav */
@@ -428,10 +431,7 @@
   <!-- App Configuration -->
   <script>
     const APP_CONFIG = {
-      // Direct Gemini API Key
-      GEMINI_API_KEY: "YOUR_DEFAULT_GEMINI_API_KEY_HERE",
-      // Add your Google Client ID here from Google Cloud Console
-      GOOGLE_CLIENT_ID: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+      GEMINI_API_KEY: "YOUR_DEFAULT_GEMINI_API_KEY_HERE"
     };
   </script>
 
@@ -542,11 +542,8 @@
       <div style="margin-top: 20px; border-top:1px solid var(--card-border); padding-top:16px;">
         <label>Quick Sign In with Google</label>
         
-        <!-- Native SDK Container -->
-        <div id="g-signin-container" style="margin-top: 10px; display:flex; justify-content:center;"></div>
-
-        <!-- Direct Action Fallback Button -->
-        <button class="custom-google-btn" onclick="triggerGooglePopup()">
+        <!-- Firebase Google Auth Button -->
+        <button class="google-auth-btn" id="firebase-google-btn">
           <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" alt="Google">
           Sign in with Google
         </button>
@@ -566,6 +563,60 @@
     </button>
   </nav>
 
+  <!-- FIREBASE SDK v10 (MODULE) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDc3kDN1KPnXK98NI2NvwZyxCvDZxLa13w",
+      authDomain: "rc-garage-lk-4092e.firebaseapp.com",
+      databaseURL: "https://rc-garage-lk-4092e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "rc-garage-lk-4092e",
+      storageBucket: "rc-garage-lk-4092e.firebasestorage.app",
+      messagingSenderId: "109607090814",
+      appId: "1:109607090814:web:f581ad97ddc9ae7c4d762f"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // Attach Google Auth to Button Click
+    document.getElementById('firebase-google-btn').addEventListener('click', async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        
+        // Save Details to Local Storage & Update UI
+        localStorage.setItem('rc_user_name', user.displayName || 'RC Enthusiast');
+        localStorage.setItem('rc_user_avatar', user.photoURL || '');
+        localStorage.setItem('rc_is_logged_in', 'true');
+
+        window.loadProfileData();
+        alert(`Successfully signed in as ${user.displayName}!`);
+        window.closeProfileModal();
+
+      } catch (error) {
+        console.error("Firebase Sign-In Error:", error);
+        alert("Google Sign-In Failed: " + error.message);
+      }
+    });
+
+    // Check Auth State on Load
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        localStorage.setItem('rc_user_name', user.displayName || 'RC Enthusiast');
+        if(user.photoURL) localStorage.setItem('rc_user_avatar', user.photoURL);
+        localStorage.setItem('rc_is_logged_in', 'true');
+        window.loadProfileData();
+      }
+    });
+  </script>
+
+  <!-- APP MAIN LOGIC SCRIPT -->
   <script>
     let deferredPrompt;
 
@@ -573,7 +624,6 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      // Show Install Banner if not installed
       if(!localStorage.getItem('rc_app_installed')) {
         document.getElementById('install-banner').style.display = 'block';
       }
@@ -630,17 +680,17 @@
       btn.classList.add('active');
     }
 
-    // Profile & Modal
-    function openProfileModal() {
+    // Profile & Modal Functions Attached to Window Scope
+    window.openProfileModal = function() {
       document.getElementById('profile-modal').style.display = 'flex';
       loadProfileData();
-    }
+    };
 
-    function closeProfileModal() {
+    window.closeProfileModal = function() {
       document.getElementById('profile-modal').style.display = 'none';
-    }
+    };
 
-    function handleImageUpload(e) {
+    window.handleImageUpload = function(e) {
       const file = e.target.files[0];
       if(file) {
         const reader = new FileReader();
@@ -651,9 +701,9 @@
         };
         reader.readAsDataURL(file);
       }
-    }
+    };
 
-    function saveProfileDetails() {
+    window.saveProfileDetails = function() {
       const name = document.getElementById('user-name-input').value.trim();
       if(name) {
         localStorage.setItem('rc_user_name', name);
@@ -661,66 +711,19 @@
       }
       alert('Profile saved!');
       closeProfileModal();
-    }
+    };
 
-    function loadProfileData() {
+    window.loadProfileData = function() {
       const savedName = localStorage.getItem('rc_user_name') || 'RC Enthusiast';
       const savedAvatar = localStorage.getItem('rc_user_avatar');
 
       document.getElementById('user-name-input').value = savedName;
       if(savedAvatar) updateAvatarUI(savedAvatar);
-    }
+    };
 
     function updateAvatarUI(url) {
       document.getElementById('modal-avatar-preview').innerHTML = `<img src="${url}">`;
       document.getElementById('header-avatar-container').innerHTML = `<img src="${url}">`;
-    }
-
-    // Google Sign-In SDK Render
-    function setupGoogleSignIn() {
-      if(window.google && APP_CONFIG.GOOGLE_CLIENT_ID && !APP_CONFIG.GOOGLE_CLIENT_ID.includes("YOUR_GOOGLE_CLIENT_ID")) {
-        try {
-          google.accounts.id.initialize({
-            client_id: APP_CONFIG.GOOGLE_CLIENT_ID,
-            callback: handleGoogleSignIn
-          });
-          const container = document.getElementById('g-signin-container');
-          if(container) {
-            container.innerHTML = '';
-            google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', shape: 'pill' });
-          }
-        } catch(e) { console.error(e); }
-      }
-    }
-
-    function triggerGooglePopup() {
-      if(window.google && APP_CONFIG.GOOGLE_CLIENT_ID && !APP_CONFIG.GOOGLE_CLIENT_ID.includes("YOUR_GOOGLE_CLIENT_ID")) {
-        google.accounts.id.prompt();
-      } else {
-        // Fallback demo sign-in
-        const userName = document.getElementById('user-name-input').value || "Google User";
-        localStorage.setItem('rc_user_name', userName);
-        localStorage.setItem('rc_is_logged_in', 'true');
-        alert(`Signed in as ${userName}!`);
-        closeProfileModal();
-      }
-    }
-
-    function handleGoogleSignIn(response) {
-      try {
-        const base64Url = response.credential.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const userData = JSON.parse(window.atob(base64));
-
-        if(userData) {
-          localStorage.setItem('rc_user_name', userData.name);
-          localStorage.setItem('rc_user_avatar', userData.picture);
-          localStorage.setItem('rc_is_logged_in', 'true');
-          loadProfileData();
-          alert(`Welcome, ${userData.name}!`);
-          closeProfileModal();
-        }
-      } catch(e) {}
     }
 
     // Runtime Calculation
@@ -768,7 +771,6 @@
 
     window.onload = function() {
       loadProfileData();
-      setupGoogleSignIn();
       checkAppLaunchMode();
     };
   </script>

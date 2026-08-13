@@ -3,475 +3,678 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>R/C Garage LK</title>
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#000000">
-  
-  <!-- Tailwind CSS & FontAwesome Icons -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>RC Garage LK - Pro Suite</title>
+  <meta name="theme-color" content="#0d0f12">
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Leaflet Maps CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Orbitron:wght@600;800&display=swap');
-    
-    * {
-      font-family: 'Plus Jakarta Sans', sans-serif;
+    :root {
+      --bg-dark: #090a0f;
+      --glass-bg: rgba(22, 27, 38, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --accent-cyan: #00f2fe;
+      --accent-blue: #4facfe;
+      --accent-purple: #7f00ff;
+      --accent-pink: #e100ff;
+      --text-main: #f0f4f8;
+      --text-muted: #94a3b8;
+      --card-radius: 20px;
     }
-    .font-orbitron { font-family: 'Orbitron', sans-serif; }
 
-    /* Deep Obsidian Black Background with Subtle Pearl Ambient Mesh */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
-      background: #000000;
+      background: var(--bg-dark);
       background-image: 
-        radial-gradient(at 10% 10%, rgba(255, 255, 255, 0.07) 0px, transparent 40%),
-        radial-gradient(at 90% 20%, rgba(200, 210, 255, 0.05) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(180, 180, 200, 0.04) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(127, 0, 255, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(0, 242, 254, 0.12) 0px, transparent 50%);
       background-attachment: fixed;
-      color: #f8fafc;
+      color: var(--text-main);
+      padding-bottom: 90px;
       min-height: 100vh;
     }
 
-    /* Apple Obsidian Glassmorphism */
-    .apple-glass {
-      background: rgba(18, 18, 20, 0.65);
-      backdrop-filter: blur(30px) saturate(200%);
-      -webkit-backdrop-filter: blur(30px) saturate(200%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    /* Header */
+    header {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: var(--glass-bg);
+      border-bottom: 1px solid var(--glass-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .apple-glass-pill {
-      background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(35px) saturate(210%);
-      -webkit-backdrop-filter: blur(35px) saturate(210%);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.25);
-    }
-
-    /* Magic Iridescent Pearl White Text & Accent Gradient */
-    .magic-white-text {
-      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 40%, #cbd5e1 70%, #ffffff 100%);
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.25));
     }
 
-    .magic-white-btn {
-      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
-      color: #000000;
-      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.8);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .magic-white-btn:hover {
-      background: #ffffff;
-      box-shadow: 0 6px 25px rgba(255, 255, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 1);
-      transform: translateY(-1px);
-    }
-
-    /* Active Nav Button Animation with Pearl Glow */
-    .nav-btn {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      color: rgba(255, 255, 255, 0.5);
-    }
-    .nav-btn.active {
-      color: #000000;
-      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
-      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.35);
+    .pwa-reload-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    #map { height: 380px; border-radius: 1.5rem; filter: brightness(0.9) contrast(1.1); }
-    
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+    /* Container & Tabs */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease-in-out forwards;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Glass Cards */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--card-radius);
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent-cyan);
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    button.btn-primary {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+      transition: 0.2s ease;
+    }
+
+    button.btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    /* Result Box */
+    .result-box {
+      margin-top: 18px;
+      padding: 16px;
+      background: rgba(0, 242, 254, 0.05);
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      border-radius: 14px;
+      text-align: center;
+    }
+
+    .result-val {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      margin: 6px 0;
+    }
+
+    .result-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* News Feed Cards */
+    .news-card {
+      background: rgba(10, 14, 23, 0.7);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      transition: 0.2s ease;
+    }
+
+    .news-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .news-content {
+      padding: 16px;
+    }
+
+    .news-source {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-pink);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .news-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .news-date {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .news-link {
+      display: inline-block;
+      color: var(--accent-cyan);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* Bottom Nav Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--glass-border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 20%;
+    }
+
+    .nav-item i {
+      font-size: 1.2rem;
+    }
+
+    .nav-item.active {
+      color: var(--accent-cyan);
+    }
+
+    /* Loader */
+    .loader {
+      border: 3px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      border-top: 3px solid var(--accent-cyan);
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
-<body class="pb-32 pt-4 px-3 sm:px-6">
+<body>
 
-  <!-- Header Section -->
-  <header class="max-w-4xl mx-auto apple-glass rounded-3xl p-4 mb-6 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-11 h-11 magic-white-btn rounded-2xl flex items-center justify-center text-black text-xl font-bold">
-        <i class="fa-solid fa-car-side"></i>
-      </div>
-      <div>
-        <h1 class="font-orbitron text-lg font-extrabold tracking-wider magic-white-text">R/C GARAGE <span class="text-slate-400">LK</span></h1>
-        <p class="text-[11px] text-slate-400 font-medium">Sri Lanka's Premium RC Community Hub</p>
-      </div>
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <i class="fa-solid fa-car-battery"></i> RC GARAGE LK
     </div>
-
-    <div id="authSection">
-      <button id="loginBtn" class="magic-white-btn px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2">
-        <i class="fa-brands fa-google text-sm"></i> Sign In
-      </button>
-      <div id="userInfo" class="hidden flex items-center gap-2">
-        <span id="userName" class="text-xs font-bold text-slate-200"></span>
-      </div>
-    </div>
+    <button class="pwa-reload-btn" onclick="forceAppUpdate()">
+      <i class="fa-solid fa-rotate"></i> Refresh App
+    </button>
   </header>
 
-  <!-- Sleek Magic Pearl Glass PWA Install Modal -->
-  <div id="pwaModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="apple-glass rounded-3xl max-w-sm w-full p-6 text-center border border-white/20 shadow-2xl relative overflow-hidden">
-      <!-- Magic White Ambient Aura Glow -->
-      <div class="absolute -top-12 -left-12 w-36 h-36 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
-      
-      <div class="w-16 h-16 magic-white-btn rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse border border-white/40">
-        <i class="fa-solid fa-download text-2xl text-black"></i>
-      </div>
-      
-      <h3 class="font-orbitron text-lg font-extrabold magic-white-text mb-1.5 tracking-wide">Install R/C Garage LK</h3>
-      <p class="text-slate-300 text-xs mb-6 font-medium leading-relaxed">Add to your Home Screen for instant launch, full screen experience, & fast tools access!</p>
+  <div class="container">
 
-      <!-- Dynamic Download Bar Animation -->
-      <div id="installProgress" class="hidden mb-5">
-        <div class="w-full bg-white/10 h-2.5 rounded-full overflow-hidden p-0.5 border border-white/10">
-          <div id="progressBar" class="bg-gradient-to-r from-white via-slate-200 to-slate-400 h-full w-0 rounded-full transition-all duration-300 shadow-md shadow-white/30"></div>
+    <!-- TAB 1: RUNTIME CALCULATOR -->
+    <div id="runtime-tab" class="tab-content active">
+      <div class="glass-card">
+        <div class="card-title">
+          <i class="fa-solid fa-battery-charging-full"></i> Battery Runtime Tester
         </div>
-        <p id="progressText" class="text-[11px] font-semibold text-slate-300 mt-2.5">Downloading app components...</p>
-      </div>
 
-      <div id="pwaButtons" class="flex gap-3">
-        <button id="cancelPWA" class="w-1/2 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-2xl text-xs font-bold transition">Later</button>
-        <button id="installPWA" class="w-1/2 py-2.5 magic-white-btn rounded-2xl text-xs font-bold transition">Install App</button>
-      </div>
-    </div>
-  </div>
+        <div class="form-group">
+          <label>Battery Capacity (mAh)</label>
+          <input type="number" id="bat-mah" placeholder="e.g. 2200, 5000" value="2200">
+        </div>
 
-  <!-- Main Content Area -->
-  <main class="max-w-4xl mx-auto space-y-6">
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Battery Chemistry</label>
+            <select id="bat-chem">
+              <option value="lipo">LiPo (3.7V/cell)</option>
+              <option value="liion">Li-Ion (3.6V/cell)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Cell Configuration</label>
+            <select id="bat-cells">
+              <option value="2">2S (7.4V / 7.2V)</option>
+              <option value="3" selected>3S (11.1V / 10.8V)</option>
+              <option value="4">4S (14.8V)</option>
+              <option value="6">6S (22.2V)</option>
+            </select>
+          </div>
+        </div>
 
-    <!-- Tab 1: RC Map -->
-    <section id="mapTab" class="tab-content apple-glass rounded-3xl p-5 space-y-4">
-      <div>
-        <h2 class="font-orbitron text-base font-bold magic-white-text flex items-center gap-2">
-          <i class="fa-solid fa-map-location-dot"></i> Sri Lanka RC Drivers Map
-        </h2>
-        <p class="text-xs text-slate-400 mt-1">Explore MN Models, Traxxas, FMS, and custom crawler owners around you.</p>
-      </div>
-      
-      <div id="map" class="w-full z-10 border border-white/10"></div>
-
-      <div class="apple-glass-pill p-4 rounded-2xl space-y-3">
-        <h3 class="text-xs font-bold text-white uppercase tracking-wider">Pin Your Location & Vehicle</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input type="text" id="ownerName" placeholder="Your Display Name" class="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white/40">
-          <select id="rcBrand" class="bg-black border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white/40">
-            <option value="MN Models (MN99s, D90, etc.)">MN Models (MN99s / D90)</option>
-            <option value="Traxxas TRX-4 / TRX-4M">Traxxas (TRX-4 / TRX-4M)</option>
-            <option value="FMS (FCX24 / Rochobby)">FMS Models</option>
-            <option value="WPL RC Crawlers">WPL Series</option>
-            <option value="Axial SCX10 / SCX24">Axial Series</option>
-            <option value="Custom Built Crawler/Buggy">Custom Built</option>
+        <div class="form-group">
+          <label>RC Vehicle & Setup Type</label>
+          <select id="rc-type">
+            <option value="3">1/10 Scale Crawler (Low Draw ~3A)</option>
+            <option value="8">1/16 Mini Basher (~8A)</option>
+            <option value="18" selected>1/10 Buggy / Truck Basher (~18A)</option>
+            <option value="25">1/10 On-Road / Drift (~25A)</option>
+            <option value="40">1/8 Monster Truck / Speed Run (~40A)</option>
           </select>
         </div>
-        <button id="addLocationBtn" class="w-full magic-white-btn py-2.5 rounded-xl text-xs font-bold">
-          <i class="fa-solid fa-location-crosshairs"></i> Add My Location To Map
-        </button>
-      </div>
-    </section>
 
-    <!-- Tab 2: Calculators -->
-    <section id="calcTab" class="tab-content hidden space-y-6">
-      <!-- Gear Ratio Calculator -->
-      <div class="apple-glass rounded-3xl p-5 space-y-4">
-        <h2 class="font-orbitron text-base font-bold magic-white-text flex items-center gap-2">
-          <i class="fa-solid fa-gears"></i> RC Gear Ratio Calculator
-        </h2>
-        <div class="grid grid-cols-2 gap-3 text-xs">
-          <div>
-            <label class="text-slate-400">Pinion Gear Teeth</label>
-            <input type="number" id="pinionTeeth" value="15" class="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 mt-1 text-white">
-          </div>
-          <div>
-            <label class="text-slate-400">Spur Gear Teeth</label>
-            <input type="number" id="spurTeeth" value="80" class="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 mt-1 text-white">
-          </div>
-          <div class="col-span-2">
-            <label class="text-slate-400">Internal Axle/Gearbox Ratio</label>
-            <input type="number" id="internalRatio" value="2.6" step="0.1" class="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 mt-1 text-white">
-          </div>
-        </div>
-        <button onclick="calculateGearRatio()" class="w-full magic-white-btn py-2.5 rounded-xl text-xs font-bold">Calculate Final Drive Ratio</button>
-        <div id="gearResult" class="hidden p-3 bg-white/5 border border-white/15 rounded-xl text-center">
-          <p class="text-xs text-slate-300">Final Drive Ratio (FDR):</p>
-          <p id="fdrValue" class="font-orbitron text-xl font-bold magic-white-text mt-1">0.0 : 1</p>
+        <button class="btn-primary" onclick="calculateRuntime()">Calculate Runtime</button>
+
+        <div class="result-box" id="runtime-result" style="display:none;">
+          <div class="result-sub">Estimated Safe Runtime (80% DOD Cutoff)</div>
+          <div class="result-val" id="runtime-val">0 Mins</div>
+          <div class="result-sub" id="runtime-sub-info">---</div>
         </div>
       </div>
+    </div>
 
-      <!-- Battery Calculator -->
-      <div class="apple-glass rounded-3xl p-5 space-y-4">
-        <h2 class="font-orbitron text-base font-bold magic-white-text flex items-center gap-2">
-          <i class="fa-solid fa-battery-full"></i> LiPo Battery Runtime
-        </h2>
-        <div class="grid grid-cols-2 gap-3 text-xs">
-          <div>
-            <label class="text-slate-400">Battery Capacity (mAh)</label>
-            <input type="number" id="batMah" value="2200" class="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 mt-1 text-white">
-          </div>
-          <div>
-            <label class="text-slate-400">Avg Motor Draw (Amps)</label>
-            <input type="number" id="avgAmps" value="15" class="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 mt-1 text-white">
-          </div>
+    <!-- TAB 2: SPEED & GEAR RATIO -->
+    <div id="speed-tab" class="tab-content">
+      <div class="glass-card">
+        <div class="card-title">
+          <i class="fa-solid fa-gauge-high"></i> Top Speed & FDR Calculator
         </div>
-        <button onclick="calculateBattery()" class="w-full magic-white-btn py-2.5 rounded-xl text-xs font-bold">Calculate Estimated Time</button>
-        <div id="batResult" class="hidden p-3 bg-white/5 border border-white/15 rounded-xl text-center">
-          <p class="text-xs text-slate-300">Estimated Runtime:</p>
-          <p id="runtimeValue" class="font-orbitron text-xl font-bold magic-white-text mt-1">0 mins</p>
-        </div>
-      </div>
-    </section>
 
-    <!-- Tab 3: AI Mechanic -->
-    <section id="aiTab" class="tab-content hidden">
-      <div class="apple-glass rounded-3xl p-5 flex flex-col h-[460px]">
-        <h2 class="font-orbitron text-base font-bold magic-white-text mb-2 flex items-center gap-2">
-          <i class="fa-solid fa-robot"></i> RC AI Assistant
-        </h2>
-        
-        <div id="chatBox" class="flex-1 bg-black/40 rounded-2xl p-3 overflow-y-auto space-y-3 border border-white/5 text-xs">
-          <div class="bg-white/10 p-3 rounded-2xl border border-white/15 max-w-[85%]">
-            <p class="text-slate-200 font-bold mb-1">AI Mechanic</p>
-            <p class="text-slate-300">Ask me anything about gear mesh, clicking differentials, motor KV, or ESC troubleshooting!</p>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Motor KV</label>
+            <input type="number" id="motor-kv" placeholder="e.g. 3300" value="3300">
+          </div>
+          <div class="form-group">
+            <label>LiPo Cells (S)</label>
+            <input type="number" id="speed-cells" placeholder="e.g. 2, 3" value="3">
           </div>
         </div>
 
-        <div class="flex gap-2 mt-3">
-          <input type="text" id="aiInput" placeholder="Ask mechanic a question..." class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white/40">
-          <button id="sendAiBtn" class="magic-white-btn px-4 py-2 rounded-2xl font-bold text-xs"><i class="fa-solid fa-paper-plane"></i></button>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Pinion Teeth</label>
+            <input type="number" id="pinion-teeth" placeholder="e.g. 15" value="15">
+          </div>
+          <div class="form-group">
+            <label>Spur Teeth</label>
+            <input type="number" id="spur-teeth" placeholder="e.g. 60" value="60">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Internal Diff Ratio</label>
+            <input type="number" step="0.01" id="diff-ratio" placeholder="e.g. 2.6" value="2.6">
+          </div>
+          <div class="form-group">
+            <label>Tyre Diameter (mm)</label>
+            <input type="number" id="tyre-dia" placeholder="e.g. 110" value="110">
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="calculateSpeed()">Calculate Top Speed</button>
+
+        <div class="result-box" id="speed-result" style="display:none;">
+          <div class="result-sub">Estimated Top Speed</div>
+          <div class="result-val" id="speed-val">0 km/h</div>
+          <div class="result-sub" id="fdr-val">Final Drive Ratio (FDR): -</div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- Tab 4: Specs Database -->
-    <section id="specsTab" class="tab-content hidden apple-glass rounded-3xl p-5 space-y-4">
-      <h2 class="font-orbitron text-base font-bold magic-white-text flex items-center gap-2">
-        <i class="fa-solid fa-database"></i> Global RC Specs
-      </h2>
-      <div class="space-y-3">
-        <div class="apple-glass-pill p-3.5 rounded-2xl">
-          <h3 class="font-bold text-xs text-white">MN Model D90 / MN99S Defender</h3>
-          <p class="text-[11px] text-slate-400 mt-1">Scale: 1/12 | Motor: 260 Brushed | Drivetrain: 4WD | Wheelbase: 190mm</p>
+    <!-- TAB 3: LIVE RC NEWS -->
+    <div id="news-tab" class="tab-content">
+      <div class="glass-card">
+        <div class="card-title">
+          <i class="fa-solid fa-newspaper"></i> Latest RC News (Live Feeds)
         </div>
-        <div class="apple-glass-pill p-3.5 rounded-2xl">
-          <h3 class="font-bold text-xs text-white">Traxxas TRX-4 Defender Scale Crawler</h3>
-          <p class="text-[11px] text-slate-400 mt-1">Scale: 1/10 | Motor: Titan 21T 550 | Axles: Portal Axles | Locking Diffs: T-Lock</p>
-        </div>
-      </div>
-    </section>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">
+          Live updates from <strong>BigSquidRC</strong> & <strong>RedRC</strong>
+        </p>
 
-    <!-- Tab 5: News Feed -->
-    <section id="newsTab" class="tab-content hidden apple-glass rounded-3xl p-5 space-y-4">
-      <h2 class="font-orbitron text-base font-bold magic-white-text flex items-center gap-2">
-        <i class="fa-solid fa-newspaper"></i> Community News
-      </h2>
-      <div class="space-y-3">
-        <div class="apple-glass-pill p-3.5 rounded-2xl">
-          <span class="text-[9px] bg-white/10 text-slate-200 border border-white/20 px-2 py-0.5 rounded-full font-semibold">LATEST</span>
-          <h3 class="font-bold text-xs text-white mt-1.5">New Crawler Trail Events in Sri Lanka</h3>
-          <p class="text-[11px] text-slate-400 mt-1">Local clubs setting up custom scale trail tracks for 1/10 and 1/12 scale crawlers.</p>
+        <div id="news-container">
+          <div class="loader"></div>
         </div>
       </div>
-    </section>
+    </div>
 
-  </main>
+    <!-- TAB 4: EXTRA TOOLS -->
+    <div id="tools-tab" class="tab-content">
+      <div class="glass-card">
+        <div class="card-title">
+          <i class="fa-solid fa-flask"></i> Shock / Diff Oil Converter
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Value</label>
+            <input type="number" id="oil-val" placeholder="e.g. 35" value="35">
+          </div>
+          <div class="form-group">
+            <label>Convert Direction</label>
+            <select id="oil-mode">
+              <option value="wt-cst">WT to cSt</option>
+              <option value="cst-wt">cSt to WT</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="convertOil()">Convert Viscosity</button>
+        <div class="result-box" id="oil-result" style="display:none;">
+          <div class="result-val" id="oil-res-val">0</div>
+        </div>
+      </div>
 
-  <!-- MAGIC APPLE FLOATING NAVIGATION BAR -->
-  <div class="fixed bottom-5 left-0 right-0 z-40 flex justify-center px-4">
-    <nav class="apple-glass-pill p-1.5 rounded-full flex items-center gap-1 sm:gap-2 shadow-2xl max-w-md w-full justify-around">
-      <button onclick="switchTab('mapTab', this)" class="nav-btn active flex-1 py-2 rounded-full text-xs font-bold flex flex-col items-center gap-0.5">
-        <i class="fa-solid fa-map-location-dot text-sm"></i>
-        <span class="text-[10px]">Map</span>
-      </button>
-      <button onclick="switchTab('calcTab', this)" class="nav-btn flex-1 py-2 rounded-full text-xs font-bold flex flex-col items-center gap-0.5">
-        <i class="fa-solid fa-calculator text-sm"></i>
-        <span class="text-[10px]">Tools</span>
-      </button>
-      <button onclick="switchTab('aiTab', this)" class="nav-btn flex-1 py-2 rounded-full text-xs font-bold flex flex-col items-center gap-0.5">
-        <i class="fa-solid fa-robot text-sm"></i>
-        <span class="text-[10px]">AI Help</span>
-      </button>
-      <button onclick="switchTab('specsTab', this)" class="nav-btn flex-1 py-2 rounded-full text-xs font-bold flex flex-col items-center gap-0.5">
-        <i class="fa-solid fa-database text-sm"></i>
-        <span class="text-[10px]">Specs</span>
-      </button>
-      <button onclick="switchTab('newsTab', this)" class="nav-btn flex-1 py-2 rounded-full text-xs font-bold flex flex-col items-center gap-0.5">
-        <i class="fa-solid fa-newspaper text-sm"></i>
-        <span class="text-[10px]">News</span>
-      </button>
-    </nav>
+      <div class="glass-card">
+        <div class="card-title">
+          <i class="fa-solid fa-ruler-combined"></i> Scale Speed Calculator
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Actual Speed (km/h)</label>
+            <input type="number" id="actual-speed" placeholder="e.g. 50" value="50">
+          </div>
+          <div class="form-group">
+            <label>Model Scale</label>
+            <select id="model-scale">
+              <option value="10">1/10 Scale</option>
+              <option value="8">1/8 Scale</option>
+              <option value="12">1/12 Scale</option>
+              <option value="24">1/24 Scale</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="calcScaleSpeed()">Calculate Scale Speed</button>
+        <div class="result-box" id="scale-result" style="display:none;">
+          <div class="result-sub">Scale Speed Equivalent</div>
+          <div class="result-val" id="scale-res-val">0 km/h</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Firebase & App Script Logic -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('runtime-tab', this)">
+      <i class="fa-solid fa-battery-half"></i>
+      <span>Runtime</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('speed-tab', this)">
+      <i class="fa-solid fa-gauge-high"></i>
+      <span>Speed</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('news-tab', this)">
+      <i class="fa-solid fa-newspaper"></i>
+      <span>News</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('tools-tab', this)">
+      <i class="fa-solid fa-toolbox"></i>
+      <span>Tools</span>
+    </button>
+  </nav>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDc3kDN1KPnXK98NI2NvwZyxCvDZxLa13w",
-      authDomain: "rc-garage-lk-4092e.firebaseapp.com",
-      databaseURL: "https://rc-garage-lk-4092e-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "rc-garage-lk-4092e",
-      storageBucket: "rc-garage-lk-4092e.firebasestorage.app",
-      messagingSenderId: "109607090814",
-      appId: "1:109607090814:web:f581ad97ddc9ae7c4d762f"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
-
-    document.getElementById('loginBtn').addEventListener('click', () => {
-      signInWithPopup(auth, provider).catch(err => console.error(err));
-    });
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        document.getElementById('loginBtn').classList.add('hidden');
-        document.getElementById('userInfo').classList.remove('hidden');
-        document.getElementById('userName').innerText = user.displayName;
-        document.getElementById('ownerName').value = user.displayName;
-      }
-    });
-
-    const map = L.map('map').setView([7.8731, 80.7718], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-    onSnapshot(collection(db, "rc_locations"), (snapshot) => {
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if(data.lat && data.lng) {
-          L.marker([data.lat, data.lng]).addTo(map).bindPopup(`<b>${data.name}</b><br>${data.brand}`);
-        }
-      });
-    });
-
-    document.getElementById('addLocationBtn').addEventListener('click', () => {
-      const name = document.getElementById('ownerName').value || 'RC Driver';
-      const brand = document.getElementById('rcBrand').value;
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-          addDoc(collection(db, "rc_locations"), {
-            name: name,
-            brand: brand,
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            timestamp: new Date()
-          }).then(() => alert("Your location has been pinned to the RC Map!"));
-        });
-      }
-    });
-
-    // AI Mechanic Engine
-    document.getElementById('sendAiBtn').addEventListener('click', () => {
-      const input = document.getElementById('aiInput');
-      const text = input.value.trim();
-      if (!text) return;
-
-      const chatBox = document.getElementById('chatBox');
-      chatBox.innerHTML += `
-        <div class="bg-white/10 p-2.5 rounded-2xl ml-auto max-w-[85%]">
-          <p class="text-[10px] text-slate-400 mb-0.5">You</p>
-          <p class="text-white">${text}</p>
-        </div>
-      `;
-
-      let reply = "Check your drive shafts, ESC calibration, and ensure gear mesh clearance is properly aligned!";
-      if (text.toLowerCase().includes("noise")) reply = "Grinding noises usually mean stripped pinion/spur gears or loose mesh. Inspect internal gearbox teeth!";
-
-      setTimeout(() => {
-        chatBox.innerHTML += `
-          <div class="bg-white/10 p-2.5 rounded-2xl border border-white/20 max-w-[85%]">
-            <p class="text-slate-200 font-bold text-[10px] mb-0.5">AI Mechanic</p>
-            <p class="text-slate-300">${reply}</p>
-          </div>
-        `;
-        chatBox.scrollTop = chatBox.scrollHeight;
-      }, 400);
-
-      input.value = '';
-    });
-  </script>
-
-  <!-- Navigation, Instant Cache Reload & PWA Install Logic -->
   <script>
+    // Tab Navigation
     function switchTab(tabId, btn) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(tabId).classList.remove('hidden');
-
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
       btn.classList.add('active');
 
-      if (tabId === 'mapTab') {
-        setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
+      if(tabId === 'news-tab' && !window.newsLoaded) {
+        fetchRCNews();
       }
     }
 
-    function calculateGearRatio() {
-      const p = parseFloat(document.getElementById('pinionTeeth').value);
-      const s = parseFloat(document.getElementById('spurTeeth').value);
-      const i = parseFloat(document.getElementById('internalRatio').value);
-      if (p > 0) {
-        document.getElementById('fdrValue').innerText = ((s / p) * i).toFixed(2) + " : 1";
-        document.getElementById('gearResult').classList.remove('hidden');
+    // 1. Battery Runtime Calculation
+    function calculateRuntime() {
+      const mah = parseFloat(document.getElementById('bat-mah').value);
+      const chem = document.getElementById('bat-chem').value;
+      const cells = parseInt(document.getElementById('bat-cells').value);
+      const avgCurrent = parseFloat(document.getElementById('rc-type').value);
+
+      if(!mah || mah <= 0) return alert('Please enter valid mAh');
+
+      // 80% Depth of Discharge for battery health
+      const usableAh = (mah / 1000) * 0.8;
+      const hours = usableAh / avgCurrent;
+      const totalMinutes = Math.round(hours * 60);
+
+      const hrsDisplay = Math.floor(totalMinutes / 60);
+      const minsDisplay = totalMinutes % 60;
+
+      let displayText = "";
+      if(hrsDisplay > 0) {
+        displayText = `${hrsDisplay}h ${minsDisplay}m`;
+      } else {
+        displayText = `${minsDisplay} Mins`;
       }
+
+      const nominalVolt = (chem === 'lipo' ? 3.7 : 3.6) * cells;
+
+      document.getElementById('runtime-result').style.display = 'block';
+      document.getElementById('runtime-val').innerText = displayText;
+      document.getElementById('runtime-sub-info').innerText = 
+        `Pack Nominal Voltage: ${nominalVolt.toFixed(1)}V | Est. Avg Load: ~${avgCurrent}A`;
     }
 
-    function calculateBattery() {
-      const mah = parseFloat(document.getElementById('batMah').value);
-      const amps = parseFloat(document.getElementById('avgAmps').value);
-      if (amps > 0) {
-        document.getElementById('runtimeValue').innerText = Math.round(((mah / 1000) / amps) * 60) + " mins";
-        document.getElementById('batResult').classList.remove('hidden');
-      }
+    // 2. Top Speed & Gear Ratio Calculation
+    function calculateSpeed() {
+      const kv = parseFloat(document.getElementById('motor-kv').value);
+      const cells = parseInt(document.getElementById('speed-cells').value);
+      const pinion = parseFloat(document.getElementById('pinion-teeth').value);
+      const spur = parseFloat(document.getElementById('spur-teeth').value);
+      const diff = parseFloat(document.getElementById('diff-ratio').value);
+      const tyreMm = parseFloat(document.getElementById('tyre-dia').value);
+
+      if(!kv || !pinion || !spur || !diff || !tyreMm) return alert('Fill all inputs');
+
+      // Gearing calculations
+      const fdr = (spur / pinion) * diff;
+      const totalVoltage = cells * 3.7; // Loaded nominal voltage estimate
+      const motorRpm = kv * totalVoltage;
+      const wheelRpm = motorRpm / fdr;
+
+      // Distance per minute in meters
+      const circumferenceMeters = (Math.PI * tyreMm) / 1000;
+      const speedMpm = wheelRpm * circumferenceMeters;
+      const speedKmh = (speedMpm * 60) / 1000;
+      const speedMph = speedKmh * 0.621371;
+
+      document.getElementById('speed-result').style.display = 'block';
+      document.getElementById('speed-val').innerText = `${speedKmh.toFixed(1)} km/h (${speedMph.toFixed(1)} mph)`;
+      document.getElementById('fdr-val').innerText = `Final Drive Ratio (FDR): ${fdr.toFixed(2)}:1 | Motor RPM: ~${Math.round(motorRpm)}`;
     }
 
-    // PWA Service Worker Registration & Instant Cache Reload
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js');
+    // 3. Live RC News Fetcher (BigSquidRC & RedRC)
+    async function fetchRCNews() {
+      const container = document.getElementById('news-container');
+      container.innerHTML = '<div class="loader"></div>';
 
-      // Auto-reload instantly when code changes on server
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload();
-      });
-    }
+      const feeds = [
+        { name: 'BigSquidRC', url: 'https://www.bigsquidrc.com/feed/' },
+        { name: 'RedRC', url: 'https://www.redrc.net/feed/' }
+      ];
 
-    // PWA Prompt for New Users
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('pwaModal').classList.remove('hidden');
-    });
+      let articles = [];
 
-    document.getElementById('cancelPWA').addEventListener('click', () => {
-      document.getElementById('pwaModal').classList.add('hidden');
-    });
-
-    document.getElementById('installPWA').addEventListener('click', () => {
-      document.getElementById('pwaButtons').classList.add('hidden');
-      document.getElementById('installProgress').classList.remove('hidden');
-
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 25;
-        document.getElementById('progressBar').style.width = progress + '%';
-        if (progress >= 100) {
-          clearInterval(interval);
-          document.getElementById('progressText').innerText = "Installation Complete!";
-          setTimeout(() => {
-            document.getElementById('pwaModal').classList.add('hidden');
-            if (deferredPrompt) deferredPrompt.prompt();
-          }, 400);
+      for(let feed of feeds) {
+        try {
+          const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`);
+          const data = await res.json();
+          if(data.status === 'ok') {
+            data.items.slice(0, 5).forEach(item => {
+              articles.push({
+                source: feed.name,
+                title: item.title,
+                link: item.link,
+                date: new Date(item.pubDate).toLocaleDateString(),
+                thumbnail: item.thumbnail || item.enclosure?.link || 'https://via.placeholder.com/400x200/161b26/00f2fe?text=RC+News'
+              });
+            });
+          }
+        } catch(e) {
+          console.error("News fetch error:", e);
         }
-      }, 180);
-    });
+      }
+
+      window.newsLoaded = true;
+
+      if(articles.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Failed to load live news. Check connection.</p>';
+        return;
+      }
+
+      container.innerHTML = articles.map(art => `
+        <div class="news-card">
+          <img src="${art.thumbnail}" alt="News Image" onerror="this.src='https://via.placeholder.com/400x200/161b26/00f2fe?text=RC+Garage+LK'">
+          <div class="news-content">
+            <div class="news-source">${art.source}</div>
+            <div class="news-title">${art.title}</div>
+            <div class="news-date">${art.date}</div>
+            <a href="${art.link}" target="_blank" class="news-link">Read Article <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 4. Tools Functions
+    function convertOil() {
+      const val = parseFloat(document.getElementById('oil-val').value);
+      const mode = document.getElementById('oil-mode').value;
+
+      if(!val) return;
+      let res = 0;
+      if(mode === 'wt-cst') {
+        res = val * 13; // Approx WT to cSt conversion formula
+      } else {
+        res = val / 13;
+      }
+
+      document.getElementById('oil-result').style.display = 'block';
+      document.getElementById('oil-res-val').innerText = `${res.toFixed(1)} ${mode === 'wt-cst' ? 'cSt' : 'WT'}`;
+    }
+
+    function calcScaleSpeed() {
+      const actual = parseFloat(document.getElementById('actual-speed').value);
+      const scale = parseFloat(document.getElementById('model-scale').value);
+
+      if(!actual) return;
+      const scaleSpeed = actual * scale;
+
+      document.getElementById('scale-result').style.display = 'block';
+      document.getElementById('scale-res-val').innerText = `${scaleSpeed.toFixed(0)} km/h`;
+    }
+
+    // PWA Refresh Fix Logic
+    function forceAppUpdate() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+          window.location.reload(true);
+        });
+      } else {
+        window.location.reload(true);
+      }
+    }
   </script>
 </body>
 </html>

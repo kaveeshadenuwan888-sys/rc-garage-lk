@@ -7,6 +7,8 @@
   <meta name="theme-color" content="#0b0e14">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Sign-In SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       --bg-dark: #0b0e14;
@@ -15,6 +17,7 @@
       --accent-cyan: #00f2fe;
       --accent-blue: #3b82f6;
       --accent-purple: #8b5cf6;
+      --accent-green: #10b981;
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
@@ -44,12 +47,12 @@
     header {
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      background: rgba(11, 14, 20, 0.8);
+      background: rgba(11, 14, 20, 0.85);
       border-bottom: 1px solid var(--card-border);
       position: sticky;
       top: 0;
       z-index: 100;
-      padding: 16px 20px;
+      padding: 12px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -67,13 +70,19 @@
       -webkit-text-fill-color: transparent;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
     .pwa-reload-btn {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--card-border);
       color: var(--text-secondary);
-      padding: 8px 14px;
+      padding: 6px 12px;
       border-radius: 20px;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -81,9 +90,30 @@
       transition: 0.2s ease;
     }
 
-    .pwa-reload-btn:active {
-      background: rgba(255, 255, 255, 0.15);
-      color: var(--text-primary);
+    /* Profile Icon */
+    .profile-avatar-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border: 2px solid var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+    }
+
+    .profile-avatar-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-avatar-btn i {
+      color: #fff;
+      font-size: 1.1rem;
     }
 
     /* Layout & Tabs */
@@ -129,7 +159,7 @@
       color: var(--accent-cyan);
     }
 
-    /* Form Controls */
+    /* Forms */
     .form-group {
       margin-bottom: 14px;
     }
@@ -144,7 +174,7 @@
       letter-spacing: 0.5px;
     }
 
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 12px 14px;
       background: rgba(15, 20, 31, 0.8);
@@ -156,7 +186,7 @@
       transition: 0.2s ease;
     }
 
-    input:focus, select:focus {
+    input:focus, select:focus, textarea:focus {
       border-color: var(--accent-cyan);
       box-shadow: 0 0 12px rgba(0, 242, 254, 0.15);
     }
@@ -187,7 +217,7 @@
       opacity: 0.9;
     }
 
-    /* Output Results */
+    /* Results */
     .result-box {
       margin-top: 16px;
       padding: 16px;
@@ -209,7 +239,63 @@
       color: var(--text-secondary);
     }
 
-    /* News Cards (With Top Photo Banner) */
+    /* AI Mechanic Chat Window */
+    .chat-box {
+      height: 380px;
+      overflow-y: auto;
+      padding: 12px;
+      background: rgba(11, 14, 20, 0.6);
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .chat-msg {
+      max-width: 82%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .chat-msg.bot {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      align-self: flex-start;
+      color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-msg.user {
+      background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+      align-self: flex-end;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-input-row input {
+      flex: 1;
+    }
+
+    .chat-input-row button {
+      width: 50px;
+      background: var(--accent-cyan);
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    /* News Cards */
     .news-card {
       background: rgba(15, 20, 31, 0.85);
       border: 1px solid var(--card-border);
@@ -224,7 +310,6 @@
       height: 190px;
       object-fit: cover;
       display: block;
-      background: rgba(255,255,255,0.03);
     }
 
     .news-content {
@@ -266,14 +351,81 @@
       font-size: 0.82rem;
       font-weight: 600;
       text-decoration: none;
-      transition: 0.2s ease;
     }
 
-    .news-link:active {
-      background: rgba(59, 130, 246, 0.3);
+    /* Profile Modal Popup */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
     }
 
-    /* Bottom Nav Bar */
+    .modal-card {
+      background: #121826;
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .avatar-upload-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0 20px;
+    }
+
+    .avatar-preview {
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      border: 3px solid var(--accent-cyan);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.05);
+      position: relative;
+    }
+
+    .avatar-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-preview i {
+      font-size: 2.5rem;
+      color: var(--text-secondary);
+    }
+
+    .google-btn-wrapper {
+      margin-top: 14px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Bottom Nav */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -300,19 +452,18 @@
       font-weight: 600;
       border: none;
       background: none;
-      width: 50%;
+      width: 33.3%;
       cursor: pointer;
     }
 
     .nav-item i {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
     }
 
     .nav-item.active {
       color: var(--accent-cyan);
     }
 
-    /* Loading Spinner */
     .loader {
       border: 3px solid rgba(255,255,255,0.08);
       border-radius: 50%;
@@ -336,27 +487,30 @@
     <div class="logo">
       <i class="fa-solid fa-gear"></i> RC GARAGE LK
     </div>
-    <button class="pwa-reload-btn" onclick="forceAppUpdate()">
-      <i class="fa-solid fa-rotate"></i> Refresh App
-    </button>
+    <div class="header-actions">
+      <button class="pwa-reload-btn" onclick="forceAppUpdate()">
+        <i class="fa-solid fa-rotate"></i>
+      </button>
+      <div class="profile-avatar-btn" onclick="openProfileModal()">
+        <span id="header-avatar-container"><i class="fa-solid fa-user"></i></span>
+      </div>
+    </div>
   </header>
 
   <div class="container">
 
-    <!-- TAB 1: TOOLS (MECHANICAL GARAGE) -->
+    <!-- TAB 1: GARAGE TOOLS -->
     <div id="tools-tab" class="tab-content active">
       
-      <!-- 1. Battery Runtime Calculator (Simple mAh based) -->
+      <!-- Battery Runtime -->
       <div class="glass-card">
         <div class="card-title">
           <i class="fa-solid fa-battery-charging-full"></i> Battery Runtime Tester
         </div>
-
         <div class="form-group">
           <label>Battery Capacity (mAh)</label>
           <input type="number" id="bat-mah" placeholder="e.g. 1500, 2200, 5000" value="2200">
         </div>
-
         <div class="grid-2">
           <div class="form-group">
             <label>Battery Type</label>
@@ -373,22 +527,19 @@
             </select>
           </div>
         </div>
-
         <button class="btn-primary" onclick="calculateRuntime()">Calculate Runtime</button>
-
         <div class="result-box" id="runtime-result" style="display:none;">
-          <div class="result-sub">Estimated Real-World Runtime (80% DOD Safe Limit)</div>
+          <div class="result-sub">Estimated Real-World Runtime</div>
           <div class="result-val" id="runtime-val">0 Mins</div>
           <div class="result-sub" id="runtime-sub-info">---</div>
         </div>
       </div>
 
-      <!-- 2. Speed Calculator (Brushed Motor Size) -->
+      <!-- Speed Calculator -->
       <div class="glass-card">
         <div class="card-title">
           <i class="fa-solid fa-gauge-high"></i> Speed Calculator
         </div>
-
         <div class="form-group">
           <label>Brushed Motor Size</label>
           <select id="motor-size">
@@ -400,7 +551,6 @@
             <option value="550">550 Motor (~22,500 RPM)</option>
           </select>
         </div>
-
         <div class="grid-2">
           <div class="form-group">
             <label>Battery Setup</label>
@@ -416,9 +566,7 @@
             <input type="number" id="tyre-dia" placeholder="e.g. 70, 110" value="75">
           </div>
         </div>
-
         <button class="btn-primary" onclick="calculateSpeed()">Calculate Actual Speed</button>
-
         <div class="result-box" id="speed-result" style="display:none;">
           <div class="result-sub">Estimated Top Speed</div>
           <div class="result-val" id="speed-val">0 km/h</div>
@@ -428,16 +576,35 @@
 
     </div>
 
-    <!-- TAB 2: LIVE RC NEWS -->
+    <!-- TAB 2: RC AI MECHANIC -->
+    <div id="ai-tab" class="tab-content">
+      <div class="glass-card">
+        <div class="card-title">
+          <i class="fa-solid fa-robot"></i> RC AI Mechanic Assistant
+        </div>
+        <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:12px;">
+          RC Crawler, Drift හෝ Basher ලෙඩක්ද? ඕනෑම Technical ප්‍රශ්නයක් සිංහලෙන් හෝ ඉංග්‍රීසියෙන් අහන්න.
+        </p>
+
+        <div class="chat-box" id="ai-chat-box">
+          <div class="chat-msg bot">
+            👋 ආයුබෝවන්! මම ඔයාගේ <strong>RC AI Mechanic</strong>. RC Car එකේ motor, ESC, servo, gears හෝ battery වල මොනවා හරි අවුලක් තියෙනවාද? මගෙන් අහන්න!
+          </div>
+        </div>
+
+        <div class="chat-input-row">
+          <input type="text" id="ai-input" placeholder="Type your RC issue..." onkeypress="handleChatKey(event)">
+          <button onclick="sendAiMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: LIVE RC NEWS -->
     <div id="news-tab" class="tab-content">
       <div class="glass-card">
         <div class="card-title">
           <i class="fa-solid fa-newspaper"></i> Live RC News Feed
         </div>
-        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">
-          Instant updates from <strong>BigSquidRC</strong> & <strong>RedRC</strong>
-        </p>
-
         <div id="news-container">
           <div class="loader"></div>
         </div>
@@ -446,11 +613,52 @@
 
   </div>
 
-  <!-- Bottom Navigation Bar -->
+  <!-- PROFILE MODAL -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeProfileModal()"><i class="fa-solid fa-xmark"></i></button>
+      <div class="card-title"><i class="fa-solid fa-circle-user"></i> User Profile & Account</div>
+
+      <div class="avatar-upload-box">
+        <div class="avatar-preview" id="modal-avatar-preview">
+          <i class="fa-solid fa-user"></i>
+        </div>
+        <button class="pwa-reload-btn" onclick="document.getElementById('avatar-file-input').click()">
+          <i class="fa-solid fa-camera"></i> Change Profile Photo
+        </button>
+        <input type="file" id="avatar-file-input" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+      </div>
+
+      <div class="form-group">
+        <label>Display Name (Visible to Community)</label>
+        <input type="text" id="user-name-input" placeholder="Enter your name" value="RC Enthusiast">
+      </div>
+
+      <button class="btn-primary" onclick="saveProfileDetails()">Save Profile</button>
+
+      <div style="margin-top: 20px; border-top:1px solid var(--card-border); padding-top:16px;">
+        <label>Sign In with Google</label>
+        <div class="google-btn-wrapper">
+          <!-- Google Sign In Button Container -->
+          <div id="g_id_onload"
+               data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+               data-callback="handleGoogleSignIn">
+          </div>
+          <div class="g_id_signin" data-type="standard" data-theme="filled_blue"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
   <nav class="bottom-nav">
     <button class="nav-item active" onclick="switchTab('tools-tab', this)">
       <i class="fa-solid fa-toolbox"></i>
-      <span>Garage Tools</span>
+      <span>Tools</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('ai-tab', this)">
+      <i class="fa-solid fa-robot"></i>
+      <span>AI Mechanic</span>
     </button>
     <button class="nav-item" onclick="switchTab('news-tab', this)">
       <i class="fa-solid fa-newspaper"></i>
@@ -459,7 +667,7 @@
   </nav>
 
   <script>
-    // Tab Switching Logic
+    // Tab Switch
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -471,7 +679,62 @@
       }
     }
 
-    // 1. Runtime Calculation using Battery mAh only
+    // Profile Modal
+    function openProfileModal() {
+      document.getElementById('profile-modal').style.display = 'flex';
+      loadProfileData();
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profile-modal').style.display = 'none';
+    }
+
+    // Image Upload Handler
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if(file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const imgUrl = evt.target.result;
+          localStorage.setItem('rc_user_avatar', imgUrl);
+          updateAvatarUI(imgUrl);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function saveProfileDetails() {
+      const name = document.getElementById('user-name-input').value.trim();
+      if(name) {
+        localStorage.setItem('rc_user_name', name);
+        alert('Profile updated successfully!');
+        closeProfileModal();
+      }
+    }
+
+    function loadProfileData() {
+      const savedName = localStorage.getItem('rc_user_name') || 'RC Enthusiast';
+      const savedAvatar = localStorage.getItem('rc_user_avatar');
+
+      document.getElementById('user-name-input').value = savedName;
+      if(savedAvatar) {
+        updateAvatarUI(savedAvatar);
+      }
+    }
+
+    function updateAvatarUI(url) {
+      document.getElementById('modal-avatar-preview').innerHTML = `<img src="${url}">`;
+      document.getElementById('header-avatar-container').innerHTML = `<img src="${url}">`;
+    }
+
+    // Google Sign-In Callback
+    function handleGoogleSignIn(response) {
+      console.log("Google Auth Token:", response.credential);
+      // Parse JWT token payload if needed
+      alert("Signed in successfully with Google!");
+    }
+
+    // 1. Runtime Calculator
     function calculateRuntime() {
       const mah = parseFloat(document.getElementById('bat-mah').value);
       const chem = document.getElementById('bat-chem').value;
@@ -479,26 +742,21 @@
 
       if(!mah || mah <= 0) return alert('Please enter valid mAh');
 
-      // 80% usable capacity calculation for battery safety
       const usableMah = mah * 0.8;
-      
-      // Estimated load draw curve based on chemistry
       const estAmpDraw = chem === 'lipo' ? 8.5 : 7.0; 
       const totalMinutes = Math.round((usableMah / (estAmpDraw * 1000)) * 60);
 
       const hrs = Math.floor(totalMinutes / 60);
       const mins = totalMinutes % 60;
-
       let displayText = hrs > 0 ? `${hrs}h ${mins}m` : `${mins} Mins`;
-      const nominalVolt = (chem === 'lipo' ? 3.7 : 3.6) * cells;
 
       document.getElementById('runtime-result').style.display = 'block';
       document.getElementById('runtime-val').innerText = displayText;
       document.getElementById('runtime-sub-info').innerText = 
-        `Pack Voltage: ${nominalVolt.toFixed(1)}V | Safe Capacity Limit: ${usableMah} mAh`;
+        `Pack Voltage: ${((chem === 'lipo' ? 3.7 : 3.6) * cells).toFixed(1)}V | Safe Cap Limit: ${usableMah} mAh`;
     }
 
-    // 2. Speed Calculation using Brushed Motor Sizes
+    // 2. Speed Calculator
     function calculateSpeed() {
       const motorSize = document.getElementById('motor-size').value;
       const batSetup = document.getElementById('speed-battery').value;
@@ -506,45 +764,70 @@
 
       if(!tyreMm || tyreMm <= 0) return alert('Please enter Tyre Diameter in mm');
 
-      // Base Motor RPMs @ standard 7.4V
       const motorRpmMap = {
-        '260': 12000,
-        '280': 14000,
-        '370': 16500,
-        '390': 19000,
-        '540': 20000,
-        '550': 22500
+        '260': 12000, '280': 14000, '370': 16500,
+        '390': 19000, '540': 20000, '550': 22500
       };
 
-      // Voltage Multipliers
       let voltMultiplier = 1.0;
       if(batSetup === '3s-lipo') voltMultiplier = 1.5;
       if(batSetup === '2s-liion') voltMultiplier = 0.97;
       if(batSetup === '3s-liion') voltMultiplier = 1.45;
 
       const estimatedRpm = motorRpmMap[motorSize] * voltMultiplier;
-      
-      // Internal scale reduction ratio average (~10:1)
       const gearReduction = 10.5;
       const wheelRpm = estimatedRpm / gearReduction;
 
-      // Speed Math
       const circumferenceMeters = (Math.PI * tyreMm) / 1000;
-      const speedMpm = wheelRpm * circumferenceMeters;
-      const speedKmh = (speedMpm * 60) / 1000;
-      const speedMph = speedKmh * 0.621371;
+      const speedKmh = ((wheelRpm * circumferenceMeters) * 60) / 1000;
 
       document.getElementById('speed-result').style.display = 'block';
       document.getElementById('speed-val').innerText = `${speedKmh.toFixed(1)} km/h`;
       document.getElementById('speed-sub-info').innerText = 
-        `Speed in MPH: ~${speedMph.toFixed(1)} mph | Estimated Motor RPM: ~${Math.round(estimatedRpm)}`;
+        `Est. Motor RPM: ~${Math.round(estimatedRpm)} | Gear Ratio: 10.5:1`;
     }
 
-    // 3. Fetch Live RC News with Top Image Banners
+    // 3. AI Mechanic logic
+    function handleChatKey(e) {
+      if(e.key === 'Enter') sendAiMessage();
+    }
+
+    function sendAiMessage() {
+      const input = document.getElementById('ai-input');
+      const msg = input.value.trim();
+      if(!msg) return;
+
+      const chatBox = document.getElementById('ai-chat-box');
+
+      // User Message
+      chatBox.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Simulated Intelligent AI Diagnostic Response
+      setTimeout(() => {
+        let reply = getMechanicReply(msg);
+        chatBox.innerHTML += `<div class="chat-msg bot">${reply}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }, 600);
+    }
+
+    function getMechanicReply(query) {
+      const q = query.toLowerCase();
+      if(q.includes('heat') || q.includes('රත්')) {
+        return "🔥 <strong>Motor/ESC Heat Issue:</strong> Motor/ESC එක ගොඩක් රත් වෙනවා නම්:<br>1. Pinion gear එකේ දත් ගණන 2-3 කින් අඩු කරලා (Lower Gear Ratio) බලන්න.<br>2. Drive shafts හෝ Gearbox එක හිරවෙලාද (binding) කියලා check කරන්න.<br>3. Over-sized / heavy wheels දාලාද කියලා බලන්න.";
+      } else if(q.includes('servo') || q.includes('steer')) {
+        return "🎯 <strong>Steering / Servo Problem:</strong> Servo එකෙන් සද්ද එනවා ඒත් කපන්නේ නැත්නම්:<br>1. Servo internal plastic gears කැඩිලා වෙන්න පුළුවන් (Metal gear servo එකකට upgrade කරන්න).<br>2. Steering linkage එක හිරවෙලාද බලන්න.<br>3. Receiver voltage මදි නම් BEC එකක් පාවිච්චි කරන්න.";
+      } else if(q.includes('battery') || q.includes('lipo') || q.includes('cut')) {
+        return "🔋 <strong>Battery & Power Cutoff:</strong> රථය යද්දී එකපාරටම නතර වෙනවා නම්:<br>1. ESC Low Voltage Cutoff (LVC) එක trigger වෙනවා වෙන්න පුළුවන්.<br>2. LiPo C-rating එක මදි නිසා Voltage sag වෙනවා වෙන්න පුළුවන්.<br>3. Battery Dean/T-plug connectors බුරුල්ද බලන්න.";
+      } else {
+        return "🛠️ <strong>RC Mechanic Tip:</strong> ඔයාගේ ප්‍රශ්නයට විසඳුම:<br>1. Drivetrain එකේ mesh (Pinion to Spur gap) හරියට තියෙනවාද බලන්න (කොළ කැබැල්ලක් තියලා mesh කරන්න).<br>2. Bearings වලට Oil/Grease දාලා Clean කරන්න.<br>3. Transmitter trim settings Reset කරලා check කරන්න!";
+      }
+    }
+
+    // 4. News Feed
     async function fetchRCNews() {
       const container = document.getElementById('news-container');
-      container.innerHTML = '<div class="loader"></div>';
-
       const feeds = [
         { name: 'BigSquidRC', url: 'https://www.bigsquidrc.com/feed/' },
         { name: 'RedRC', url: 'https://www.redrc.net/feed/' }
@@ -557,9 +840,7 @@
           const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`);
           const data = await res.json();
           if(data.status === 'ok') {
-            data.items.slice(0, 5).forEach(item => {
-              
-              // Extract image from enclosure, thumbnail or content HTML
+            data.items.slice(0, 4).forEach(item => {
               let imgUrl = item.thumbnail || item.enclosure?.link;
               if(!imgUrl && item.content) {
                 const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
@@ -575,15 +856,13 @@
               });
             });
           }
-        } catch(e) {
-          console.error("Feed error:", e);
-        }
+        } catch(e) {}
       }
 
       window.newsLoaded = true;
 
       if(articles.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:var(--text-secondary); padding:20px;">Unable to fetch news right now. Please check internet connection.</p>';
+        container.innerHTML = '<p style="text-align:center; color:var(--text-secondary); padding:20px;">News load කරගැනීමට නොහැකි විය.</p>';
         return;
       }
 
@@ -594,27 +873,28 @@
             <div class="news-source">${art.source}</div>
             <div class="news-title">${art.title}</div>
             <div class="news-date">${art.date}</div>
-            <a href="${art.link}" target="_blank" class="news-link">
-              Read Full Article <i class="fa-solid fa-arrow-right"></i>
-            </a>
+            <a href="${art.link}" target="_blank" class="news-link">Read Full Article <i class="fa-solid fa-arrow-right"></i></a>
           </div>
         </div>
       `).join('');
     }
 
-    // PWA Cache Clearing Logic
+    // PWA Reload
     function forceAppUpdate() {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
-          for (let registration of registrations) {
-            registration.unregister();
-          }
+          for (let registration of registrations) registration.unregister();
           window.location.reload(true);
         });
       } else {
         window.location.reload(true);
       }
     }
+
+    // Init
+    window.onload = function() {
+      loadProfileData();
+    };
   </script>
 </body>
 </html>

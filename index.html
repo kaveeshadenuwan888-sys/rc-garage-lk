@@ -439,6 +439,16 @@
 </head>
 <body>
 
+  <!-- App Main Config (ඔයාගේ Google Client ID එක මෙතනට විතරක් දාන්න) -->
+  <script>
+    const APP_CONFIG = {
+      // ඔයාගේ Gemini API Key එක මෙතන තියෙන්න දෙන්න (User ලාගෙන් ඉල්ලන්නේ නෑ)
+      GEMINI_API_KEY: "YOUR_DEFAULT_GEMINI_API_KEY_HERE",
+      // ඔයාගේ Google Cloud Console එකෙන් ගත්තු Client ID එක මෙතනට දාන්න
+      GOOGLE_CLIENT_ID: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+    };
+  </script>
+
   <!-- Header -->
   <header>
     <div class="logo">
@@ -540,7 +550,7 @@
           <i class="fa-solid fa-robot"></i> Gemini AI RC Mechanic
         </div>
         <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:12px;">
-          100% Real AI Engine. Ask any technical RC problem in Sinhala or English!
+          Ask any technical RC problem in Sinhala or English!
         </p>
 
         <div class="chat-box" id="ai-chat-box">
@@ -574,14 +584,14 @@
   <div class="modal-overlay" id="profile-modal">
     <div class="modal-card">
       <button class="modal-close" onclick="closeProfileModal()"><i class="fa-solid fa-xmark"></i></button>
-      <div class="card-title"><i class="fa-solid fa-circle-user"></i> User Profile & API Keys</div>
+      <div class="card-title"><i class="fa-solid fa-circle-user"></i> User Profile</div>
 
       <div class="avatar-upload-box">
         <div class="avatar-preview" id="modal-avatar-preview">
           <i class="fa-solid fa-user"></i>
         </div>
         <button class="pwa-reload-btn" onclick="document.getElementById('avatar-file-input').click()">
-          <i class="fa-solid fa-camera"></i> Change Avatar Photo
+          <i class="fa-solid fa-camera"></i> Change Photo
         </button>
         <input type="file" id="avatar-file-input" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
       </div>
@@ -591,23 +601,11 @@
         <input type="text" id="user-name-input" placeholder="Enter display name" value="RC Enthusiast">
       </div>
 
-      <div class="form-group">
-        <label>Gemini API Key (For Real AI Mechanic)</label>
-        <input type="password" id="gemini-api-key" placeholder="AIzaSy...">
-      </div>
-
-      <div class="form-group">
-        <label>Google OAuth Client ID</label>
-        <input type="text" id="google-client-id" placeholder="xxxx.apps.googleusercontent.com">
-      </div>
-
-      <button class="btn-primary" onclick="saveProfileDetails()">Save Settings</button>
+      <button class="btn-primary" onclick="saveProfileDetails()">Save Profile</button>
 
       <div style="margin-top: 20px; border-top:1px solid var(--card-border); padding-top:16px;">
-        <label>Sign In with Google</label>
-        <div id="g-signin-container" style="margin-top: 8px; display:flex; justify-content:center;">
-          <p style="font-size:0.78rem; color:var(--text-muted);">Please add valid OAuth Client ID above to enable Sign-In button.</p>
-        </div>
+        <label>Quick Sign In with Google</label>
+        <div id="g-signin-container" style="margin-top: 12px; display:flex; justify-content:center;"></div>
       </div>
     </div>
   </div>
@@ -666,32 +664,17 @@
 
     function saveProfileDetails() {
       const name = document.getElementById('user-name-input').value.trim();
-      const apiKey = document.getElementById('gemini-api-key').value.trim();
-      const clientId = document.getElementById('google-client-id').value.trim();
-
       if(name) localStorage.setItem('rc_user_name', name);
-      if(apiKey) localStorage.setItem('rc_gemini_key', apiKey);
-      if(clientId) {
-        localStorage.setItem('rc_google_client_id', clientId);
-        initGoogleSignIn(clientId);
-      }
-
-      alert('Settings saved successfully!');
+      alert('Profile updated successfully!');
       closeProfileModal();
     }
 
     function loadProfileData() {
       const savedName = localStorage.getItem('rc_user_name') || 'RC Enthusiast';
       const savedAvatar = localStorage.getItem('rc_user_avatar');
-      const savedKey = localStorage.getItem('rc_gemini_key') || '';
-      const savedClientId = localStorage.getItem('rc_google_client_id') || '';
 
       document.getElementById('user-name-input').value = savedName;
-      document.getElementById('gemini-api-key').value = savedKey;
-      document.getElementById('google-client-id').value = savedClientId;
-
       if(savedAvatar) updateAvatarUI(savedAvatar);
-      if(savedClientId) initGoogleSignIn(savedClientId);
     }
 
     function updateAvatarUI(url) {
@@ -699,16 +682,19 @@
       document.getElementById('header-avatar-container').innerHTML = `<img src="${url}">`;
     }
 
-    function initGoogleSignIn(clientId) {
-      if(window.google && clientId) {
+    // Direct Google Sign-In Loader
+    function setupGoogleSignIn() {
+      if(window.google && APP_CONFIG.GOOGLE_CLIENT_ID && APP_CONFIG.GOOGLE_CLIENT_ID !== "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com") {
         try {
           google.accounts.id.initialize({
-            client_id: clientId,
+            client_id: APP_CONFIG.GOOGLE_CLIENT_ID,
             callback: handleGoogleSignIn
           });
           const container = document.getElementById('g-signin-container');
-          container.innerHTML = '';
-          google.accounts.id.renderButton(container, { theme: 'outline', size: 'large' });
+          if(container) {
+            container.innerHTML = '';
+            google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', shape: 'pill' });
+          }
         } catch(e) { console.error(e); }
       }
     }
@@ -727,7 +713,7 @@
         localStorage.setItem('rc_user_name', userData.name);
         localStorage.setItem('rc_user_avatar', userData.picture);
         loadProfileData();
-        alert(`Welcome, ${userData.name}! Logged in with Google.`);
+        alert(`Welcome, ${userData.name}! Successfully signed in.`);
         closeProfileModal();
       }
     }
@@ -796,13 +782,7 @@
       chatBox.innerHTML += `<div class="chat-msg bot" id="${loadingId}"><i class="fa-solid fa-spinner fa-spin"></i> Gemini is thinking...</div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      const apiKey = localStorage.getItem('rc_gemini_key');
-      
-      if (!apiKey) {
-        document.getElementById(loadingId).outerHTML = 
-          `<div class="chat-msg bot">⚠️ <strong>Gemini API Key Missing!</strong><br>Profile Avatar එක මත ක්ලික් කර ඔබගේ Gemini API Key එක එකතු කර Save කරන්න.</div>`;
-        return;
-      }
+      const apiKey = APP_CONFIG.GEMINI_API_KEY;
 
       try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
@@ -822,7 +802,7 @@
 
         document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">${aiReply.replace(/\n/g, '<br>')}</div>`;
       } catch(e) {
-        document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">❌ Connection error or invalid Gemini API Key.</div>`;
+        document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">❌ AI Engine error. Please verify the Gemini API Key in the APP_CONFIG script.</div>`;
       }
       chatBox.scrollTop = chatBox.scrollHeight;
     }
@@ -891,6 +871,7 @@
 
     window.onload = function() {
       loadProfileData();
+      setupGoogleSignIn();
     };
   </script>
 </body>

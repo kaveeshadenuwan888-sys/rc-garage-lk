@@ -4,39 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RC Garage LK - Pro Suite</title>
-  <meta name="theme-color" content="#0d0f12">
+  <meta name="theme-color" content="#0b0e14">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --bg-dark: #090a0f;
-      --glass-bg: rgba(22, 27, 38, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.08);
+      --bg-dark: #0b0e14;
+      --card-bg: rgba(18, 24, 38, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
       --accent-cyan: #00f2fe;
-      --accent-blue: #4facfe;
-      --accent-purple: #7f00ff;
-      --accent-pink: #e100ff;
-      --text-main: #f0f4f8;
-      --text-muted: #94a3b8;
-      --card-radius: 20px;
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --card-radius: 18px;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
     body {
       background: var(--bg-dark);
       background-image: 
-        radial-gradient(at 0% 0%, rgba(127, 0, 255, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(0, 242, 254, 0.12) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(0, 242, 254, 0.1) 0px, transparent 50%);
       background-attachment: fixed;
-      color: var(--text-main);
-      padding-bottom: 90px;
+      color: var(--text-primary);
+      padding-bottom: 85px;
       min-height: 100vh;
     }
 
@@ -44,8 +44,8 @@
     header {
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      background: var(--glass-bg);
-      border-bottom: 1px solid var(--glass-border);
+      background: rgba(11, 14, 20, 0.8);
+      border-bottom: 1px solid var(--card-border);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -58,37 +58,44 @@
     .logo {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 1.2rem;
+      gap: 10px;
+      font-size: 1.15rem;
       font-weight: 800;
-      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .pwa-reload-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid var(--glass-border);
-      color: var(--text-main);
-      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
+      padding: 8px 14px;
       border-radius: 20px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
+      transition: 0.2s ease;
     }
 
-    /* Container & Tabs */
+    .pwa-reload-btn:active {
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--text-primary);
+    }
+
+    /* Layout & Tabs */
     .container {
-      max-width: 800px;
+      max-width: 700px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 20px 16px;
     }
 
     .tab-content {
       display: none;
-      animation: fadeIn 0.3s ease-in-out forwards;
+      animation: fadeIn 0.25s ease-out forwards;
     }
 
     .tab-content.active {
@@ -96,24 +103,24 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Glass Cards */
+    /* Cards UI */
     .glass-card {
-      background: var(--glass-bg);
+      background: var(--card-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--glass-border);
+      border: 1px solid var(--card-border);
       border-radius: var(--card-radius);
-      padding: 22px;
-      margin-bottom: 20px;
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
 
     .card-title {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 700;
       margin-bottom: 16px;
       display: flex;
@@ -122,25 +129,28 @@
       color: var(--accent-cyan);
     }
 
-    /* Form Elements */
+    /* Form Controls */
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     label {
       display: block;
-      font-size: 0.85rem;
-      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
       margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     input, select {
       width: 100%;
-      padding: 12px 16px;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--glass-border);
+      padding: 12px 14px;
+      background: rgba(15, 20, 31, 0.8);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
-      color: #fff;
+      color: var(--text-primary);
       font-size: 0.95rem;
       outline: none;
       transition: 0.2s ease;
@@ -148,7 +158,7 @@
 
     input:focus, select:focus {
       border-color: var(--accent-cyan);
-      box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+      box-shadow: 0 0 12px rgba(0, 242, 254, 0.15);
     }
 
     .grid-2 {
@@ -163,55 +173,58 @@
       border: none;
       border-radius: 12px;
       background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-      color: white;
+      color: #fff;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
-      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+      box-shadow: 0 4px 18px rgba(59, 130, 246, 0.3);
       transition: 0.2s ease;
+      margin-top: 6px;
     }
 
     button.btn-primary:active {
       transform: scale(0.98);
+      opacity: 0.9;
     }
 
-    /* Result Box */
+    /* Output Results */
     .result-box {
-      margin-top: 18px;
+      margin-top: 16px;
       padding: 16px;
-      background: rgba(0, 242, 254, 0.05);
+      background: rgba(0, 242, 254, 0.04);
       border: 1px solid rgba(0, 242, 254, 0.2);
       border-radius: 14px;
       text-align: center;
     }
 
     .result-val {
-      font-size: 1.8rem;
+      font-size: 1.75rem;
       font-weight: 800;
       color: var(--accent-cyan);
-      margin: 6px 0;
+      margin: 4px 0;
     }
 
     .result-sub {
-      font-size: 0.85rem;
-      color: var(--text-muted);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
     }
 
-    /* News Feed Cards */
+    /* News Cards (With Top Photo Banner) */
     .news-card {
-      background: rgba(10, 14, 23, 0.7);
-      border: 1px solid var(--glass-border);
+      background: rgba(15, 20, 31, 0.85);
+      border: 1px solid var(--card-border);
       border-radius: 16px;
       overflow: hidden;
-      margin-bottom: 16px;
-      transition: 0.2s ease;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     }
 
     .news-card img {
       width: 100%;
-      height: 160px;
+      height: 190px;
       object-fit: cover;
-      background: rgba(255,255,255,0.05);
+      display: block;
+      background: rgba(255,255,255,0.03);
     }
 
     .news-content {
@@ -219,16 +232,18 @@
     }
 
     .news-source {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--accent-pink);
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--accent-cyan);
       text-transform: uppercase;
+      letter-spacing: 0.8px;
       margin-bottom: 6px;
     }
 
     .news-title {
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-weight: 700;
+      color: var(--text-primary);
       margin-bottom: 8px;
       line-height: 1.4;
     }
@@ -236,15 +251,26 @@
     .news-date {
       font-size: 0.75rem;
       color: var(--text-muted);
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .news-link {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
       color: var(--accent-cyan);
-      font-size: 0.85rem;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.82rem;
       font-weight: 600;
       text-decoration: none;
+      transition: 0.2s ease;
+    }
+
+    .news-link:active {
+      background: rgba(59, 130, 246, 0.3);
     }
 
     /* Bottom Nav Bar */
@@ -253,11 +279,11 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: 70px;
-      background: var(--glass-bg);
+      height: 68px;
+      background: rgba(11, 14, 20, 0.85);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid var(--glass-border);
+      border-top: 1px solid var(--card-border);
       display: flex;
       justify-content: space-around;
       align-items: center;
@@ -270,31 +296,31 @@
       align-items: center;
       gap: 4px;
       color: var(--text-muted);
-      font-size: 0.7rem;
-      text-decoration: none;
-      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 600;
       border: none;
       background: none;
-      width: 20%;
+      width: 50%;
+      cursor: pointer;
     }
 
     .nav-item i {
-      font-size: 1.2rem;
+      font-size: 1.25rem;
     }
 
     .nav-item.active {
       color: var(--accent-cyan);
     }
 
-    /* Loader */
+    /* Loading Spinner */
     .loader {
-      border: 3px solid rgba(255,255,255,0.1);
+      border: 3px solid rgba(255,255,255,0.08);
       border-radius: 50%;
       border-top: 3px solid var(--accent-cyan);
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-      margin: 20px auto;
+      width: 28px;
+      height: 28px;
+      animation: spin 0.8s linear infinite;
+      margin: 30px auto;
     }
 
     @keyframes spin {
@@ -308,7 +334,7 @@
   <!-- Header -->
   <header>
     <div class="logo">
-      <i class="fa-solid fa-car-battery"></i> RC GARAGE LK
+      <i class="fa-solid fa-gear"></i> RC GARAGE LK
     </div>
     <button class="pwa-reload-btn" onclick="forceAppUpdate()">
       <i class="fa-solid fa-rotate"></i> Refresh App
@@ -317,8 +343,10 @@
 
   <div class="container">
 
-    <!-- TAB 1: RUNTIME CALCULATOR -->
-    <div id="runtime-tab" class="tab-content active">
+    <!-- TAB 1: TOOLS (MECHANICAL GARAGE) -->
+    <div id="tools-tab" class="tab-content active">
+      
+      <!-- 1. Battery Runtime Calculator (Simple mAh based) -->
       <div class="glass-card">
         <div class="card-title">
           <i class="fa-solid fa-battery-charging-full"></i> Battery Runtime Tester
@@ -326,107 +354,88 @@
 
         <div class="form-group">
           <label>Battery Capacity (mAh)</label>
-          <input type="number" id="bat-mah" placeholder="e.g. 2200, 5000" value="2200">
+          <input type="number" id="bat-mah" placeholder="e.g. 1500, 2200, 5000" value="2200">
         </div>
 
         <div class="grid-2">
           <div class="form-group">
-            <label>Battery Chemistry</label>
+            <label>Battery Type</label>
             <select id="bat-chem">
-              <option value="lipo">LiPo (3.7V/cell)</option>
-              <option value="liion">Li-Ion (3.6V/cell)</option>
+              <option value="lipo">LiPo (3.7V)</option>
+              <option value="liion">Li-Ion (3.6V)</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Cell Configuration</label>
+            <label>Cell Count</label>
             <select id="bat-cells">
-              <option value="2">2S (7.4V / 7.2V)</option>
-              <option value="3" selected>3S (11.1V / 10.8V)</option>
-              <option value="4">4S (14.8V)</option>
-              <option value="6">6S (22.2V)</option>
+              <option value="2" selected>2S (7.4V)</option>
+              <option value="3">3S (11.1V)</option>
             </select>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label>RC Vehicle & Setup Type</label>
-          <select id="rc-type">
-            <option value="3">1/10 Scale Crawler (Low Draw ~3A)</option>
-            <option value="8">1/16 Mini Basher (~8A)</option>
-            <option value="18" selected>1/10 Buggy / Truck Basher (~18A)</option>
-            <option value="25">1/10 On-Road / Drift (~25A)</option>
-            <option value="40">1/8 Monster Truck / Speed Run (~40A)</option>
-          </select>
         </div>
 
         <button class="btn-primary" onclick="calculateRuntime()">Calculate Runtime</button>
 
         <div class="result-box" id="runtime-result" style="display:none;">
-          <div class="result-sub">Estimated Safe Runtime (80% DOD Cutoff)</div>
+          <div class="result-sub">Estimated Real-World Runtime (80% DOD Safe Limit)</div>
           <div class="result-val" id="runtime-val">0 Mins</div>
           <div class="result-sub" id="runtime-sub-info">---</div>
         </div>
       </div>
-    </div>
 
-    <!-- TAB 2: SPEED & GEAR RATIO -->
-    <div id="speed-tab" class="tab-content">
+      <!-- 2. Speed Calculator (Brushed Motor Size) -->
       <div class="glass-card">
         <div class="card-title">
-          <i class="fa-solid fa-gauge-high"></i> Top Speed & FDR Calculator
+          <i class="fa-solid fa-gauge-high"></i> Speed Calculator
+        </div>
+
+        <div class="form-group">
+          <label>Brushed Motor Size</label>
+          <select id="motor-size">
+            <option value="260">260 Motor (~12,000 RPM)</option>
+            <option value="280">280 Motor (~14,000 RPM)</option>
+            <option value="370" selected>370 Motor (~16,500 RPM)</option>
+            <option value="390">390 Motor (~19,000 RPM)</option>
+            <option value="540">540 Motor (~20,000 RPM)</option>
+            <option value="550">550 Motor (~22,500 RPM)</option>
+          </select>
         </div>
 
         <div class="grid-2">
           <div class="form-group">
-            <label>Motor KV</label>
-            <input type="number" id="motor-kv" placeholder="e.g. 3300" value="3300">
-          </div>
-          <div class="form-group">
-            <label>LiPo Cells (S)</label>
-            <input type="number" id="speed-cells" placeholder="e.g. 2, 3" value="3">
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Pinion Teeth</label>
-            <input type="number" id="pinion-teeth" placeholder="e.g. 15" value="15">
-          </div>
-          <div class="form-group">
-            <label>Spur Teeth</label>
-            <input type="number" id="spur-teeth" placeholder="e.g. 60" value="60">
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Internal Diff Ratio</label>
-            <input type="number" step="0.01" id="diff-ratio" placeholder="e.g. 2.6" value="2.6">
+            <label>Battery Setup</label>
+            <select id="speed-battery">
+              <option value="2s-lipo">2S LiPo (7.4V)</option>
+              <option value="3s-lipo">3S LiPo (11.1V)</option>
+              <option value="2s-liion">2S Li-Ion (7.2V)</option>
+              <option value="3s-liion">3S Li-Ion (10.8V)</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Tyre Diameter (mm)</label>
-            <input type="number" id="tyre-dia" placeholder="e.g. 110" value="110">
+            <input type="number" id="tyre-dia" placeholder="e.g. 70, 110" value="75">
           </div>
         </div>
 
-        <button class="btn-primary" onclick="calculateSpeed()">Calculate Top Speed</button>
+        <button class="btn-primary" onclick="calculateSpeed()">Calculate Actual Speed</button>
 
         <div class="result-box" id="speed-result" style="display:none;">
           <div class="result-sub">Estimated Top Speed</div>
           <div class="result-val" id="speed-val">0 km/h</div>
-          <div class="result-sub" id="fdr-val">Final Drive Ratio (FDR): -</div>
+          <div class="result-sub" id="speed-sub-info">---</div>
         </div>
       </div>
+
     </div>
 
-    <!-- TAB 3: LIVE RC NEWS -->
+    <!-- TAB 2: LIVE RC NEWS -->
     <div id="news-tab" class="tab-content">
       <div class="glass-card">
         <div class="card-title">
-          <i class="fa-solid fa-newspaper"></i> Latest RC News (Live Feeds)
+          <i class="fa-solid fa-newspaper"></i> Live RC News Feed
         </div>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">
-          Live updates from <strong>BigSquidRC</strong> & <strong>RedRC</strong>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">
+          Instant updates from <strong>BigSquidRC</strong> & <strong>RedRC</strong>
         </p>
 
         <div id="news-container">
@@ -435,82 +444,22 @@
       </div>
     </div>
 
-    <!-- TAB 4: EXTRA TOOLS -->
-    <div id="tools-tab" class="tab-content">
-      <div class="glass-card">
-        <div class="card-title">
-          <i class="fa-solid fa-flask"></i> Shock / Diff Oil Converter
-        </div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Value</label>
-            <input type="number" id="oil-val" placeholder="e.g. 35" value="35">
-          </div>
-          <div class="form-group">
-            <label>Convert Direction</label>
-            <select id="oil-mode">
-              <option value="wt-cst">WT to cSt</option>
-              <option value="cst-wt">cSt to WT</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn-primary" onclick="convertOil()">Convert Viscosity</button>
-        <div class="result-box" id="oil-result" style="display:none;">
-          <div class="result-val" id="oil-res-val">0</div>
-        </div>
-      </div>
-
-      <div class="glass-card">
-        <div class="card-title">
-          <i class="fa-solid fa-ruler-combined"></i> Scale Speed Calculator
-        </div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Actual Speed (km/h)</label>
-            <input type="number" id="actual-speed" placeholder="e.g. 50" value="50">
-          </div>
-          <div class="form-group">
-            <label>Model Scale</label>
-            <select id="model-scale">
-              <option value="10">1/10 Scale</option>
-              <option value="8">1/8 Scale</option>
-              <option value="12">1/12 Scale</option>
-              <option value="24">1/24 Scale</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn-primary" onclick="calcScaleSpeed()">Calculate Scale Speed</button>
-        <div class="result-box" id="scale-result" style="display:none;">
-          <div class="result-sub">Scale Speed Equivalent</div>
-          <div class="result-val" id="scale-res-val">0 km/h</div>
-        </div>
-      </div>
-    </div>
-
   </div>
 
   <!-- Bottom Navigation Bar -->
   <nav class="bottom-nav">
-    <button class="nav-item active" onclick="switchTab('runtime-tab', this)">
-      <i class="fa-solid fa-battery-half"></i>
-      <span>Runtime</span>
-    </button>
-    <button class="nav-item" onclick="switchTab('speed-tab', this)">
-      <i class="fa-solid fa-gauge-high"></i>
-      <span>Speed</span>
+    <button class="nav-item active" onclick="switchTab('tools-tab', this)">
+      <i class="fa-solid fa-toolbox"></i>
+      <span>Garage Tools</span>
     </button>
     <button class="nav-item" onclick="switchTab('news-tab', this)">
       <i class="fa-solid fa-newspaper"></i>
-      <span>News</span>
-    </button>
-    <button class="nav-item" onclick="switchTab('tools-tab', this)">
-      <i class="fa-solid fa-toolbox"></i>
-      <span>Tools</span>
+      <span>RC News</span>
     </button>
   </nav>
 
   <script>
-    // Tab Navigation
+    // Tab Switching Logic
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -522,67 +471,76 @@
       }
     }
 
-    // 1. Battery Runtime Calculation
+    // 1. Runtime Calculation using Battery mAh only
     function calculateRuntime() {
       const mah = parseFloat(document.getElementById('bat-mah').value);
       const chem = document.getElementById('bat-chem').value;
       const cells = parseInt(document.getElementById('bat-cells').value);
-      const avgCurrent = parseFloat(document.getElementById('rc-type').value);
 
       if(!mah || mah <= 0) return alert('Please enter valid mAh');
 
-      // 80% Depth of Discharge for battery health
-      const usableAh = (mah / 1000) * 0.8;
-      const hours = usableAh / avgCurrent;
-      const totalMinutes = Math.round(hours * 60);
+      // 80% usable capacity calculation for battery safety
+      const usableMah = mah * 0.8;
+      
+      // Estimated load draw curve based on chemistry
+      const estAmpDraw = chem === 'lipo' ? 8.5 : 7.0; 
+      const totalMinutes = Math.round((usableMah / (estAmpDraw * 1000)) * 60);
 
-      const hrsDisplay = Math.floor(totalMinutes / 60);
-      const minsDisplay = totalMinutes % 60;
+      const hrs = Math.floor(totalMinutes / 60);
+      const mins = totalMinutes % 60;
 
-      let displayText = "";
-      if(hrsDisplay > 0) {
-        displayText = `${hrsDisplay}h ${minsDisplay}m`;
-      } else {
-        displayText = `${minsDisplay} Mins`;
-      }
-
+      let displayText = hrs > 0 ? `${hrs}h ${mins}m` : `${mins} Mins`;
       const nominalVolt = (chem === 'lipo' ? 3.7 : 3.6) * cells;
 
       document.getElementById('runtime-result').style.display = 'block';
       document.getElementById('runtime-val').innerText = displayText;
       document.getElementById('runtime-sub-info').innerText = 
-        `Pack Nominal Voltage: ${nominalVolt.toFixed(1)}V | Est. Avg Load: ~${avgCurrent}A`;
+        `Pack Voltage: ${nominalVolt.toFixed(1)}V | Safe Capacity Limit: ${usableMah} mAh`;
     }
 
-    // 2. Top Speed & Gear Ratio Calculation
+    // 2. Speed Calculation using Brushed Motor Sizes
     function calculateSpeed() {
-      const kv = parseFloat(document.getElementById('motor-kv').value);
-      const cells = parseInt(document.getElementById('speed-cells').value);
-      const pinion = parseFloat(document.getElementById('pinion-teeth').value);
-      const spur = parseFloat(document.getElementById('spur-teeth').value);
-      const diff = parseFloat(document.getElementById('diff-ratio').value);
+      const motorSize = document.getElementById('motor-size').value;
+      const batSetup = document.getElementById('speed-battery').value;
       const tyreMm = parseFloat(document.getElementById('tyre-dia').value);
 
-      if(!kv || !pinion || !spur || !diff || !tyreMm) return alert('Fill all inputs');
+      if(!tyreMm || tyreMm <= 0) return alert('Please enter Tyre Diameter in mm');
 
-      // Gearing calculations
-      const fdr = (spur / pinion) * diff;
-      const totalVoltage = cells * 3.7; // Loaded nominal voltage estimate
-      const motorRpm = kv * totalVoltage;
-      const wheelRpm = motorRpm / fdr;
+      // Base Motor RPMs @ standard 7.4V
+      const motorRpmMap = {
+        '260': 12000,
+        '280': 14000,
+        '370': 16500,
+        '390': 19000,
+        '540': 20000,
+        '550': 22500
+      };
 
-      // Distance per minute in meters
+      // Voltage Multipliers
+      let voltMultiplier = 1.0;
+      if(batSetup === '3s-lipo') voltMultiplier = 1.5;
+      if(batSetup === '2s-liion') voltMultiplier = 0.97;
+      if(batSetup === '3s-liion') voltMultiplier = 1.45;
+
+      const estimatedRpm = motorRpmMap[motorSize] * voltMultiplier;
+      
+      // Internal scale reduction ratio average (~10:1)
+      const gearReduction = 10.5;
+      const wheelRpm = estimatedRpm / gearReduction;
+
+      // Speed Math
       const circumferenceMeters = (Math.PI * tyreMm) / 1000;
       const speedMpm = wheelRpm * circumferenceMeters;
       const speedKmh = (speedMpm * 60) / 1000;
       const speedMph = speedKmh * 0.621371;
 
       document.getElementById('speed-result').style.display = 'block';
-      document.getElementById('speed-val').innerText = `${speedKmh.toFixed(1)} km/h (${speedMph.toFixed(1)} mph)`;
-      document.getElementById('fdr-val').innerText = `Final Drive Ratio (FDR): ${fdr.toFixed(2)}:1 | Motor RPM: ~${Math.round(motorRpm)}`;
+      document.getElementById('speed-val').innerText = `${speedKmh.toFixed(1)} km/h`;
+      document.getElementById('speed-sub-info').innerText = 
+        `Speed in MPH: ~${speedMph.toFixed(1)} mph | Estimated Motor RPM: ~${Math.round(estimatedRpm)}`;
     }
 
-    // 3. Live RC News Fetcher (BigSquidRC & RedRC)
+    // 3. Fetch Live RC News with Top Image Banners
     async function fetchRCNews() {
       const container = document.getElementById('news-container');
       container.innerHTML = '<div class="loader"></div>';
@@ -600,69 +558,51 @@
           const data = await res.json();
           if(data.status === 'ok') {
             data.items.slice(0, 5).forEach(item => {
+              
+              // Extract image from enclosure, thumbnail or content HTML
+              let imgUrl = item.thumbnail || item.enclosure?.link;
+              if(!imgUrl && item.content) {
+                const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
+                if(imgMatch) imgUrl = imgMatch[1];
+              }
+
               articles.push({
                 source: feed.name,
                 title: item.title,
                 link: item.link,
                 date: new Date(item.pubDate).toLocaleDateString(),
-                thumbnail: item.thumbnail || item.enclosure?.link || 'https://via.placeholder.com/400x200/161b26/00f2fe?text=RC+News'
+                thumbnail: imgUrl || 'https://via.placeholder.com/600x300/121826/00f2fe?text=RC+Garage+LK'
               });
             });
           }
         } catch(e) {
-          console.error("News fetch error:", e);
+          console.error("Feed error:", e);
         }
       }
 
       window.newsLoaded = true;
 
       if(articles.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Failed to load live news. Check connection.</p>';
+        container.innerHTML = '<p style="text-align:center; color:var(--text-secondary); padding:20px;">Unable to fetch news right now. Please check internet connection.</p>';
         return;
       }
 
       container.innerHTML = articles.map(art => `
         <div class="news-card">
-          <img src="${art.thumbnail}" alt="News Image" onerror="this.src='https://via.placeholder.com/400x200/161b26/00f2fe?text=RC+Garage+LK'">
+          <img src="${art.thumbnail}" alt="RC News Photo" onerror="this.src='https://via.placeholder.com/600x300/121826/00f2fe?text=RC+Garage+LK'">
           <div class="news-content">
             <div class="news-source">${art.source}</div>
             <div class="news-title">${art.title}</div>
             <div class="news-date">${art.date}</div>
-            <a href="${art.link}" target="_blank" class="news-link">Read Article <i class="fa-solid fa-arrow-right"></i></a>
+            <a href="${art.link}" target="_blank" class="news-link">
+              Read Full Article <i class="fa-solid fa-arrow-right"></i>
+            </a>
           </div>
         </div>
       `).join('');
     }
 
-    // 4. Tools Functions
-    function convertOil() {
-      const val = parseFloat(document.getElementById('oil-val').value);
-      const mode = document.getElementById('oil-mode').value;
-
-      if(!val) return;
-      let res = 0;
-      if(mode === 'wt-cst') {
-        res = val * 13; // Approx WT to cSt conversion formula
-      } else {
-        res = val / 13;
-      }
-
-      document.getElementById('oil-result').style.display = 'block';
-      document.getElementById('oil-res-val').innerText = `${res.toFixed(1)} ${mode === 'wt-cst' ? 'cSt' : 'WT'}`;
-    }
-
-    function calcScaleSpeed() {
-      const actual = parseFloat(document.getElementById('actual-speed').value);
-      const scale = parseFloat(document.getElementById('model-scale').value);
-
-      if(!actual) return;
-      const scaleSpeed = actual * scale;
-
-      document.getElementById('scale-result').style.display = 'block';
-      document.getElementById('scale-res-val').innerText = `${scaleSpeed.toFixed(0)} km/h`;
-    }
-
-    // PWA Refresh Fix Logic
+    // PWA Cache Clearing Logic
     function forceAppUpdate() {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(registrations => {

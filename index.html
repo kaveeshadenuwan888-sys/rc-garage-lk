@@ -7,12 +7,14 @@
   <meta name="theme-color" content="#0b0e14">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <!-- Google Sign-In SDK -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <style>
     :root {
       --bg-dark: #0b0e14;
-      --card-bg: rgba(18, 24, 38, 0.75);
+      --card-bg: rgba(18, 24, 38, 0.85);
       --card-border: rgba(255, 255, 255, 0.08);
       --accent-cyan: #00f2fe;
       --accent-blue: #3b82f6;
@@ -103,6 +105,80 @@
       object-fit: cover;
     }
 
+    /* Install Prompt Card Banner */
+    .install-banner-overlay {
+      position: fixed;
+      bottom: 80px;
+      left: 16px;
+      right: 16px;
+      max-width: 500px;
+      margin: 0 auto;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--accent-cyan);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 16px 20px;
+      z-index: 999;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: none;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .install-flex {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .install-btn {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      color: #000;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* Downloading Progress Overlay */
+    .download-anim-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(11, 14, 20, 0.92);
+      backdrop-filter: blur(12px);
+      z-index: 3000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .progress-bar-container {
+      width: 80%;
+      max-width: 300px;
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      margin-top: 20px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+      transition: width 0.2s ease-in-out;
+    }
+
     /* Layout & Tabs */
     .container {
       max-width: 700px;
@@ -127,7 +203,6 @@
     .glass-card {
       background: var(--card-bg);
       backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--card-border);
       border-radius: var(--card-radius);
       padding: 20px;
@@ -186,27 +261,117 @@
       cursor: pointer;
     }
 
-    .result-box {
-      margin-top: 16px;
+    /* Modal Popup */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
       padding: 16px;
-      background: rgba(0, 242, 254, 0.04);
-      border: 1px solid rgba(0, 242, 254, 0.2);
-      border-radius: 14px;
-      text-align: center;
     }
 
-    .result-val {
-      font-size: 1.75rem;
-      font-weight: 800;
+    .modal-card {
+      background: #121826;
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 440px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .avatar-upload-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0 20px;
+    }
+
+    .avatar-preview {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 3px solid var(--accent-cyan);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .avatar-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Custom Google Button UI Fallback */
+    .custom-google-btn {
+      width: 100%;
+      background: #ffffff;
+      color: #333333;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 68px;
+      background: rgba(11, 14, 20, 0.85);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      border: none;
+      background: none;
+      width: 33.3%;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
       color: var(--accent-cyan);
     }
 
-    .result-sub {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-    }
-
-    /* AI Mechanic Chat Window */
+    /* Chat UI */
     .chat-box {
       height: 380px;
       overflow-y: auto;
@@ -233,14 +398,12 @@
       border: 1px solid rgba(255, 255, 255, 0.05);
       align-self: flex-start;
       color: var(--text-primary);
-      border-bottom-left-radius: 4px;
     }
 
     .chat-msg.user {
       background: linear-gradient(135deg, var(--accent-blue), #2563eb);
       align-self: flex-end;
       color: #fff;
-      border-bottom-right-radius: 4px;
     }
 
     .chat-input-row {
@@ -248,10 +411,7 @@
       gap: 8px;
     }
 
-    .chat-input-row input {
-      flex: 1;
-    }
-
+    .chat-input-row input { flex: 1; }
     .chat-input-row button {
       width: 50px;
       background: var(--accent-cyan);
@@ -261,190 +421,16 @@
       font-size: 1.1rem;
       cursor: pointer;
     }
-
-    /* News Cards */
-    .news-card {
-      background: rgba(15, 20, 31, 0.85);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-
-    .news-card img {
-      width: 100%;
-      height: 190px;
-      object-fit: cover;
-    }
-
-    .news-content {
-      padding: 16px;
-    }
-
-    .news-source {
-      font-size: 0.72rem;
-      font-weight: 800;
-      color: var(--accent-cyan);
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .news-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-    }
-
-    .news-date {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 14px;
-    }
-
-    .news-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(59, 130, 246, 0.15);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      color: var(--accent-cyan);
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      text-decoration: none;
-    }
-
-    /* Modal Popup */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(8px);
-      z-index: 2000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .modal-card {
-      background: #121826;
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      width: 100%;
-      max-width: 440px;
-      padding: 24px;
-      position: relative;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-
-    .avatar-upload-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      margin: 16px 0 20px;
-    }
-
-    .avatar-preview {
-      width: 86px;
-      height: 86px;
-      border-radius: 50%;
-      border: 3px solid var(--accent-cyan);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,0.05);
-    }
-
-    .avatar-preview img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .avatar-preview i {
-      font-size: 2.5rem;
-      color: var(--text-secondary);
-    }
-
-    /* Bottom Nav */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 68px;
-      background: rgba(11, 14, 20, 0.85);
-      backdrop-filter: blur(20px);
-      border-top: 1px solid var(--card-border);
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      color: var(--text-muted);
-      font-size: 0.72rem;
-      font-weight: 600;
-      border: none;
-      background: none;
-      width: 33.3%;
-      cursor: pointer;
-    }
-
-    .nav-item i {
-      font-size: 1.2rem;
-    }
-
-    .nav-item.active {
-      color: var(--accent-cyan);
-    }
-
-    .loader {
-      border: 3px solid rgba(255,255,255,0.08);
-      border-radius: 50%;
-      border-top: 3px solid var(--accent-cyan);
-      width: 28px;
-      height: 28px;
-      animation: spin 0.8s linear infinite;
-      margin: 30px auto;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
   </style>
 </head>
 <body>
 
-  <!-- App Main Config (ඔයාගේ Google Client ID එක මෙතනට විතරක් දාන්න) -->
+  <!-- App Configuration -->
   <script>
     const APP_CONFIG = {
-      // ඔයාගේ Gemini API Key එක මෙතන තියෙන්න දෙන්න (User ලාගෙන් ඉල්ලන්නේ නෑ)
+      // Direct Gemini API Key
       GEMINI_API_KEY: "YOUR_DEFAULT_GEMINI_API_KEY_HERE",
-      // ඔයාගේ Google Cloud Console එකෙන් ගත්තු Client ID එක මෙතනට දාන්න
+      // Add your Google Client ID here from Google Cloud Console
       GOOGLE_CLIENT_ID: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
     };
   </script>
@@ -464,19 +450,35 @@
     </div>
   </header>
 
+  <!-- PWA Install Prompt Banner -->
+  <div class="install-banner-overlay" id="install-banner">
+    <div class="install-flex">
+      <div>
+        <div style="font-weight:700; font-size:0.95rem; color:#fff;">Download R/C Garage SL</div>
+        <div style="font-size:0.75rem; color:var(--text-secondary);">Add to Home Screen for quick access</div>
+      </div>
+      <button class="install-btn" onclick="triggerAppDownloadAnimation()">Download</button>
+    </div>
+  </div>
+
+  <!-- Download Progress Overlay Screen -->
+  <div class="download-anim-overlay" id="download-overlay">
+    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--accent-cyan);"></i>
+    <h3 style="margin-top:20px; font-size:1.1rem; color:#fff;" id="download-status-txt">Downloading R/C Garage SL...</h3>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
   <div class="container">
 
     <!-- TAB 1: GARAGE TOOLS -->
     <div id="tools-tab" class="tab-content active">
-      
-      <!-- Battery Runtime -->
       <div class="glass-card">
-        <div class="card-title">
-          <i class="fa-solid fa-battery-charging-full"></i> Battery Runtime Tester
-        </div>
+        <div class="card-title"><i class="fa-solid fa-battery-charging-full"></i> Battery Runtime Tester</div>
         <div class="form-group">
-          <label>Battery Capacity (mAh)</label>
-          <input type="number" id="bat-mah" placeholder="e.g. 1500, 2200, 5000" value="2200">
+          <label>Capacity (mAh)</label>
+          <input type="number" id="bat-mah" value="2200">
         </div>
         <div class="grid-2">
           <div class="form-group">
@@ -489,98 +491,32 @@
           <div class="form-group">
             <label>Cell Count</label>
             <select id="bat-cells">
-              <option value="2" selected>2S (7.4V)</option>
+              <option value="2">2S (7.4V)</option>
               <option value="3">3S (11.1V)</option>
             </select>
           </div>
         </div>
         <button class="btn-primary" onclick="calculateRuntime()">Calculate Runtime</button>
-        <div class="result-box" id="runtime-result" style="display:none;">
-          <div class="result-sub">Estimated Real-World Runtime</div>
-          <div class="result-val" id="runtime-val">0 Mins</div>
-          <div class="result-sub" id="runtime-sub-info">---</div>
-        </div>
       </div>
-
-      <!-- Speed Calculator -->
-      <div class="glass-card">
-        <div class="card-title">
-          <i class="fa-solid fa-gauge-high"></i> Speed Calculator
-        </div>
-        <div class="form-group">
-          <label>Brushed Motor Size</label>
-          <select id="motor-size">
-            <option value="260">260 Motor (~12,000 RPM)</option>
-            <option value="280">280 Motor (~14,000 RPM)</option>
-            <option value="370" selected>370 Motor (~16,500 RPM)</option>
-            <option value="390">390 Motor (~19,000 RPM)</option>
-            <option value="540">540 Motor (~20,000 RPM)</option>
-            <option value="550">550 Motor (~22,500 RPM)</option>
-          </select>
-        </div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Battery Setup</label>
-            <select id="speed-battery">
-              <option value="2s-lipo">2S LiPo (7.4V)</option>
-              <option value="3s-lipo">3S LiPo (11.1V)</option>
-              <option value="2s-liion">2S Li-Ion (7.2V)</option>
-              <option value="3s-liion">3S Li-Ion (10.8V)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Tyre Diameter (mm)</label>
-            <input type="number" id="tyre-dia" placeholder="e.g. 70, 110" value="75">
-          </div>
-        </div>
-        <button class="btn-primary" onclick="calculateSpeed()">Calculate Actual Speed</button>
-        <div class="result-box" id="speed-result" style="display:none;">
-          <div class="result-sub">Estimated Top Speed</div>
-          <div class="result-val" id="speed-val">0 km/h</div>
-          <div class="result-sub" id="speed-sub-info">---</div>
-        </div>
-      </div>
-
     </div>
 
-    <!-- TAB 2: REAL GEMINI AI MECHANIC -->
+    <!-- TAB 2: GEMINI AI MECHANIC -->
     <div id="ai-tab" class="tab-content">
       <div class="glass-card">
-        <div class="card-title">
-          <i class="fa-solid fa-robot"></i> Gemini AI RC Mechanic
-        </div>
-        <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:12px;">
-          Ask any technical RC problem in Sinhala or English!
-        </p>
-
+        <div class="card-title"><i class="fa-solid fa-robot"></i> Gemini AI RC Mechanic</div>
         <div class="chat-box" id="ai-chat-box">
-          <div class="chat-msg bot">
-            👋 ආයුබෝවන්! මම ඔයාගේ <strong>Gemini AI RC Mechanic</strong>. RC Crawler, Basher, Motor/ESC heating, Gear ratios හෝ වෙනත් ඕනෑම technical ප්‍රශ්නයක් ඇතුළත් කරන්න.
-          </div>
+          <div class="chat-msg bot">👋 ආයුබෝවන්! මම ඔයාගේ <strong>Gemini AI RC Mechanic</strong>. ඕනෑම ප්‍රශ්නයක් ඇතුළත් කරන්න.</div>
         </div>
-
         <div class="chat-input-row">
-          <input type="text" id="ai-input" placeholder="Ask Gemini RC AI..." onkeypress="handleChatKey(event)">
+          <input type="text" id="ai-input" placeholder="Ask Gemini..." onkeypress="if(event.key==='Enter') sendAiMessage()">
           <button onclick="sendAiMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 3: LIVE RC NEWS -->
-    <div id="news-tab" class="tab-content">
-      <div class="glass-card">
-        <div class="card-title">
-          <i class="fa-solid fa-newspaper"></i> Live RC News Feed
-        </div>
-        <div id="news-container">
-          <div class="loader"></div>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- PROFILE MODAL -->
+  <!-- PROFILE & SIGN IN MODAL -->
   <div class="modal-overlay" id="profile-modal">
     <div class="modal-card">
       <button class="modal-close" onclick="closeProfileModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -588,7 +524,7 @@
 
       <div class="avatar-upload-box">
         <div class="avatar-preview" id="modal-avatar-preview">
-          <i class="fa-solid fa-user"></i>
+          <i class="fa-solid fa-user" style="font-size: 2.2rem; color: var(--text-secondary);"></i>
         </div>
         <button class="pwa-reload-btn" onclick="document.getElementById('avatar-file-input').click()">
           <i class="fa-solid fa-camera"></i> Change Photo
@@ -605,7 +541,15 @@
 
       <div style="margin-top: 20px; border-top:1px solid var(--card-border); padding-top:16px;">
         <label>Quick Sign In with Google</label>
-        <div id="g-signin-container" style="margin-top: 12px; display:flex; justify-content:center;"></div>
+        
+        <!-- Native SDK Container -->
+        <div id="g-signin-container" style="margin-top: 10px; display:flex; justify-content:center;"></div>
+
+        <!-- Direct Action Fallback Button -->
+        <button class="custom-google-btn" onclick="triggerGooglePopup()">
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" alt="Google">
+          Sign in with Google
+        </button>
       </div>
     </div>
   </div>
@@ -620,23 +564,70 @@
       <i class="fa-solid fa-robot"></i>
       <span>AI Mechanic</span>
     </button>
-    <button class="nav-item" onclick="switchTab('news-tab', this)">
-      <i class="fa-solid fa-newspaper"></i>
-      <span>RC News</span>
-    </button>
   </nav>
 
   <script>
-    // Tab Switch
+    let deferredPrompt;
+
+    // Listen for PWA Install Event
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Show Install Banner if not installed
+      if(!localStorage.getItem('rc_app_installed')) {
+        document.getElementById('install-banner').style.display = 'block';
+      }
+    });
+
+    // PWA Download Animation Handler
+    function triggerAppDownloadAnimation() {
+      document.getElementById('install-banner').style.display = 'none';
+      const overlay = document.getElementById('download-overlay');
+      const progressFill = document.getElementById('progress-fill');
+      const statusTxt = document.getElementById('download-status-txt');
+
+      overlay.style.display = 'flex';
+      let progress = 0;
+
+      const interval = setInterval(() => {
+        progress += 20;
+        progressFill.style.width = progress + '%';
+
+        if(progress >= 100) {
+          clearInterval(interval);
+          statusTxt.innerText = "Adding to Home Screen...";
+          setTimeout(() => {
+            overlay.style.display = 'none';
+            if (deferredPrompt) {
+              deferredPrompt.prompt();
+              deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                  localStorage.setItem('rc_app_installed', 'true');
+                }
+              });
+            }
+          }, 800);
+        }
+      }, 300);
+    }
+
+    // Auto Check if opened from Home Screen (PWA Mode)
+    function checkAppLaunchMode() {
+      const isPwa = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      const isLoggedIn = localStorage.getItem('rc_is_logged_in');
+
+      // If app opened via shortcut and user is not logged in -> Auto open popup
+      if (isPwa && !isLoggedIn) {
+        setTimeout(() => openProfileModal(), 500);
+      }
+    }
+
+    // Tab Navigation
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       btn.classList.add('active');
-
-      if(tabId === 'news-tab' && !window.newsLoaded) {
-        fetchRCNews();
-      }
     }
 
     // Profile & Modal
@@ -664,8 +655,11 @@
 
     function saveProfileDetails() {
       const name = document.getElementById('user-name-input').value.trim();
-      if(name) localStorage.setItem('rc_user_name', name);
-      alert('Profile updated successfully!');
+      if(name) {
+        localStorage.setItem('rc_user_name', name);
+        localStorage.setItem('rc_is_logged_in', 'true');
+      }
+      alert('Profile saved!');
       closeProfileModal();
     }
 
@@ -682,9 +676,9 @@
       document.getElementById('header-avatar-container').innerHTML = `<img src="${url}">`;
     }
 
-    // Direct Google Sign-In Loader
+    // Google Sign-In SDK Render
     function setupGoogleSignIn() {
-      if(window.google && APP_CONFIG.GOOGLE_CLIENT_ID && APP_CONFIG.GOOGLE_CLIENT_ID !== "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com") {
+      if(window.google && APP_CONFIG.GOOGLE_CLIENT_ID && !APP_CONFIG.GOOGLE_CLIENT_ID.includes("YOUR_GOOGLE_CLIENT_ID")) {
         try {
           google.accounts.id.initialize({
             client_id: APP_CONFIG.GOOGLE_CLIENT_ID,
@@ -699,74 +693,44 @@
       }
     }
 
-    function parseJwt(token) {
-      try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        return JSON.parse(window.atob(base64));
-      } catch(e) { return null; }
-    }
-
-    function handleGoogleSignIn(response) {
-      const userData = parseJwt(response.credential);
-      if(userData) {
-        localStorage.setItem('rc_user_name', userData.name);
-        localStorage.setItem('rc_user_avatar', userData.picture);
-        loadProfileData();
-        alert(`Welcome, ${userData.name}! Successfully signed in.`);
+    function triggerGooglePopup() {
+      if(window.google && APP_CONFIG.GOOGLE_CLIENT_ID && !APP_CONFIG.GOOGLE_CLIENT_ID.includes("YOUR_GOOGLE_CLIENT_ID")) {
+        google.accounts.id.prompt();
+      } else {
+        // Fallback demo sign-in
+        const userName = document.getElementById('user-name-input').value || "Google User";
+        localStorage.setItem('rc_user_name', userName);
+        localStorage.setItem('rc_is_logged_in', 'true');
+        alert(`Signed in as ${userName}!`);
         closeProfileModal();
       }
     }
 
-    // 1. Runtime Calculator
+    function handleGoogleSignIn(response) {
+      try {
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const userData = JSON.parse(window.atob(base64));
+
+        if(userData) {
+          localStorage.setItem('rc_user_name', userData.name);
+          localStorage.setItem('rc_user_avatar', userData.picture);
+          localStorage.setItem('rc_is_logged_in', 'true');
+          loadProfileData();
+          alert(`Welcome, ${userData.name}!`);
+          closeProfileModal();
+        }
+      } catch(e) {}
+    }
+
+    // Runtime Calculation
     function calculateRuntime() {
       const mah = parseFloat(document.getElementById('bat-mah').value);
-      const chem = document.getElementById('bat-chem').value;
-      const cells = parseInt(document.getElementById('bat-cells').value);
-
-      if(!mah || mah <= 0) return alert('Please enter valid mAh');
-
-      const usableMah = mah * 0.8;
-      const estAmpDraw = chem === 'lipo' ? 8.5 : 7.0; 
-      const totalMinutes = Math.round((usableMah / (estAmpDraw * 1000)) * 60);
-
-      const hrs = Math.floor(totalMinutes / 60);
-      const mins = totalMinutes % 60;
-
-      document.getElementById('runtime-result').style.display = 'block';
-      document.getElementById('runtime-val').innerText = hrs > 0 ? `${hrs}h ${mins}m` : `${mins} Mins`;
-      document.getElementById('runtime-sub-info').innerText = 
-        `Pack Voltage: ${((chem === 'lipo' ? 3.7 : 3.6) * cells).toFixed(1)}V | Safe Capacity Limit: ${usableMah} mAh`;
+      if(!mah || mah <= 0) return alert('Enter valid mAh');
+      alert(`Estimated Runtime: ~${Math.round((mah * 0.8 / 8500) * 60)} Mins`);
     }
 
-    // 2. Speed Calculator
-    function calculateSpeed() {
-      const motorSize = document.getElementById('motor-size').value;
-      const batSetup = document.getElementById('speed-battery').value;
-      const tyreMm = parseFloat(document.getElementById('tyre-dia').value);
-
-      if(!tyreMm || tyreMm <= 0) return alert('Please enter Tyre Diameter in mm');
-
-      const motorRpmMap = { '260': 12000, '280': 14000, '370': 16500, '390': 19000, '540': 20000, '550': 22500 };
-      let voltMultiplier = 1.0;
-      if(batSetup === '3s-lipo') voltMultiplier = 1.5;
-      if(batSetup === '2s-liion') voltMultiplier = 0.97;
-      if(batSetup === '3s-liion') voltMultiplier = 1.45;
-
-      const estimatedRpm = motorRpmMap[motorSize] * voltMultiplier;
-      const wheelRpm = estimatedRpm / 10.5;
-      const speedKmh = ((wheelRpm * ((Math.PI * tyreMm) / 1000)) * 60) / 1000;
-
-      document.getElementById('speed-result').style.display = 'block';
-      document.getElementById('speed-val').innerText = `${speedKmh.toFixed(1)} km/h`;
-      document.getElementById('speed-sub-info').innerText = `Est. Motor RPM: ~${Math.round(estimatedRpm)} | Gear Ratio: 10.5:1`;
-    }
-
-    // 3. REAL GEMINI AI INTEGRATION
-    function handleChatKey(e) {
-      if(e.key === 'Enter') sendAiMessage();
-    }
-
+    // Gemini AI Chat
     async function sendAiMessage() {
       const input = document.getElementById('ai-input');
       const msg = input.value.trim();
@@ -777,101 +741,35 @@
       input.value = '';
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      // Temporary Loading Indicator
       const loadingId = 'loader-' + Date.now();
-      chatBox.innerHTML += `<div class="chat-msg bot" id="${loadingId}"><i class="fa-solid fa-spinner fa-spin"></i> Gemini is thinking...</div>`;
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      const apiKey = APP_CONFIG.GEMINI_API_KEY;
+      chatBox.innerHTML += `<div class="chat-msg bot" id="${loadingId}"><i class="fa-solid fa-spinner fa-spin"></i> Processing...</div>`;
 
       try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${APP_CONFIG.GEMINI_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: `You are an expert RC Car Mechanic engineer for 'RC Garage LK'. Answer concisely in helpful bullet points. Answer in Sinhala if the user prompt is in Sinhala/Sinhlish, or in English if asked in English. Question: ${msg}`
-              }]
-            }]
+            contents: [{ parts: [{ text: `Answer briefly: ${msg}` }] }]
           })
         });
 
         const data = await response.json();
-        const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't process that request right now.";
-
+        const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Unable to retrieve response.";
         document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">${aiReply.replace(/\n/g, '<br>')}</div>`;
       } catch(e) {
-        document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">❌ AI Engine error. Please verify the Gemini API Key in the APP_CONFIG script.</div>`;
+        document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">❌ Connection error.</div>`;
       }
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // 4. Live News
-    async function fetchRCNews() {
-      const container = document.getElementById('news-container');
-      const feeds = [
-        { name: 'BigSquidRC', url: 'https://www.bigsquidrc.com/feed/' },
-        { name: 'RedRC', url: 'https://www.redrc.net/feed/' }
-      ];
-
-      let articles = [];
-      for(let feed of feeds) {
-        try {
-          const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`);
-          const data = await res.json();
-          if(data.status === 'ok') {
-            data.items.slice(0, 4).forEach(item => {
-              let imgUrl = item.thumbnail || item.enclosure?.link;
-              if(!imgUrl && item.content) {
-                const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
-                if(imgMatch) imgUrl = imgMatch[1];
-              }
-              articles.push({
-                source: feed.name,
-                title: item.title,
-                link: item.link,
-                date: new Date(item.pubDate).toLocaleDateString(),
-                thumbnail: imgUrl || 'https://via.placeholder.com/600x300/121826/00f2fe?text=RC+Garage+LK'
-              });
-            });
-          }
-        } catch(e) {}
-      }
-
-      window.newsLoaded = true;
-      if(articles.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:var(--text-secondary); padding:20px;">Unable to fetch news.</p>';
-        return;
-      }
-
-      container.innerHTML = articles.map(art => `
-        <div class="news-card">
-          <img src="${art.thumbnail}" alt="RC News Photo" onerror="this.src='https://via.placeholder.com/600x300/121826/00f2fe?text=RC+Garage+LK'">
-          <div class="news-content">
-            <div class="news-source">${art.source}</div>
-            <div class="news-title">${art.title}</div>
-            <div class="news-date">${art.date}</div>
-            <a href="${art.link}" target="_blank" class="news-link">Read Full Article <i class="fa-solid fa-arrow-right"></i></a>
-          </div>
-        </div>
-      `).join('');
-    }
-
     function forceAppUpdate() {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          for (let registration of registrations) registration.unregister();
-          window.location.reload(true);
-        });
-      } else {
-        window.location.reload(true);
-      }
+      window.location.reload(true);
     }
 
     window.onload = function() {
       loadProfileData();
       setupGoogleSignIn();
+      checkAppLaunchMode();
     };
   </script>
 </body>

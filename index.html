@@ -84,7 +84,7 @@
       cursor: pointer;
     }
 
-    /* Fixed Clean Avatar (No Frame/Border/Gradient) */
+    /* Fixed Clean Avatar */
     .profile-avatar-btn {
       width: 40px;
       height: 40px;
@@ -402,7 +402,6 @@
       margin: 16px 0 20px;
     }
 
-    /* Clean Avatar Preview in Modal (No Border/Gradient) */
     .avatar-preview {
       width: 90px;
       height: 90px;
@@ -653,7 +652,7 @@
           <i class="fa-solid fa-user" style="font-size: 2.2rem; color: var(--text-secondary);"></i>
         </div>
         <button class="pwa-reload-btn" onclick="document.getElementById('avatar-file-input').click()">
-          <i class="fa-solid fa-camera"></i> Change Photo
+          <i class="fa-solid fa-camera"></i> Select Photo from Gallery
         </button>
         <input type="file" id="avatar-file-input" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
       </div>
@@ -665,7 +664,7 @@
 
       <button class="btn-primary" onclick="saveProfileDetails()">Save Profile</button>
 
-      <!-- Auth Action Section (Sign In vs Sign Out Dynamic Section) -->
+      <!-- Auth Action Section -->
       <div style="margin-top: 20px; border-top:1px solid var(--card-border); padding-top:16px;" id="auth-action-box">
         <label id="auth-label">Account Status</label>
         
@@ -732,6 +731,7 @@
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         
+        // Use Google Display Name only if local name is default
         if (!localStorage.getItem('rc_user_name') || localStorage.getItem('rc_user_name') === 'RC Enthusiast') {
           localStorage.setItem('rc_user_name', user.displayName || 'RC Enthusiast');
         }
@@ -889,7 +889,7 @@
       }
     }
 
-    // Dynamic Auth Section UI Switcher (Sign In vs Sign Out)
+    // Dynamic Auth Section UI Switcher
     window.updateAuthUI = function(isLoggedIn) {
       const signedOutView = document.getElementById('signed-out-view');
       const signedInView = document.getElementById('signed-in-view');
@@ -916,15 +916,16 @@
       document.getElementById('profile-modal').style.display = 'none';
     };
 
-    // Only user uploaded custom image is saved to rc_user_avatar
+    // Store local custom gallery image Base64 string
+    let tempAvatarBase64 = null;
+
     window.handleImageUpload = function(e) {
       const file = e.target.files[0];
       if(file) {
         const reader = new FileReader();
         reader.onload = function(evt) {
-          const customImgUrl = evt.target.result;
-          localStorage.setItem('rc_user_avatar', customImgUrl);
-          updateAvatarUI(customImgUrl);
+          tempAvatarBase64 = evt.target.result;
+          updateAvatarPreview(tempAvatarBase64);
         };
         reader.readAsDataURL(file);
       }
@@ -935,6 +936,13 @@
       if(name) {
         localStorage.setItem('rc_user_name', name);
       }
+      
+      // Save image selected from gallery
+      if(tempAvatarBase64) {
+        localStorage.setItem('rc_user_avatar', tempAvatarBase64);
+      }
+      
+      loadProfileData();
       alert('Profile details saved successfully!');
       closeProfileModal();
     };
@@ -944,12 +952,18 @@
       const customAvatar = localStorage.getItem('rc_user_avatar');
 
       document.getElementById('user-name-input').value = savedName;
+      
+      // Always prioritize locally saved gallery image
       if(customAvatar) {
         updateAvatarUI(customAvatar);
       } else {
         resetAvatarUI();
       }
     };
+
+    function updateAvatarPreview(url) {
+      document.getElementById('modal-avatar-preview').innerHTML = `<img src="${url}">`;
+    }
 
     function updateAvatarUI(url) {
       document.getElementById('modal-avatar-preview').innerHTML = `<img src="${url}">`;

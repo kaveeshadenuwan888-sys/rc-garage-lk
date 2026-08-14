@@ -16,6 +16,7 @@
       --accent-cyan: #00f2fe;
       --accent-blue: #3b82f6;
       --accent-purple: #8b5cf6;
+      --accent-red: #ef4444;
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
@@ -83,12 +84,13 @@
       cursor: pointer;
     }
 
+    /* Fixed Clean Avatar (No Frame/Border/Gradient) */
     .profile-avatar-btn {
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-      border: 2px solid var(--accent-cyan);
+      background: transparent;
+      border: none;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -100,6 +102,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      border-radius: 50%;
     }
 
     /* Install Banner */
@@ -399,11 +402,12 @@
       margin: 16px 0 20px;
     }
 
+    /* Clean Avatar Preview in Modal (No Border/Gradient) */
     .avatar-preview {
       width: 90px;
       height: 90px;
       border-radius: 50%;
-      border: 3px solid var(--accent-cyan);
+      border: none;
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -414,6 +418,7 @@
     .avatar-preview img {
       width: 100%; height: 100%;
       object-fit: cover;
+      border-radius: 50%;
     }
 
     .google-auth-btn {
@@ -430,7 +435,28 @@
       justify-content: center;
       gap: 10px;
       cursor: pointer;
-      margin-top: 12px;
+      margin-top: 10px;
+    }
+
+    .signout-btn {
+      width: 100%;
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--accent-red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .signout-btn:hover {
+      background: rgba(239, 68, 68, 0.2);
     }
 
     /* Bottom Nav */
@@ -519,7 +545,7 @@
         <i class="fa-solid fa-rotate"></i>
       </button>
       <div class="profile-avatar-btn" onclick="openProfileModal()">
-        <span id="header-avatar-container"><i class="fa-solid fa-user"></i></span>
+        <span id="header-avatar-container"><i class="fa-solid fa-user" style="font-size:1.2rem; color:var(--text-secondary);"></i></span>
       </div>
     </div>
   </header>
@@ -621,6 +647,7 @@
       <button class="modal-close" onclick="closeProfileModal()"><i class="fa-solid fa-xmark"></i></button>
       <div class="card-title"><span><i class="fa-solid fa-circle-user"></i> User Profile</span></div>
 
+      <!-- Photo Upload Box -->
       <div class="avatar-upload-box">
         <div class="avatar-preview" id="modal-avatar-preview">
           <i class="fa-solid fa-user" style="font-size: 2.2rem; color: var(--text-secondary);"></i>
@@ -638,12 +665,28 @@
 
       <button class="btn-primary" onclick="saveProfileDetails()">Save Profile</button>
 
-      <div style="margin-top: 20px; border-top:1px solid var(--card-border); padding-top:16px;">
-        <label>Quick Sign In with Google</label>
-        <button class="google-auth-btn" id="firebase-google-btn">
-          <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" alt="Google">
-          Sign in with Google
-        </button>
+      <!-- Auth Action Section (Sign In vs Sign Out Dynamic Section) -->
+      <div style="margin-top: 20px; border-top:1px solid var(--card-border); padding-top:16px;" id="auth-action-box">
+        <label id="auth-label">Account Status</label>
+        
+        <!-- Signed Out UI (Default) -->
+        <div id="signed-out-view">
+          <button class="google-auth-btn" id="firebase-google-btn">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" alt="Google">
+            Sign in with Google
+          </button>
+        </div>
+
+        <!-- Signed In UI -->
+        <div id="signed-in-view" style="display:none;">
+          <div style="font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-circle-check"></i> Connected with Google
+          </div>
+          <button class="signout-btn" id="firebase-signout-btn">
+            <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
@@ -667,7 +710,7 @@
   <!-- FIREBASE SDK v10 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDc3kDN1KPnXK98NI2NvwZyxCvDZxLa13w",
@@ -683,20 +726,20 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
+    // Google Sign-In Action
     document.getElementById('firebase-google-btn').addEventListener('click', async () => {
       try {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         
-        localStorage.setItem('rc_user_name', user.displayName || 'RC Enthusiast');
-        if (user.photoURL) {
-          localStorage.setItem('rc_user_avatar', user.photoURL);
+        if (!localStorage.getItem('rc_user_name') || localStorage.getItem('rc_user_name') === 'RC Enthusiast') {
+          localStorage.setItem('rc_user_name', user.displayName || 'RC Enthusiast');
         }
         localStorage.setItem('rc_is_logged_in', 'true');
 
+        window.updateAuthUI(true);
         window.loadProfileData();
-        alert(`Successfully signed in as ${user.displayName}!`);
-        window.closeProfileModal();
+        alert(`Signed in as ${user.displayName || user.email}`);
 
       } catch (error) {
         console.error("Firebase Sign-In Error:", error);
@@ -704,15 +747,28 @@
       }
     });
 
+    // Google Sign-Out Action
+    document.getElementById('firebase-signout-btn').addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        localStorage.removeItem('rc_is_logged_in');
+        window.updateAuthUI(false);
+        alert("Successfully signed out!");
+      } catch (error) {
+        console.error("Sign Out Error:", error);
+      }
+    });
+
+    // Auth State Listener
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        localStorage.setItem('rc_user_name', user.displayName || 'RC Enthusiast');
-        if (user.photoURL && !localStorage.getItem('rc_user_avatar')) {
-          localStorage.setItem('rc_user_avatar', user.photoURL);
-        }
         localStorage.setItem('rc_is_logged_in', 'true');
-        window.loadProfileData();
+        window.updateAuthUI(true);
+      } else {
+        localStorage.removeItem('rc_is_logged_in');
+        window.updateAuthUI(false);
       }
+      window.loadProfileData();
     });
   </script>
 
@@ -779,14 +835,10 @@
       }
     }
 
-    // REAL-TIME RC NEWS FETCHING (Option 2)
+    // REAL-TIME RC NEWS FETCHING
     async function fetchLiveRcNews() {
       const container = document.getElementById('news-container');
-      
-      // Fallback default image in case feed image is missing
       const defaultImg = "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=600&q=80";
-      
-      // RCDriver RSS Feed via RSS2JSON API
       const rssUrl = "https://www.rcdriver.com/feed/";
       const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
 
@@ -798,14 +850,12 @@
           container.innerHTML = '';
           
           data.items.slice(0, 10).forEach(item => {
-            // Extract image URL from description or thumbnail
             let imgUrl = item.thumbnail || defaultImg;
             if (imgUrl === defaultImg && item.description) {
               const imgMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
               if (imgMatch) imgUrl = imgMatch[1];
             }
 
-            // Clean description text
             const cleanDesc = item.description.replace(/<[^>]*>?/gm, '').substring(0, 120) + '...';
             const pubDate = new Date(item.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
@@ -839,7 +889,24 @@
       }
     }
 
-    // PROFILE MANAGEMENT
+    // Dynamic Auth Section UI Switcher (Sign In vs Sign Out)
+    window.updateAuthUI = function(isLoggedIn) {
+      const signedOutView = document.getElementById('signed-out-view');
+      const signedInView = document.getElementById('signed-in-view');
+      const authLabel = document.getElementById('auth-label');
+
+      if (isLoggedIn) {
+        signedOutView.style.display = 'none';
+        signedInView.style.display = 'block';
+        if(authLabel) authLabel.innerText = "ACCOUNT SESSION";
+      } else {
+        signedOutView.style.display = 'block';
+        signedInView.style.display = 'none';
+        if(authLabel) authLabel.innerText = "QUICK SIGN IN WITH GOOGLE";
+      }
+    };
+
+    // PROFILE & AVATAR MANAGEMENT
     window.openProfileModal = function() {
       document.getElementById('profile-modal').style.display = 'flex';
       loadProfileData();
@@ -849,14 +916,15 @@
       document.getElementById('profile-modal').style.display = 'none';
     };
 
+    // Only user uploaded custom image is saved to rc_user_avatar
     window.handleImageUpload = function(e) {
       const file = e.target.files[0];
       if(file) {
         const reader = new FileReader();
         reader.onload = function(evt) {
-          const imgUrl = evt.target.result;
-          localStorage.setItem('rc_user_avatar', imgUrl);
-          updateAvatarUI(imgUrl);
+          const customImgUrl = evt.target.result;
+          localStorage.setItem('rc_user_avatar', customImgUrl);
+          updateAvatarUI(customImgUrl);
         };
         reader.readAsDataURL(file);
       }
@@ -866,25 +934,33 @@
       const name = document.getElementById('user-name-input').value.trim();
       if(name) {
         localStorage.setItem('rc_user_name', name);
-        localStorage.setItem('rc_is_logged_in', 'true');
       }
-      alert('Profile saved!');
+      alert('Profile details saved successfully!');
       closeProfileModal();
     };
 
     window.loadProfileData = function() {
       const savedName = localStorage.getItem('rc_user_name') || 'RC Enthusiast';
-      const savedAvatar = localStorage.getItem('rc_user_avatar');
+      const customAvatar = localStorage.getItem('rc_user_avatar');
 
       document.getElementById('user-name-input').value = savedName;
-      if(savedAvatar) {
-        updateAvatarUI(savedAvatar);
+      if(customAvatar) {
+        updateAvatarUI(customAvatar);
+      } else {
+        resetAvatarUI();
       }
     };
 
     function updateAvatarUI(url) {
       document.getElementById('modal-avatar-preview').innerHTML = `<img src="${url}">`;
       document.getElementById('header-avatar-container').innerHTML = `<img src="${url}">`;
+    }
+
+    function resetAvatarUI() {
+      const defaultIcon = `<i class="fa-solid fa-user" style="font-size: 1.2rem; color: var(--text-secondary);"></i>`;
+      const modalDefaultIcon = `<i class="fa-solid fa-user" style="font-size: 2.2rem; color: var(--text-secondary);"></i>`;
+      document.getElementById('header-avatar-container').innerHTML = defaultIcon;
+      document.getElementById('modal-avatar-preview').innerHTML = modalDefaultIcon;
     }
 
     function calculateRuntime() {

@@ -20,6 +20,7 @@
       --accent-blue: #3b82f6;
       --accent-purple: #8b5cf6;
       --accent-red: #ef4444;
+      --accent-green: #10b981;
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
@@ -87,7 +88,6 @@
       cursor: pointer;
     }
 
-    /* Fixed Clean Avatar Container */
     .profile-avatar-btn {
       width: 40px;
       height: 40px;
@@ -149,7 +149,7 @@
       cursor: pointer;
     }
 
-    /* Downloading Overlay */
+    /* Download Overlay */
     .download-anim-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -245,6 +245,12 @@
       outline: none;
     }
 
+    input:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: rgba(10, 14, 22, 0.5);
+    }
+
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -261,6 +267,43 @@
       font-weight: 700;
       font-size: 0.95rem;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button.btn-secondary {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button.btn-gps {
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      margin-top: 8px;
     }
 
     /* Live RC News Styling */
@@ -288,9 +331,7 @@
       background: #1e293b;
     }
 
-    .news-body {
-      padding: 16px;
-    }
+    .news-body { padding: 16px; }
 
     .news-meta {
       display: flex;
@@ -343,19 +384,15 @@
     }
 
     .skeleton-img {
-      width: 100%;
-      height: 150px;
+      width: 100%; height: 150px;
       background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      margin-bottom: 12px;
+      border-radius: 12px; margin-bottom: 12px;
       animation: pulse 1.5s infinite ease-in-out;
     }
 
     .skeleton-line {
-      height: 14px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 6px;
-      margin-bottom: 8px;
+      height: 14px; background: rgba(255,255,255,0.05);
+      border-radius: 6px; margin-bottom: 8px;
       animation: pulse 1.5s infinite ease-in-out;
     }
 
@@ -382,103 +419,60 @@
       background: #121826;
       border: 1px solid var(--card-border);
       border-radius: 20px;
-      width: 100%;
-      max-width: 440px;
-      padding: 24px;
-      position: relative;
+      width: 100%; max-width: 440px;
+      padding: 24px; position: relative;
     }
 
     .modal-close {
-      position: absolute;
-      top: 16px; right: 16px;
+      position: absolute; top: 16px; right: 16px;
       background: none; border: none;
       color: var(--text-secondary);
       font-size: 1.2rem; cursor: pointer;
     }
 
     .avatar-upload-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      margin: 16px 0 20px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 12px; margin: 16px 0 20px;
     }
 
     .avatar-preview {
-      width: 90px;
-      height: 90px;
+      width: 90px; height: 90px;
       border-radius: 50%;
       border: 1px solid var(--card-border);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      overflow: hidden; display: flex;
+      align-items: center; justify-content: center;
       background: rgba(255,255,255,0.05);
     }
 
-    .avatar-preview img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-    }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
 
-    .avatar-btns-row {
-      display: flex;
-      gap: 8px;
-    }
+    .avatar-btns-row { display: flex; gap: 8px; }
 
     .google-auth-btn {
-      width: 100%;
-      background: #ffffff;
-      color: #333333;
-      border: none;
-      padding: 12px;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      cursor: pointer;
-      margin-top: 10px;
+      width: 100%; background: #ffffff; color: #333;
+      border: none; padding: 12px; border-radius: 12px;
+      font-weight: 600; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; cursor: pointer; margin-top: 10px;
     }
 
     .signout-btn {
-      width: 100%;
-      background: rgba(239, 68, 68, 0.12);
-      color: var(--accent-red);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      padding: 12px;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .signout-btn:hover {
-      background: rgba(239, 68, 68, 0.2);
+      width: 100%; background: rgba(239, 68, 68, 0.12);
+      color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 12px; border-radius: 12px; font-weight: 600; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; cursor: pointer; margin-top: 10px;
     }
 
     /* MAP TAB STYLING */
     #map-container {
-      width: 100%;
-      height: 380px;
+      width: 100%; height: 380px;
       border-radius: 14px;
       border: 1px solid var(--card-border);
-      margin-top: 12px;
-      z-index: 1;
+      margin-top: 12px; z-index: 1;
     }
 
-    .search-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
+    .search-row { display: flex; gap: 8px; margin-bottom: 12px; }
 
     .leaflet-popup-content-wrapper {
       background: #121826 !important;
@@ -486,81 +480,48 @@
       border: 1px solid var(--accent-cyan);
       border-radius: 12px;
     }
-    .leaflet-popup-tip {
-      background: #121826 !important;
-    }
+    .leaflet-popup-tip { background: #121826 !important; }
 
     /* Bottom Nav */
     .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      height: 68px;
+      position: fixed; bottom: 0; left: 0; right: 0; height: 68px;
       background: rgba(11, 14, 20, 0.85);
       backdrop-filter: blur(20px);
       border-top: 1px solid var(--card-border);
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 1000;
+      display: flex; justify-content: space-around;
+      align-items: center; z-index: 1000;
     }
 
     .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      color: var(--text-muted);
-      font-size: 0.7rem;
-      font-weight: 600;
-      border: none; background: none;
-      width: 25%;
-      cursor: pointer;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      color: var(--text-muted); font-size: 0.7rem; font-weight: 600;
+      border: none; background: none; width: 25%; cursor: pointer;
     }
 
-    .nav-item.active {
-      color: var(--accent-cyan);
-    }
+    .nav-item.active { color: var(--accent-cyan); }
 
     /* Chat UI */
     .chat-box {
-      height: 380px;
-      overflow-y: auto;
-      padding: 12px;
+      height: 380px; overflow-y: auto; padding: 12px;
       background: rgba(11, 14, 20, 0.6);
-      border-radius: 14px;
-      border: 1px solid var(--card-border);
-      display: flex; flex-direction: column;
-      gap: 12px; margin-bottom: 12px;
+      border-radius: 14px; border: 1px solid var(--card-border);
+      display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px;
     }
 
     .chat-msg {
-      max-width: 85%;
-      padding: 12px 16px;
-      border-radius: 16px;
-      font-size: 0.88rem;
-      line-height: 1.5;
+      max-width: 85%; padding: 12px 16px;
+      border-radius: 16px; font-size: 0.88rem; line-height: 1.5;
     }
 
-    .chat-msg.bot {
-      background: rgba(30, 41, 59, 0.9);
-      align-self: flex-start;
-      color: var(--text-primary);
-    }
-
-    .chat-msg.user {
-      background: linear-gradient(135deg, var(--accent-blue), #2563eb);
-      align-self: flex-end;
-      color: #fff;
-    }
+    .chat-msg.bot { background: rgba(30, 41, 59, 0.9); align-self: flex-start; color: var(--text-primary); }
+    .chat-msg.user { background: linear-gradient(135deg, var(--accent-blue), #2563eb); align-self: flex-end; color: #fff; }
 
     .chat-input-row { display: flex; gap: 8px; }
     .chat-input-row input { flex: 1; }
     .chat-input-row button {
-      width: 50px;
-      background: var(--accent-cyan);
-      color: #000; border: none;
-      border-radius: 12px; font-size: 1.1rem;
-      cursor: pointer;
+      width: 50px; background: var(--accent-cyan); color: #000;
+      border: none; border-radius: 12px; font-size: 1.1rem; cursor: pointer;
     }
   </style>
 </head>
@@ -646,6 +607,11 @@
           <button class="pwa-reload-btn" style="padding: 0 16px; background: var(--accent-cyan); color: #000; font-weight:700;" onclick="searchMapLocation()">Search</button>
         </div>
 
+        <!-- GPS Auto Location Button -->
+        <button class="btn-gps" id="gps-btn" onclick="locateUserGPS()">
+          <i class="fa-solid fa-crosshairs"></i> Use My Current Location (GPS)
+        </button>
+
         <!-- Map Container -->
         <div id="map-container"></div>
 
@@ -656,11 +622,16 @@
             <input type="text" id="user-rc-models" placeholder="e.g. MN300 Tank 300, MN82, WLtoys 104311">
           </div>
 
-          <div style="font-size:0.75rem; color:var(--accent-cyan); margin-bottom:10px;" id="selected-coords-txt">
-            📍 Click on the map to pin your location!
+          <div style="font-size:0.75rem; color:var(--accent-cyan); margin-bottom:12px;" id="selected-coords-txt">
+            📍 Click on the map or use GPS to pin your location!
           </div>
 
-          <button class="btn-primary" onclick="saveUserMapLocation()">Save / Update Location on Map</button>
+          <!-- Dynamic Action Button (Save vs Edit) -->
+          <div id="map-action-container">
+            <button class="btn-primary" id="save-map-btn" onclick="saveUserMapLocation()">
+              <i class="fa-solid fa-floppy-disk"></i> Save Location & Models
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -674,7 +645,6 @@
       
       <!-- News List Container -->
       <div id="news-container">
-        <!-- Skeleton Loaders -->
         <div class="skeleton-card">
           <div class="skeleton-img"></div>
           <div class="skeleton-line" style="width: 80%;"></div>
@@ -737,7 +707,6 @@
       <div style="margin-top: 20px; border-top:1px solid var(--card-border); padding-top:16px;" id="auth-action-box">
         <label id="auth-label">Account Status</label>
         
-        <!-- Signed Out UI (Default) -->
         <div id="signed-out-view">
           <button class="google-auth-btn" id="firebase-google-btn">
             <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" alt="Google">
@@ -745,7 +714,6 @@
           </button>
         </div>
 
-        <!-- Signed In UI -->
         <div id="signed-in-view" style="display:none;">
           <div style="font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
             <i class="fa-solid fa-circle-check"></i> Connected with Google
@@ -803,13 +771,11 @@
     const db = getDatabase(app);
     const provider = new GoogleAuthProvider();
 
-    // Export DB Methods to Global Window Scope for usage in Leaflet Map Script
     window.firebaseDB = db;
     window.dbRef = ref;
     window.dbSet = set;
     window.dbOnValue = onValue;
 
-    // Google Sign-In Action
     document.getElementById('firebase-google-btn').addEventListener('click', async () => {
       try {
         const result = await signInWithPopup(auth, provider);
@@ -831,7 +797,6 @@
       }
     });
 
-    // Google Sign-Out Action
     document.getElementById('firebase-signout-btn').addEventListener('click', async () => {
       try {
         await signOut(auth);
@@ -843,7 +808,6 @@
       }
     });
 
-    // Auth State Listener
     onAuthStateChanged(auth, (user) => {
       if (user) {
         localStorage.setItem('rc_is_logged_in', 'true');
@@ -863,6 +827,7 @@
     let map, userMarker;
     let markersGroup;
     let selectedLat = null, selectedLng = null;
+    let isEditingMode = true;
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -925,10 +890,9 @@
       }
     }
 
-    /* SRI LANKA RC MAP FUNCTIONS */
+    /* SRI LANKA RC MAP & GPS FUNCTIONS */
     function initRcMap() {
       if (!map) {
-        // Centered at Sri Lanka (Colombo/Kandy area)
         map = L.map('map-container').setView([7.8731, 80.7718], 8);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -938,24 +902,62 @@
 
         markersGroup = L.layerGroup().addTo(map);
 
-        // Click on map to select location
+        // Click map to select location
         map.on('click', function(e) {
-          selectedLat = e.latlng.lat;
-          selectedLng = e.latlng.lng;
-
-          if (userMarker) {
-            userMarker.setLatLng(e.latlng);
-          } else {
-            userMarker = L.marker(e.latlng).addTo(map);
-          }
-
-          document.getElementById('selected-coords-txt').innerText = `📍 Selected Location: (${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)})`;
+          if (!isEditingMode) return; // Prevent moving marker if not in edit mode
+          
+          updateSelectedPosition(e.latlng.lat, e.latlng.lng);
         });
 
         loadAllDriversFromFirebase();
       } else {
         setTimeout(() => map.invalidateSize(), 300);
       }
+    }
+
+    function updateSelectedPosition(lat, lng) {
+      selectedLat = lat;
+      selectedLng = lng;
+
+      if (userMarker) {
+        userMarker.setLatLng([lat, lng]);
+      } else {
+        userMarker = L.marker([lat, lng]).addTo(map);
+      }
+
+      document.getElementById('selected-coords-txt').innerText = `📍 Selected Location: (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+    }
+
+    /* GPS Auto Location Trigger */
+    function locateUserGPS() {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+
+      const gpsBtn = document.getElementById('gps-btn');
+      gpsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Locating...`;
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          if (isEditingMode) {
+            updateSelectedPosition(lat, lng);
+            map.setView([lat, lng], 14);
+          } else {
+            map.setView([lat, lng], 14);
+          }
+
+          gpsBtn.innerHTML = `<i class="fa-solid fa-crosshairs"></i> Use My Current Location (GPS)`;
+        },
+        (error) => {
+          gpsBtn.innerHTML = `<i class="fa-solid fa-crosshairs"></i> Use My Current Location (GPS)`;
+          alert('Unable to retrieve your location. Please check GPS permissions.');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
     }
 
     function saveUserMapLocation() {
@@ -969,7 +971,7 @@
       }
 
       if (!selectedLat || !selectedLng) {
-        alert('Please click on the map to select your location first!');
+        alert('Please select your location using GPS or clicking on the map first!');
         return;
       }
 
@@ -986,23 +988,48 @@
         updatedAt: new Date().toISOString()
       };
 
-      // Save locally
+      // Local Storage Save
       localStorage.setItem('rc_user_models', modelsInput);
       localStorage.setItem('rc_user_lat', selectedLat);
       localStorage.setItem('rc_user_lng', selectedLng);
+      localStorage.setItem('rc_map_saved', 'true');
 
-      // Push to Realtime Firebase Database if loaded
+      // Firebase Sync
       if (window.firebaseDB) {
         window.dbSet(window.dbRef(window.firebaseDB, 'drivers/' + userId), driverData)
           .then(() => {
-            alert('Your Location and RC Models saved successfully on the map!');
+            alert('Location & RC Models updated on Map successfully!');
           })
           .catch((err) => {
             console.error(err);
-            alert('Saved locally! Firebase update failed.');
+            alert('Saved locally!');
           });
       } else {
         alert('Location saved locally!');
+      }
+
+      toggleMapEditMode(false);
+    }
+
+    function toggleMapEditMode(enableEdit) {
+      isEditingMode = enableEdit;
+      const modelsField = document.getElementById('user-rc-models');
+      const actionContainer = document.getElementById('map-action-container');
+
+      if (enableEdit) {
+        modelsField.disabled = false;
+        actionContainer.innerHTML = `
+          <button class="btn-primary" id="save-map-btn" onclick="saveUserMapLocation()">
+            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+          </button>
+        `;
+      } else {
+        modelsField.disabled = true;
+        actionContainer.innerHTML = `
+          <button class="btn-secondary" onclick="toggleMapEditMode(true)">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Details / Location
+          </button>
+        `;
       }
     }
 
@@ -1030,23 +1057,26 @@
         }
       });
 
-      // Load current user's saved data into inputs
+      // Restore user state
       const savedModels = localStorage.getItem('rc_user_models');
       const savedLat = localStorage.getItem('rc_user_lat');
       const savedLng = localStorage.getItem('rc_user_lng');
+      const isSaved = localStorage.getItem('rc_map_saved');
 
       if (savedModels) {
         document.getElementById('user-rc-models').value = savedModels;
       }
+
       if (savedLat && savedLng) {
         selectedLat = parseFloat(savedLat);
         selectedLng = parseFloat(savedLng);
-        document.getElementById('selected-coords-txt').innerText = `📍 Saved Location: (${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)})`;
-        if (userMarker) {
-          userMarker.setLatLng([selectedLat, selectedLng]);
-        } else {
-          userMarker = L.marker([selectedLat, selectedLng]).addTo(map);
-        }
+        updateSelectedPosition(selectedLat, selectedLng);
+      }
+
+      if (isSaved === 'true') {
+        toggleMapEditMode(false);
+      } else {
+        toggleMapEditMode(true);
       }
     }
 

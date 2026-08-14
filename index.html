@@ -8,6 +8,9 @@
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <!-- Leaflet CSS for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
   <style>
     :root {
       --bg-dark: #0b0e14;
@@ -461,6 +464,32 @@
       background: rgba(239, 68, 68, 0.2);
     }
 
+    /* MAP TAB STYLING */
+    #map-container {
+      width: 100%;
+      height: 380px;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      margin-top: 12px;
+      z-index: 1;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: #121826 !important;
+      color: #fff !important;
+      border: 1px solid var(--accent-cyan);
+      border-radius: 12px;
+    }
+    .leaflet-popup-tip {
+      background: #121826 !important;
+    }
+
     /* Bottom Nav */
     .bottom-nav {
       position: fixed;
@@ -481,10 +510,10 @@
       align-items: center;
       gap: 4px;
       color: var(--text-muted);
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 600;
       border: none; background: none;
-      width: 33.3%;
+      width: 25%;
       cursor: pointer;
     }
 
@@ -604,7 +633,39 @@
       </div>
     </div>
 
-    <!-- TAB 2: LIVE RC NEWS -->
+    <!-- TAB 2: SRI LANKA RC MAP -->
+    <div id="map-tab" class="tab-content">
+      <div class="glass-card">
+        <div class="card-title">
+          <span><i class="fa-solid fa-map-location-dot"></i> Sri Lanka RC Drivers Map</span>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-row">
+          <input type="text" id="map-search-input" placeholder="Search location (e.g. Wennappuwa)...">
+          <button class="pwa-reload-btn" style="padding: 0 16px; background: var(--accent-cyan); color: #000; font-weight:700;" onclick="searchMapLocation()">Search</button>
+        </div>
+
+        <!-- Map Container -->
+        <div id="map-container"></div>
+
+        <!-- Location & Models Form -->
+        <div style="margin-top: 16px; border-top: 1px solid var(--card-border); padding-top: 14px;">
+          <div class="form-group">
+            <label>Your RC Models (Separated by Commas)</label>
+            <input type="text" id="user-rc-models" placeholder="e.g. MN300 Tank 300, MN82, WLtoys 104311">
+          </div>
+
+          <div style="font-size:0.75rem; color:var(--accent-cyan); margin-bottom:10px;" id="selected-coords-txt">
+            📍 Click on the map to pin your location!
+          </div>
+
+          <button class="btn-primary" onclick="saveUserMapLocation()">Save / Update Location on Map</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: LIVE RC NEWS -->
     <div id="news-tab" class="tab-content">
       <div class="card-title" style="margin-bottom:14px;">
         <span><i class="fa-solid fa-newspaper"></i> World RC News</span>
@@ -627,7 +688,7 @@
       </div>
     </div>
 
-    <!-- TAB 3: GEMINI AI MECHANIC -->
+    <!-- TAB 4: GEMINI AI MECHANIC -->
     <div id="ai-tab" class="tab-content">
       <div class="glass-card">
         <div class="card-title"><span><i class="fa-solid fa-robot"></i> Gemini AI RC Mechanic</span></div>
@@ -704,6 +765,10 @@
       <i class="fa-solid fa-toolbox"></i>
       <span>Tools</span>
     </button>
+    <button class="nav-item" onclick="switchTab('map-tab', this)">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <span>RC Map</span>
+    </button>
     <button class="nav-item" onclick="switchTab('news-tab', this)">
       <i class="fa-solid fa-newspaper"></i>
       <span>RC News</span>
@@ -714,10 +779,14 @@
     </button>
   </nav>
 
+  <!-- Leaflet JS for Map -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <!-- FIREBASE SDK v10 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDc3kDN1KPnXK98NI2NvwZyxCvDZxLa13w",
@@ -731,9 +800,16 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getDatabase(app);
     const provider = new GoogleAuthProvider();
 
-    // Google Sign-In Action (Only Auth, NO Photo Sync)
+    // Export DB Methods to Global Window Scope for usage in Leaflet Map Script
+    window.firebaseDB = db;
+    window.dbRef = ref;
+    window.dbSet = set;
+    window.dbOnValue = onValue;
+
+    // Google Sign-In Action
     document.getElementById('firebase-google-btn').addEventListener('click', async () => {
       try {
         const result = await signInWithPopup(auth, provider);
@@ -743,6 +819,7 @@
           localStorage.setItem('rc_user_name', user.displayName || 'RC Enthusiast');
         }
         localStorage.setItem('rc_is_logged_in', 'true');
+        localStorage.setItem('rc_user_uid', user.uid);
 
         window.updateAuthUI(true);
         window.loadProfileData();
@@ -766,10 +843,11 @@
       }
     });
 
-    // Auth State Listener (Does NOT touch local avatar data)
+    // Auth State Listener
     onAuthStateChanged(auth, (user) => {
       if (user) {
         localStorage.setItem('rc_is_logged_in', 'true');
+        localStorage.setItem('rc_user_uid', user.uid);
         window.updateAuthUI(true);
       } else {
         localStorage.removeItem('rc_is_logged_in');
@@ -782,6 +860,9 @@
   <!-- MAIN SCRIPT -->
   <script>
     let deferredPrompt;
+    let map, userMarker;
+    let markersGroup;
+    let selectedLat = null, selectedLng = null;
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -839,6 +920,153 @@
 
       if(tabId === 'news-tab') {
         fetchLiveRcNews();
+      } else if(tabId === 'map-tab') {
+        initRcMap();
+      }
+    }
+
+    /* SRI LANKA RC MAP FUNCTIONS */
+    function initRcMap() {
+      if (!map) {
+        // Centered at Sri Lanka (Colombo/Kandy area)
+        map = L.map('map-container').setView([7.8731, 80.7718], 8);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 18,
+          attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        markersGroup = L.layerGroup().addTo(map);
+
+        // Click on map to select location
+        map.on('click', function(e) {
+          selectedLat = e.latlng.lat;
+          selectedLng = e.latlng.lng;
+
+          if (userMarker) {
+            userMarker.setLatLng(e.latlng);
+          } else {
+            userMarker = L.marker(e.latlng).addTo(map);
+          }
+
+          document.getElementById('selected-coords-txt').innerText = `📍 Selected Location: (${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)})`;
+        });
+
+        loadAllDriversFromFirebase();
+      } else {
+        setTimeout(() => map.invalidateSize(), 300);
+      }
+    }
+
+    function saveUserMapLocation() {
+      const modelsInput = document.getElementById('user-rc-models').value.trim();
+      const userName = localStorage.getItem('rc_user_name') || 'RC Driver';
+      let userId = localStorage.getItem('rc_user_uid');
+
+      if (!userId) {
+        userId = 'user_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('rc_user_uid', userId);
+      }
+
+      if (!selectedLat || !selectedLng) {
+        alert('Please click on the map to select your location first!');
+        return;
+      }
+
+      if (!modelsInput) {
+        alert('Please enter your RC Models (separated by commas).');
+        return;
+      }
+
+      const driverData = {
+        name: userName,
+        models: modelsInput,
+        lat: selectedLat,
+        lng: selectedLng,
+        updatedAt: new Date().toISOString()
+      };
+
+      // Save locally
+      localStorage.setItem('rc_user_models', modelsInput);
+      localStorage.setItem('rc_user_lat', selectedLat);
+      localStorage.setItem('rc_user_lng', selectedLng);
+
+      // Push to Realtime Firebase Database if loaded
+      if (window.firebaseDB) {
+        window.dbSet(window.dbRef(window.firebaseDB, 'drivers/' + userId), driverData)
+          .then(() => {
+            alert('Your Location and RC Models saved successfully on the map!');
+          })
+          .catch((err) => {
+            console.error(err);
+            alert('Saved locally! Firebase update failed.');
+          });
+      } else {
+        alert('Location saved locally!');
+      }
+    }
+
+    function loadAllDriversFromFirebase() {
+      if (!window.firebaseDB) return;
+
+      const driversRef = window.dbRef(window.firebaseDB, 'drivers');
+      window.dbOnValue(driversRef, (snapshot) => {
+        const data = snapshot.val();
+        markersGroup.clearLayers();
+
+        if (data) {
+          Object.keys(data).forEach(key => {
+            const driver = data[key];
+            if (driver.lat && driver.lng) {
+              const popupContent = `
+                <div style="font-weight:bold; color:var(--accent-cyan);">${driver.name}</div>
+                <div style="font-size:0.8rem; margin-top:4px;"><strong>Models:</strong> ${driver.models}</div>
+              `;
+              L.marker([driver.lat, driver.lng])
+                .bindPopup(popupContent)
+                .addTo(markersGroup);
+            }
+          });
+        }
+      });
+
+      // Load current user's saved data into inputs
+      const savedModels = localStorage.getItem('rc_user_models');
+      const savedLat = localStorage.getItem('rc_user_lat');
+      const savedLng = localStorage.getItem('rc_user_lng');
+
+      if (savedModels) {
+        document.getElementById('user-rc-models').value = savedModels;
+      }
+      if (savedLat && savedLng) {
+        selectedLat = parseFloat(savedLat);
+        selectedLng = parseFloat(savedLng);
+        document.getElementById('selected-coords-txt').innerText = `📍 Saved Location: (${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)})`;
+        if (userMarker) {
+          userMarker.setLatLng([selectedLat, selectedLng]);
+        } else {
+          userMarker = L.marker([selectedLat, selectedLng]).addTo(map);
+        }
+      }
+    }
+
+    async function searchMapLocation() {
+      const query = document.getElementById('map-search-input').value.trim();
+      if (!query) return;
+
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Sri Lanka')}`);
+        const data = await res.json();
+
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lon = parseFloat(data[0].lon);
+          map.setView([lat, lon], 12);
+        } else {
+          alert('Location not found in Sri Lanka. Try another search.');
+        }
+      } catch (e) {
+        alert('Search service error. Try again.');
       }
     }
 
@@ -913,7 +1141,7 @@
       }
     };
 
-    // PROFILE & AVATAR MANAGEMENT (PERSISTENT & DECOUPLED FROM GOOGLE)
+    // PROFILE & AVATAR MANAGEMENT
     let tempAvatarBase64 = null;
 
     window.openProfileModal = function() {
@@ -949,7 +1177,6 @@
         localStorage.setItem('rc_user_name', name);
       }
       
-      // Permanently save or clear local avatar in local storage
       if(tempAvatarBase64 !== null) {
         if(tempAvatarBase64 === "") {
           localStorage.removeItem('rc_user_avatar');
@@ -969,7 +1196,6 @@
 
       document.getElementById('user-name-input').value = savedName;
       
-      // Render stored gallery image or blank icon
       if(customAvatar && customAvatar.startsWith('data:image')) {
         renderAvatarUI(customAvatar);
       } else {

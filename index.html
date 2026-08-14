@@ -102,7 +102,7 @@
       object-fit: cover;
     }
 
-    /* Install Prompt Card Banner */
+    /* Install Banner */
     .install-banner-overlay {
       position: fixed;
       bottom: 80px;
@@ -144,7 +144,7 @@
       cursor: pointer;
     }
 
-    /* Downloading Progress Overlay Screen */
+    /* Downloading Overlay */
     .download-anim-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -176,7 +176,7 @@
       transition: width 0.2s ease-in-out;
     }
 
-    /* Layout & Tabs */
+    /* Container & Tabs */
     .container {
       max-width: 700px;
       margin: 0 auto;
@@ -212,7 +212,7 @@
       margin-bottom: 16px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: space-between;
       color: var(--accent-cyan);
     }
 
@@ -258,6 +258,108 @@
       cursor: pointer;
     }
 
+    /* Live RC News Styling */
+    .news-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      text-decoration: none;
+      display: block;
+      color: inherit;
+    }
+
+    .news-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0, 242, 254, 0.3);
+    }
+
+    .news-img {
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+      background: #1e293b;
+    }
+
+    .news-body {
+      padding: 16px;
+    }
+
+    .news-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .news-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      background: rgba(0, 242, 254, 0.12);
+      color: var(--accent-cyan);
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .news-date {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .news-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+
+    .news-desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Skeleton Loading UI */
+    .skeleton-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--card-radius);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .skeleton-img {
+      width: 100%;
+      height: 150px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    .skeleton-line {
+      height: 14px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.3; }
+      50% { opacity: 0.7; }
+      100% { opacity: 0.3; }
+    }
+
     /* Modal Popup */
     .modal-overlay {
       position: fixed;
@@ -283,13 +385,10 @@
 
     .modal-close {
       position: absolute;
-      top: 16px;
-      right: 16px;
-      background: none;
-      border: none;
+      top: 16px; right: 16px;
+      background: none; border: none;
       color: var(--text-secondary);
-      font-size: 1.2rem;
-      cursor: pointer;
+      font-size: 1.2rem; cursor: pointer;
     }
 
     .avatar-upload-box {
@@ -313,12 +412,10 @@
     }
 
     .avatar-preview img {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       object-fit: cover;
     }
 
-    /* Official Google Sign In Button Styling */
     .google-auth-btn {
       width: 100%;
       background: #ffffff;
@@ -334,12 +431,6 @@
       gap: 10px;
       cursor: pointer;
       margin-top: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      transition: background 0.2s;
-    }
-
-    .google-auth-btn:hover {
-      background: #f1f5f9;
     }
 
     /* Bottom Nav */
@@ -364,8 +455,7 @@
       color: var(--text-muted);
       font-size: 0.72rem;
       font-weight: 600;
-      border: none;
-      background: none;
+      border: none; background: none;
       width: 33.3%;
       cursor: pointer;
     }
@@ -382,10 +472,8 @@
       background: rgba(11, 14, 20, 0.6);
       border-radius: 14px;
       border: 1px solid var(--card-border);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 12px;
+      display: flex; flex-direction: column;
+      gap: 12px; margin-bottom: 12px;
     }
 
     .chat-msg {
@@ -398,7 +486,6 @@
 
     .chat-msg.bot {
       background: rgba(30, 41, 59, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.05);
       align-self: flex-start;
       color: var(--text-primary);
     }
@@ -409,31 +496,18 @@
       color: #fff;
     }
 
-    .chat-input-row {
-      display: flex;
-      gap: 8px;
-    }
-
+    .chat-input-row { display: flex; gap: 8px; }
     .chat-input-row input { flex: 1; }
     .chat-input-row button {
       width: 50px;
       background: var(--accent-cyan);
-      color: #000;
-      border: none;
-      border-radius: 12px;
-      font-size: 1.1rem;
+      color: #000; border: none;
+      border-radius: 12px; font-size: 1.1rem;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
-
-  <!-- App Configuration -->
-  <script>
-    const APP_CONFIG = {
-      GEMINI_API_KEY: "YOUR_DEFAULT_GEMINI_API_KEY_HERE"
-    };
-  </script>
 
   <!-- Header -->
   <header>
@@ -450,7 +524,7 @@
     </div>
   </header>
 
-  <!-- PWA Install Prompt Banner -->
+  <!-- PWA Install Banner -->
   <div class="install-banner-overlay" id="install-banner">
     <div class="install-flex">
       <div>
@@ -461,7 +535,7 @@
     </div>
   </div>
 
-  <!-- Download Progress Overlay Screen -->
+  <!-- Download Overlay -->
   <div class="download-anim-overlay" id="download-overlay">
     <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--accent-cyan);"></i>
     <h3 style="margin-top:20px; font-size:1.1rem; color:#fff;" id="download-status-txt">Downloading R/C Garage SL...</h3>
@@ -475,7 +549,9 @@
     <!-- TAB 1: GARAGE TOOLS -->
     <div id="tools-tab" class="tab-content active">
       <div class="glass-card">
-        <div class="card-title"><i class="fa-solid fa-battery-charging-full"></i> Battery Runtime Tester</div>
+        <div class="card-title">
+          <span><i class="fa-solid fa-battery-charging-full"></i> Battery Runtime Tester</span>
+        </div>
         <div class="form-group">
           <label>Capacity (mAh)</label>
           <input type="number" id="bat-mah" value="2200">
@@ -500,10 +576,33 @@
       </div>
     </div>
 
-    <!-- TAB 2: GEMINI AI MECHANIC -->
+    <!-- TAB 2: LIVE RC NEWS -->
+    <div id="news-tab" class="tab-content">
+      <div class="card-title" style="margin-bottom:14px;">
+        <span><i class="fa-solid fa-newspaper"></i> World RC News</span>
+        <button class="pwa-reload-btn" onclick="fetchLiveRcNews()"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+      </div>
+      
+      <!-- News List Container -->
+      <div id="news-container">
+        <!-- Skeleton Loaders -->
+        <div class="skeleton-card">
+          <div class="skeleton-img"></div>
+          <div class="skeleton-line" style="width: 80%;"></div>
+          <div class="skeleton-line" style="width: 50%;"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-img"></div>
+          <div class="skeleton-line" style="width: 70%;"></div>
+          <div class="skeleton-line" style="width: 40%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: GEMINI AI MECHANIC -->
     <div id="ai-tab" class="tab-content">
       <div class="glass-card">
-        <div class="card-title"><i class="fa-solid fa-robot"></i> Gemini AI RC Mechanic</div>
+        <div class="card-title"><span><i class="fa-solid fa-robot"></i> Gemini AI RC Mechanic</span></div>
         <div class="chat-box" id="ai-chat-box">
           <div class="chat-msg bot">👋 ආයුබෝවන්! මම ඔයාගේ <strong>Gemini AI RC Mechanic</strong>. ඕනෑම ප්‍රශ්නයක් ඇතුළත් කරන්න.</div>
         </div>
@@ -520,7 +619,7 @@
   <div class="modal-overlay" id="profile-modal">
     <div class="modal-card">
       <button class="modal-close" onclick="closeProfileModal()"><i class="fa-solid fa-xmark"></i></button>
-      <div class="card-title"><i class="fa-solid fa-circle-user"></i> User Profile</div>
+      <div class="card-title"><span><i class="fa-solid fa-circle-user"></i> User Profile</span></div>
 
       <div class="avatar-upload-box">
         <div class="avatar-preview" id="modal-avatar-preview">
@@ -541,8 +640,6 @@
 
       <div style="margin-top: 20px; border-top:1px solid var(--card-border); padding-top:16px;">
         <label>Quick Sign In with Google</label>
-        
-        <!-- Firebase Google Auth Button -->
         <button class="google-auth-btn" id="firebase-google-btn">
           <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" alt="Google">
           Sign in with Google
@@ -557,18 +654,21 @@
       <i class="fa-solid fa-toolbox"></i>
       <span>Tools</span>
     </button>
+    <button class="nav-item" onclick="switchTab('news-tab', this)">
+      <i class="fa-solid fa-newspaper"></i>
+      <span>RC News</span>
+    </button>
     <button class="nav-item" onclick="switchTab('ai-tab', this)">
       <i class="fa-solid fa-robot"></i>
       <span>AI Mechanic</span>
     </button>
   </nav>
 
-  <!-- FIREBASE SDK v10 (MODULE) -->
+  <!-- FIREBASE SDK v10 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    // Your web app's Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDc3kDN1KPnXK98NI2NvwZyxCvDZxLa13w",
       authDomain: "rc-garage-lk-4092e.firebaseapp.com",
@@ -579,20 +679,19 @@
       appId: "1:109607090814:web:f581ad97ddc9ae7c4d762f"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Attach Google Auth to Button Click
     document.getElementById('firebase-google-btn').addEventListener('click', async () => {
       try {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         
-        // Save Details to Local Storage & Update UI
         localStorage.setItem('rc_user_name', user.displayName || 'RC Enthusiast');
-        localStorage.setItem('rc_user_avatar', user.photoURL || '');
+        if (user.photoURL) {
+          localStorage.setItem('rc_user_avatar', user.photoURL);
+        }
         localStorage.setItem('rc_is_logged_in', 'true');
 
         window.loadProfileData();
@@ -605,22 +704,22 @@
       }
     });
 
-    // Check Auth State on Load
     onAuthStateChanged(auth, (user) => {
       if (user) {
         localStorage.setItem('rc_user_name', user.displayName || 'RC Enthusiast');
-        if(user.photoURL) localStorage.setItem('rc_user_avatar', user.photoURL);
+        if (user.photoURL && !localStorage.getItem('rc_user_avatar')) {
+          localStorage.setItem('rc_user_avatar', user.photoURL);
+        }
         localStorage.setItem('rc_is_logged_in', 'true');
         window.loadProfileData();
       }
     });
   </script>
 
-  <!-- APP MAIN LOGIC SCRIPT -->
+  <!-- MAIN SCRIPT -->
   <script>
     let deferredPrompt;
 
-    // Listen for PWA Install Event
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -629,7 +728,6 @@
       }
     });
 
-    // PWA Download Animation Handler
     function triggerAppDownloadAnimation() {
       document.getElementById('install-banner').style.display = 'none';
       const overlay = document.getElementById('download-overlay');
@@ -661,26 +759,87 @@
       }, 300);
     }
 
-    // Auto Check if opened from Home Screen (PWA Mode)
     function checkAppLaunchMode() {
       const isPwa = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const isLoggedIn = localStorage.getItem('rc_is_logged_in');
 
-      // If app opened via shortcut and user is not logged in -> Auto open popup
       if (isPwa && !isLoggedIn) {
         setTimeout(() => openProfileModal(), 500);
       }
     }
 
-    // Tab Navigation
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       btn.classList.add('active');
+
+      if(tabId === 'news-tab') {
+        fetchLiveRcNews();
+      }
     }
 
-    // Profile & Modal Functions Attached to Window Scope
+    // REAL-TIME RC NEWS FETCHING (Option 2)
+    async function fetchLiveRcNews() {
+      const container = document.getElementById('news-container');
+      
+      // Fallback default image in case feed image is missing
+      const defaultImg = "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=600&q=80";
+      
+      // RCDriver RSS Feed via RSS2JSON API
+      const rssUrl = "https://www.rcdriver.com/feed/";
+      const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (data.status === 'ok' && data.items.length > 0) {
+          container.innerHTML = '';
+          
+          data.items.slice(0, 10).forEach(item => {
+            // Extract image URL from description or thumbnail
+            let imgUrl = item.thumbnail || defaultImg;
+            if (imgUrl === defaultImg && item.description) {
+              const imgMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
+              if (imgMatch) imgUrl = imgMatch[1];
+            }
+
+            // Clean description text
+            const cleanDesc = item.description.replace(/<[^>]*>?/gm, '').substring(0, 120) + '...';
+            const pubDate = new Date(item.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            container.innerHTML += `
+              <a href="${item.link}" target="_blank" class="news-card">
+                <img src="${imgUrl}" class="news-img" alt="RC News" onerror="this.src='${defaultImg}'">
+                <div class="news-body">
+                  <div class="news-meta">
+                    <span class="news-tag">GLOBAL RC</span>
+                    <span class="news-date"><i class="fa-regular fa-clock"></i> ${pubDate}</span>
+                  </div>
+                  <div class="news-title">${item.title}</div>
+                  <div class="news-desc">${cleanDesc}</div>
+                </div>
+              </a>
+            `;
+          });
+        } else {
+          throw new Error('Invalid feed data');
+        }
+
+      } catch (error) {
+        console.error("Failed to load RC news:", error);
+        container.innerHTML = `
+          <div class="glass-card" style="text-align:center; padding:30px;">
+            <i class="fa-solid fa-wifi" style="font-size:2rem; color:var(--text-muted); margin-bottom:10px;"></i>
+            <div style="font-size:0.9rem; color:var(--text-secondary);">Unable to load latest news right now.</div>
+            <button class="pwa-reload-btn" style="margin-top:12px;" onclick="fetchLiveRcNews()">Try Again</button>
+          </div>
+        `;
+      }
+    }
+
+    // PROFILE MANAGEMENT
     window.openProfileModal = function() {
       document.getElementById('profile-modal').style.display = 'flex';
       loadProfileData();
@@ -718,7 +877,9 @@
       const savedAvatar = localStorage.getItem('rc_user_avatar');
 
       document.getElementById('user-name-input').value = savedName;
-      if(savedAvatar) updateAvatarUI(savedAvatar);
+      if(savedAvatar) {
+        updateAvatarUI(savedAvatar);
+      }
     };
 
     function updateAvatarUI(url) {
@@ -726,14 +887,12 @@
       document.getElementById('header-avatar-container').innerHTML = `<img src="${url}">`;
     }
 
-    // Runtime Calculation
     function calculateRuntime() {
       const mah = parseFloat(document.getElementById('bat-mah').value);
       if(!mah || mah <= 0) return alert('Enter valid mAh');
       alert(`Estimated Runtime: ~${Math.round((mah * 0.8 / 8500) * 60)} Mins`);
     }
 
-    // Gemini AI Chat
     async function sendAiMessage() {
       const input = document.getElementById('ai-input');
       const msg = input.value.trim();

@@ -257,6 +257,20 @@
       gap: 12px;
     }
 
+    .calc-result {
+      background: rgba(0, 242, 254, 0.08);
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-top: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
     button.btn-primary {
       width: 100%;
       padding: 14px;
@@ -566,32 +580,80 @@
 
     <!-- TAB 1: GARAGE TOOLS -->
     <div id="tools-tab" class="tab-content active">
+      
+      <!-- TOOL 1: BATTERY RUNTIME TESTER (mAh ONLY) -->
       <div class="glass-card">
         <div class="card-title">
-          <span><i class="fa-solid fa-battery-charging-full"></i> Battery Runtime Tester</span>
+          <span><i class="fa-solid fa-battery-charging-full"></i> Battery Runtime Calculator</span>
         </div>
         <div class="form-group">
-          <label>Capacity (mAh)</label>
-          <input type="number" id="bat-mah" value="2200">
+          <label>Battery Capacity (mAh)</label>
+          <input type="number" id="bat-mah" placeholder="e.g. 1500, 2200, 5000" value="2200">
+        </div>
+        <button class="btn-primary" onclick="calculateSimpleRuntime()">
+          <i class="fa-solid fa-clock"></i> Calculate Runtime
+        </button>
+        <div class="calc-result" id="bat-runtime-result">
+          <span>Estimated Runtime:</span>
+          <span id="runtime-val">-- mins</span>
+        </div>
+      </div>
+
+      <!-- TOOL 2: SPEED CALCULATOR -->
+      <div class="glass-card">
+        <div class="card-title">
+          <span><i class="fa-solid fa-gauge-high"></i> RC Speed Calculator</span>
         </div>
         <div class="grid-2">
           <div class="form-group">
-            <label>Battery Type</label>
-            <select id="bat-chem">
-              <option value="lipo">LiPo (3.7V)</option>
-              <option value="liion">Li-Ion (3.6V)</option>
+            <label>Motor Size</label>
+            <select id="motor-size">
+              <option value="260">260 Motor (Mini)</option>
+              <option value="280">280 Motor</option>
+              <option value="370" selected>370 Motor (MN Series)</option>
+              <option value="390">390 Motor</option>
+              <option value="540">540 Motor (Standard 1/10)</option>
+              <option value="550">550 Motor (High Power)</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Cell Count</label>
-            <select id="bat-cells">
-              <option value="2">2S (7.4V)</option>
-              <option value="3">3S (11.1V)</option>
-            </select>
+            <label>Tyre Diameter (mm)</label>
+            <input type="number" id="tyre-diameter" placeholder="e.g. 70" value="70">
           </div>
         </div>
-        <button class="btn-primary" onclick="calculateRuntime()">Calculate Runtime</button>
+        <button class="btn-primary" onclick="calculateSpeed()">
+          <i class="fa-solid fa-bolt"></i> Calculate Speed
+        </button>
+        <div class="calc-result" id="speed-result">
+          <span>Estimated Speed:</span>
+          <span id="speed-val">-- km/h</span>
+        </div>
       </div>
+
+      <!-- TOOL 3: CRAWLER CLIMBING DEGREE CALCULATOR -->
+      <div class="glass-card">
+        <div class="card-title">
+          <span><i class="fa-solid fa-mountain"></i> Crawler Climbing Angle Calculator</span>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Vertical Height (cm / mm)</label>
+            <input type="number" id="climb-height" placeholder="e.g. 30" value="30">
+          </div>
+          <div class="form-group">
+            <label>Horizontal Distance (cm / mm)</label>
+            <input type="number" id="climb-distance" placeholder="e.g. 40" value="40">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="calculateClimbingAngle()">
+          <i class="fa-solid fa-compass"></i> Calculate Incline Angle
+        </button>
+        <div class="calc-result" id="climb-result">
+          <span>Climbing Angle:</span>
+          <span id="climb-val">-- ° (Degrees)</span>
+        </div>
+      </div>
+
     </div>
 
     <!-- TAB 2: SRI LANKA RC MAP -->
@@ -890,6 +952,73 @@
       }
     }
 
+    /* TOOLS CALCULATOR FUNCTIONS */
+
+    // 1. Simple Battery Runtime (mAh only)
+    function calculateSimpleRuntime() {
+      const mah = parseFloat(document.getElementById('bat-mah').value);
+      if(!mah || mah <= 0) {
+        alert('Please enter a valid mAh value');
+        return;
+      }
+
+      // Average discharge assumption for general RC vehicles (~2.5A average draw)
+      const avgCurrentDrawA = 2.5; 
+      const usableAh = (mah / 1000) * 0.8; // 80% safe depth of discharge
+      const runtimeMins = Math.round((usableAh / avgCurrentDrawA) * 60);
+
+      document.getElementById('runtime-val').innerText = `~${runtimeMins} Mins (Avg)`;
+    }
+
+    // 2. RC Speed Calculator (Motor Size & Tyre Diameter)
+    function calculateSpeed() {
+      const motorType = document.getElementById('motor-size').value;
+      const tyreDiameterMm = parseFloat(document.getElementById('tyre-diameter').value);
+
+      if(!tyreDiameterMm || tyreDiameterMm <= 0) {
+        alert('Please enter a valid Tyre Diameter in mm');
+        return;
+      }
+
+      // RPM estimates for brushed motors at standard voltage (7.4V)
+      const motorRpmMap = {
+        '260': 12000,
+        '280': 14000,
+        '370': 18000,
+        '390': 20000,
+        '540': 22000,
+        '550': 25000
+      };
+
+      const rpm = motorRpmMap[motorType] || 18000;
+      const gearRatio = 15; // Typical overall gear ratio for RC crawlers/trucks
+
+      const wheelCircumferenceMeters = (Math.PI * tyreDiameterMm) / 1000;
+      const wheelRpm = rpm / gearRatio;
+      const speedMetersPerMin = wheelRpm * wheelCircumferenceMeters;
+      const speedKmh = (speedMetersPerMin * 60) / 1000;
+
+      document.getElementById('speed-val').innerText = `~${speedKmh.toFixed(1)} km/h`;
+    }
+
+    // 3. Crawler Incline / Climbing Angle Calculator (Degrees)
+    function calculateClimbingAngle() {
+      const height = parseFloat(document.getElementById('climb-height').value);
+      const distance = parseFloat(document.getElementById('climb-distance').value);
+
+      if(!height || !distance || height <= 0 || distance <= 0) {
+        alert('Please enter valid Height and Distance values');
+        return;
+      }
+
+      // Angle calculation in degrees: arctan(height / distance)
+      const angleRad = Math.atan(height / distance);
+      const angleDeg = angleRad * (180 / Math.PI);
+
+      document.getElementById('climb-val').innerText = `~${angleDeg.toFixed(1)}°`;
+    }
+
+
     /* SRI LANKA RC MAP & GPS FUNCTIONS */
     function initRcMap() {
       if (!map) {
@@ -904,8 +1033,7 @@
 
         // Click map to select location
         map.on('click', function(e) {
-          if (!isEditingMode) return; // Prevent moving marker if not in edit mode
-          
+          if (!isEditingMode) return;
           updateSelectedPosition(e.latlng.lat, e.latlng.lng);
         });
 
@@ -1247,12 +1375,6 @@
         headerContainer.innerHTML = headerBlankIcon;
         modalPreview.innerHTML = modalBlankIcon;
       }
-    }
-
-    function calculateRuntime() {
-      const mah = parseFloat(document.getElementById('bat-mah').value);
-      if(!mah || mah <= 0) return alert('Enter valid mAh');
-      alert(`Estimated Runtime: ~${Math.round((mah * 0.8 / 8500) * 60)} Mins`);
     }
 
     async function sendAiMessage() {

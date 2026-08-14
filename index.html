@@ -84,13 +84,13 @@
       cursor: pointer;
     }
 
-    /* Fixed Clean Avatar */
+    /* Fixed Clean Avatar Container */
     .profile-avatar-btn {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: transparent;
-      border: none;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -102,7 +102,6 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 50%;
     }
 
     /* Install Banner */
@@ -406,7 +405,7 @@
       width: 90px;
       height: 90px;
       border-radius: 50%;
-      border: none;
+      border: 1px solid var(--card-border);
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -417,7 +416,11 @@
     .avatar-preview img {
       width: 100%; height: 100%;
       object-fit: cover;
-      border-radius: 50%;
+    }
+
+    .avatar-btns-row {
+      display: flex;
+      gap: 8px;
     }
 
     .google-auth-btn {
@@ -651,9 +654,14 @@
         <div class="avatar-preview" id="modal-avatar-preview">
           <i class="fa-solid fa-user" style="font-size: 2.2rem; color: var(--text-secondary);"></i>
         </div>
-        <button class="pwa-reload-btn" onclick="document.getElementById('avatar-file-input').click()">
-          <i class="fa-solid fa-camera"></i> Select Photo from Gallery
-        </button>
+        <div class="avatar-btns-row">
+          <button class="pwa-reload-btn" onclick="document.getElementById('avatar-file-input').click()">
+            <i class="fa-solid fa-camera"></i> Select Photo
+          </button>
+          <button class="pwa-reload-btn" style="color:var(--accent-red);" onclick="removeSelectedPhoto()">
+            <i class="fa-solid fa-trash"></i> Remove
+          </button>
+        </div>
         <input type="file" id="avatar-file-input" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
       </div>
 
@@ -725,13 +733,12 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Google Sign-In Action
+    // Google Sign-In Action (Only Auth, NO Photo Sync)
     document.getElementById('firebase-google-btn').addEventListener('click', async () => {
       try {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         
-        // Use Google Display Name only if local name is default
         if (!localStorage.getItem('rc_user_name') || localStorage.getItem('rc_user_name') === 'RC Enthusiast') {
           localStorage.setItem('rc_user_name', user.displayName || 'RC Enthusiast');
         }
@@ -759,7 +766,7 @@
       }
     });
 
-    // Auth State Listener
+    // Auth State Listener (Does NOT touch local avatar data)
     onAuthStateChanged(auth, (user) => {
       if (user) {
         localStorage.setItem('rc_is_logged_in', 'true');
@@ -906,18 +913,18 @@
       }
     };
 
-    // PROFILE & AVATAR MANAGEMENT
+    // PROFILE & AVATAR MANAGEMENT (PERSISTENT & DECOUPLED FROM GOOGLE)
+    let tempAvatarBase64 = null;
+
     window.openProfileModal = function() {
       document.getElementById('profile-modal').style.display = 'flex';
       loadProfileData();
     };
 
     window.closeProfileModal = function() {
+      tempAvatarBase64 = null;
       document.getElementById('profile-modal').style.display = 'none';
     };
-
-    // Store local custom gallery image Base64 string
-    let tempAvatarBase64 = null;
 
     window.handleImageUpload = function(e) {
       const file = e.target.files[0];
@@ -925,10 +932,15 @@
         const reader = new FileReader();
         reader.onload = function(evt) {
           tempAvatarBase64 = evt.target.result;
-          updateAvatarPreview(tempAvatarBase64);
+          renderAvatarUI(tempAvatarBase64);
         };
         reader.readAsDataURL(file);
       }
+    };
+
+    window.removeSelectedPhoto = function() {
+      tempAvatarBase64 = "";
+      renderAvatarUI(null);
     };
 
     window.saveProfileDetails = function() {
@@ -937,9 +949,13 @@
         localStorage.setItem('rc_user_name', name);
       }
       
-      // Save image selected from gallery
-      if(tempAvatarBase64) {
-        localStorage.setItem('rc_user_avatar', tempAvatarBase64);
+      // Permanently save or clear local avatar in local storage
+      if(tempAvatarBase64 !== null) {
+        if(tempAvatarBase64 === "") {
+          localStorage.removeItem('rc_user_avatar');
+        } else {
+          localStorage.setItem('rc_user_avatar', tempAvatarBase64);
+        }
       }
       
       loadProfileData();
@@ -953,28 +969,28 @@
 
       document.getElementById('user-name-input').value = savedName;
       
-      // Always prioritize locally saved gallery image
-      if(customAvatar) {
-        updateAvatarUI(customAvatar);
+      // Render stored gallery image or blank icon
+      if(customAvatar && customAvatar.startsWith('data:image')) {
+        renderAvatarUI(customAvatar);
       } else {
-        resetAvatarUI();
+        renderAvatarUI(null);
       }
     };
 
-    function updateAvatarPreview(url) {
-      document.getElementById('modal-avatar-preview').innerHTML = `<img src="${url}">`;
-    }
+    function renderAvatarUI(url) {
+      const headerContainer = document.getElementById('header-avatar-container');
+      const modalPreview = document.getElementById('modal-avatar-preview');
 
-    function updateAvatarUI(url) {
-      document.getElementById('modal-avatar-preview').innerHTML = `<img src="${url}">`;
-      document.getElementById('header-avatar-container').innerHTML = `<img src="${url}">`;
-    }
-
-    function resetAvatarUI() {
-      const defaultIcon = `<i class="fa-solid fa-user" style="font-size: 1.2rem; color: var(--text-secondary);"></i>`;
-      const modalDefaultIcon = `<i class="fa-solid fa-user" style="font-size: 2.2rem; color: var(--text-secondary);"></i>`;
-      document.getElementById('header-avatar-container').innerHTML = defaultIcon;
-      document.getElementById('modal-avatar-preview').innerHTML = modalDefaultIcon;
+      if(url) {
+        const imgHtml = `<img src="${url}" alt="Profile">`;
+        headerContainer.innerHTML = imgHtml;
+        modalPreview.innerHTML = imgHtml;
+      } else {
+        const headerBlankIcon = `<i class="fa-solid fa-user" style="font-size: 1.2rem; color: var(--text-secondary);"></i>`;
+        const modalBlankIcon = `<i class="fa-solid fa-user" style="font-size: 2.2rem; color: var(--text-secondary);"></i>`;
+        headerContainer.innerHTML = headerBlankIcon;
+        modalPreview.innerHTML = modalBlankIcon;
+      }
     }
 
     function calculateRuntime() {

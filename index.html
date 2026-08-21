@@ -21,6 +21,7 @@
       --accent-purple: #8b5cf6;
       --accent-red: #ef4444;
       --accent-green: #10b981;
+      --accent-orange: #ff9800;
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
@@ -234,7 +235,7 @@
       text-transform: uppercase;
     }
 
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 12px 14px;
       background: rgba(15, 20, 31, 0.8);
@@ -245,7 +246,7 @@
       outline: none;
     }
 
-    input:disabled {
+    input:disabled, textarea:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       background: rgba(10, 14, 22, 0.5);
@@ -303,6 +304,18 @@
       gap: 8px;
     }
 
+    button.btn-groq {
+      background: rgba(255, 152, 0, 0.12);
+      border: 1px solid var(--accent-orange);
+      color: var(--accent-orange);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
     button.btn-gps {
       background: rgba(0, 242, 254, 0.12);
       border: 1px solid var(--accent-cyan);
@@ -318,6 +331,47 @@
       gap: 6px;
       width: 100%;
       margin-top: 8px;
+    }
+
+    /* Tricks & Mods Feed Styling */
+    .tricks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .trick-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .trick-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: #1e293b;
+    }
+
+    .trick-card-body {
+      padding: 16px;
+    }
+
+    .trick-card-body h3 {
+      margin: 0 0 8px 0;
+      font-size: 1.05rem;
+      color: var(--accent-orange);
+    }
+
+    .trick-card-body p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      white-space: pre-line;
+      line-height: 1.4;
     }
 
     /* Live RC News Styling */
@@ -433,8 +487,10 @@
       background: #121826;
       border: 1px solid var(--card-border);
       border-radius: 20px;
-      width: 100%; max-width: 440px;
+      width: 100%; max-width: 460px;
       padding: 24px; position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     .modal-close {
@@ -509,8 +565,8 @@
     .nav-item {
       display: flex; flex-direction: column;
       align-items: center; gap: 4px;
-      color: var(--text-muted); font-size: 0.7rem; font-weight: 600;
-      border: none; background: none; width: 25%; cursor: pointer;
+      color: var(--text-muted); font-size: 0.68rem; font-weight: 600;
+      border: none; background: none; width: 20%; cursor: pointer;
     }
 
     .nav-item.active { color: var(--accent-cyan); }
@@ -656,7 +712,21 @@
 
     </div>
 
-    <!-- TAB 2: SRI LANKA RC MAP -->
+    <!-- TAB 2: TRICKS & MODS FEED -->
+    <div id="tricks-tab" class="tab-content">
+      <div class="glass-card">
+        <div class="card-title">
+          <span><i class="fa-solid fa-wrench"></i> Community Tricks & Mods</span>
+          <button class="pwa-reload-btn" style="background: var(--accent-orange); color:#000; font-weight:bold;" onclick="openTrickModal()">+ Share Trick</button>
+        </div>
+
+        <div id="tricks-feed" class="tricks-grid">
+          <p style="color:var(--text-secondary);">Loading community tricks...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: SRI LANKA RC MAP -->
     <div id="map-tab" class="tab-content">
       <div class="glass-card">
         <div class="card-title">
@@ -698,7 +768,7 @@
       </div>
     </div>
 
-    <!-- TAB 3: LIVE RC NEWS -->
+    <!-- TAB 4: LIVE RC NEWS -->
     <div id="news-tab" class="tab-content">
       <div class="card-title" style="margin-bottom:14px;">
         <span><i class="fa-solid fa-newspaper"></i> World RC News</span>
@@ -720,20 +790,53 @@
       </div>
     </div>
 
-    <!-- TAB 4: GEMINI AI MECHANIC -->
+    <!-- TAB 5: GROQ AI MECHANIC -->
     <div id="ai-tab" class="tab-content">
       <div class="glass-card">
-        <div class="card-title"><span><i class="fa-solid fa-robot"></i> Gemini AI RC Mechanic</span></div>
+        <div class="card-title"><span><i class="fa-solid fa-robot"></i> Groq AI RC Mechanic</span></div>
         <div class="chat-box" id="ai-chat-box">
-          <div class="chat-msg bot">👋 ආයුබෝවන්! මම ඔයාගේ <strong>Gemini AI RC Mechanic</strong>. ඕනෑම ප්‍රශ්නයක් ඇතුළත් කරන්න.</div>
+          <div class="chat-msg bot">👋 ආයුබෝවන්! මම ඔයාගේ <strong>Groq AI RC Mechanic</strong>. RC වාහන සම්බන්ධ ඕනෑම ප්‍රශ්නයක් මගෙන් අහන්න!</div>
         </div>
         <div class="chat-input-row">
-          <input type="text" id="ai-input" placeholder="Ask Gemini..." onkeypress="if(event.key==='Enter') sendAiMessage()">
+          <input type="text" id="ai-input" placeholder="Ask Groq AI..." onkeypress="if(event.key==='Enter') sendAiMessage()">
           <button onclick="sendAiMessage()"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
       </div>
     </div>
 
+  </div>
+
+  <!-- POST A TRICK MODAL -->
+  <div class="modal-overlay" id="trick-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeTrickModal()"><i class="fa-solid fa-xmark"></i></button>
+      <div class="card-title"><span style="color:var(--accent-orange);"><i class="fa-solid fa-screwdriver-wrench"></i> Post a New RC Trick</span></div>
+
+      <form id="trick-form" onsubmit="handleTrickSubmit(event)">
+        <div class="form-group">
+          <label for="trick-title">Trick Title</label>
+          <input type="text" id="trick-title" placeholder="e.g. MN D99S Flex Modification" required>
+        </div>
+
+        <div class="form-group">
+          <label for="trick-desc">Description / Instructions</label>
+          <textarea id="trick-desc" rows="4" placeholder="Explain your trick..." required></textarea>
+        </div>
+
+        <button type="button" id="groq-enhance-btn" class="btn-groq" onclick="enhanceTextWithGroq()">
+          ✨ Enhance Text with Groq AI
+        </button>
+
+        <div class="form-group">
+          <label for="trick-image">Select Photo from Gallery</label>
+          <input type="file" id="trick-image" accept="image/*" required>
+        </div>
+
+        <button type="submit" id="submit-trick-btn" class="btn-primary" style="background: linear-gradient(135deg, var(--accent-orange), #f57c00);">
+          Upload Post
+        </button>
+      </form>
+    </div>
   </div>
 
   <!-- PROFILE & SIGN IN MODAL -->
@@ -795,6 +898,10 @@
       <i class="fa-solid fa-toolbox"></i>
       <span>Tools</span>
     </button>
+    <button class="nav-item" onclick="switchTab('tricks-tab', this)">
+      <i class="fa-solid fa-screwdriver-wrench"></i>
+      <span>Tricks</span>
+    </button>
     <button class="nav-item" onclick="switchTab('map-tab', this)">
       <i class="fa-solid fa-map-location-dot"></i>
       <span>RC Map</span>
@@ -809,21 +916,16 @@
     </button>
   </nav>
 
-  <!-- Global App Config Script -->
-  <script>
-    const APP_CONFIG = {
-      GEMINI_API_KEY: "YOUR_GEMINI_API_KEY_HERE"
-    };
-  </script>
-
   <!-- Leaflet JS for Map -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- FIREBASE SDK v10 -->
+  <!-- FIREBASE SDK v10 (Modular Import) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDc3kDN1KPnXK98NI2NvwZyxCvDZxLa13w",
@@ -838,12 +940,28 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
+    const firestore = getFirestore(app);
+    const storage = getStorage(app);
     const provider = new GoogleAuthProvider();
 
+    // Attach to window object for global script access
     window.firebaseDB = db;
     window.dbRef = ref;
     window.dbSet = set;
     window.dbOnValue = onValue;
+
+    window.firestoreDB = firestore;
+    window.fsCollection = collection;
+    window.fsAddDoc = addDoc;
+    window.fsGetDocs = getDocs;
+    window.fsQuery = query;
+    window.fsOrderBy = orderBy;
+    window.fsServerTimestamp = serverTimestamp;
+
+    window.firebaseStorage = storage;
+    window.fStorageRef = storageRef;
+    window.fUploadBytes = uploadBytes;
+    window.fGetDownloadURL = getDownloadURL;
 
     document.getElementById('firebase-google-btn').addEventListener('click', async () => {
       try {
@@ -890,13 +1008,16 @@
     });
   </script>
 
-  <!-- MAIN SCRIPT -->
+  <!-- MAIN APP SCRIPT -->
   <script>
     let deferredPrompt;
     let map, userMarker;
     let markersGroup;
     let selectedLat = null, selectedLng = null;
     let isEditingMode = true;
+
+    // Groq API Key Setup
+    const GROQ_API_KEY = "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"; // Replace with your actual Groq key
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -956,6 +1077,8 @@
         fetchLiveRcNews();
       } else if(tabId === 'map-tab') {
         initRcMap();
+      } else if(tabId === 'tricks-tab') {
+        loadTricksFeed();
       }
     }
 
@@ -969,15 +1092,14 @@
         return;
       }
 
-      // Average discharge assumption for general RC vehicles (~2.5A average draw)
       const avgCurrentDrawA = 2.5; 
-      const usableAh = (mah / 1000) * 0.8; // 80% safe depth of discharge
+      const usableAh = (mah / 1000) * 0.8;
       const runtimeMins = Math.round((usableAh / avgCurrentDrawA) * 60);
 
       document.getElementById('runtime-val').innerText = `~${runtimeMins} Mins (Avg)`;
     }
 
-    // 2. RC Speed Calculator (Motor Size & Tyre Diameter)
+    // 2. RC Speed Calculator
     function calculateSpeed() {
       const motorType = document.getElementById('motor-size').value;
       const tyreDiameterMm = parseFloat(document.getElementById('tyre-diameter').value);
@@ -987,7 +1109,6 @@
         return;
       }
 
-      // RPM estimates for brushed motors at standard voltage (7.4V)
       const motorRpmMap = {
         '260': 12000,
         '280': 14000,
@@ -998,7 +1119,7 @@
       };
 
       const rpm = motorRpmMap[motorType] || 18000;
-      const gearRatio = 15; // Typical overall gear ratio for RC crawlers/trucks
+      const gearRatio = 15;
 
       const wheelCircumferenceMeters = (Math.PI * tyreDiameterMm) / 1000;
       const wheelRpm = rpm / gearRatio;
@@ -1008,7 +1129,7 @@
       document.getElementById('speed-val').innerText = `~${speedKmh.toFixed(1)} km/h`;
     }
 
-    // 3. Crawler Incline / Climbing Angle Calculator (Degrees)
+    // 3. Crawler Incline / Climbing Angle Calculator
     function calculateClimbingAngle() {
       const height = parseFloat(document.getElementById('climb-height').value);
       const distance = parseFloat(document.getElementById('climb-distance').value);
@@ -1018,11 +1139,147 @@
         return;
       }
 
-      // Angle calculation in degrees: arctan(height / distance)
       const angleRad = Math.atan(height / distance);
       const angleDeg = angleRad * (180 / Math.PI);
 
       document.getElementById('climb-val').innerText = `~${angleDeg.toFixed(1)}°`;
+    }
+
+    /* TRICKS & MODS FEED FUNCTIONS */
+
+    function openTrickModal() {
+      document.getElementById('trick-modal').style.display = 'flex';
+    }
+
+    function closeTrickModal() {
+      document.getElementById('trick-modal').style.display = 'none';
+      document.getElementById('trick-form').reset();
+    }
+
+    async function enhanceTextWithGroq() {
+      const descInput = document.getElementById('trick-desc');
+      const groqBtn = document.getElementById('groq-enhance-btn');
+
+      if (!descInput.value.trim()) {
+        alert("කරුණාකර මුලින්ම විස්තරයක් (Description) සටහන් කරන්න.");
+        return;
+      }
+
+      groqBtn.innerText = "Enhancing...";
+      groqBtn.disabled = true;
+
+      try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${GROQ_API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              {
+                role: "system",
+                content: "You are an expert RC mechanics assistant. Format and enhance the given text clearly into easy-to-read steps or bullet points."
+              },
+              {
+                role: "user",
+                content: descInput.value
+              }
+            ]
+          })
+        });
+
+        const data = await response.json();
+        if (data.choices && data.choices[0]) {
+          descInput.value = data.choices[0].message.content;
+        }
+      } catch (err) {
+        console.error("Groq AI Error:", err);
+        alert("AI Enhancement එක සාර්ථක වූයේ නැත.");
+      } finally {
+        groqBtn.innerText = "✨ Enhance Text with Groq AI";
+        groqBtn.disabled = false;
+      }
+    }
+
+    async function handleTrickSubmit(e) {
+      e.preventDefault();
+
+      const title = document.getElementById("trick-title").value;
+      const description = document.getElementById("trick-desc").value;
+      const imageFile = document.getElementById("trick-image").files[0];
+      const submitBtn = document.getElementById("submit-trick-btn");
+
+      if(!imageFile) {
+        alert("Please select an image file.");
+        return;
+      }
+
+      submitBtn.innerText = "Uploading...";
+      submitBtn.disabled = true;
+
+      try {
+        // 1. Upload Image to Storage
+        const fileRef = window.fStorageRef(window.firebaseStorage, `rc_tricks/${Date.now()}_${imageFile.name}`);
+        const snapshot = await window.fUploadBytes(fileRef, imageFile);
+        const imageUrl = await window.fGetDownloadURL(snapshot.ref);
+
+        // 2. Add Record to Firestore
+        await window.fsAddDoc(window.fsCollection(window.firestoreDB, "rc_tricks"), {
+          title: title,
+          description: description,
+          imageUrl: imageUrl,
+          createdAt: window.fsServerTimestamp()
+        });
+
+        closeTrickModal();
+        loadTricksFeed();
+        alert("Trick uploaded successfully!");
+      } catch (error) {
+        console.error("Upload Error:", error);
+        alert("Error uploading post to Firebase.");
+      } finally {
+        submitBtn.innerText = "Upload Post";
+        submitBtn.disabled = false;
+      }
+    }
+
+    async function loadTricksFeed() {
+      const feedContainer = document.getElementById("tricks-feed");
+      feedContainer.innerHTML = "<p style='color:var(--text-secondary);'>Loading tricks...</p>";
+
+      try {
+        const q = window.fsQuery(
+          window.fsCollection(window.firestoreDB, "rc_tricks"), 
+          window.fsOrderBy("createdAt", "desc")
+        );
+        const querySnapshot = await window.fsGetDocs(q);
+
+        if (querySnapshot.empty) {
+          feedContainer.innerHTML = "<p style='color:var(--text-secondary);'>තවම Posts මුකුත් නෑ! පළමු Trick එක ඔයා Post කරන්න.</p>";
+          return;
+        }
+
+        feedContainer.innerHTML = "";
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const card = document.createElement("div");
+          card.className = "trick-card";
+          card.innerHTML = `
+            <img src="${data.imageUrl}" alt="${data.title}">
+            <div class="trick-card-body">
+              <h3>${data.title}</h3>
+              <p>${data.description}</p>
+            </div>
+          `;
+          feedContainer.appendChild(card);
+        });
+      } catch (err) {
+        console.error("Feed Error:", err);
+        feedContainer.innerHTML = "<p style='color:var(--accent-red);'>Feed එක Load කිරීමට නොහැකි විය.</p>";
+      }
     }
 
 
@@ -1038,7 +1295,6 @@
 
         markersGroup = L.layerGroup().addTo(map);
 
-        // Click map to select location
         map.on('click', function(e) {
           if (!isEditingMode) return;
           updateSelectedPosition(e.latlng.lat, e.latlng.lng);
@@ -1063,7 +1319,6 @@
       document.getElementById('selected-coords-txt').innerText = `📍 Selected Location: (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
     }
 
-    /* GPS Auto Location Trigger */
     function locateUserGPS() {
       if (!navigator.geolocation) {
         alert('Geolocation is not supported by your browser.');
@@ -1123,13 +1378,11 @@
         updatedAt: new Date().toISOString()
       };
 
-      // Local Storage Save
       localStorage.setItem('rc_user_models', modelsInput);
       localStorage.setItem('rc_user_lat', selectedLat);
       localStorage.setItem('rc_user_lng', selectedLng);
       localStorage.setItem('rc_map_saved', 'true');
 
-      // Firebase Sync
       if (window.firebaseDB) {
         window.dbSet(window.dbRef(window.firebaseDB, 'drivers/' + userId), driverData)
           .then(() => {
@@ -1192,7 +1445,6 @@
         }
       });
 
-      // Restore user state
       const savedModels = localStorage.getItem('rc_user_models');
       const savedLat = localStorage.getItem('rc_user_lat');
       const savedLng = localStorage.getItem('rc_user_lng');
@@ -1384,6 +1636,7 @@
       }
     }
 
+    // AI MECHANIC VIA GROQ API (Llama 3.3 Versatile)
     async function sendAiMessage() {
       const input = document.getElementById('ai-input');
       const msg = input.value.trim();
@@ -1398,20 +1651,33 @@
       chatBox.innerHTML += `<div class="chat-msg bot" id="${loadingId}"><i class="fa-solid fa-spinner fa-spin"></i> Processing...</div>`;
 
       try {
-        const apiKey = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.GEMINI_API_KEY) ? APP_CONFIG.GEMINI_API_KEY : '';
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${GROQ_API_KEY}`,
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: `Answer briefly: ${msg}` }] }]
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              {
+                role: "system",
+                content: "You are an expert RC vehicles mechanics assistant. Help the user with remote control car/truck/boat modifications, electrical fixes, motor/ESC specs, and troubleshooting. Answer concisely and clearly."
+              },
+              {
+                role: "user",
+                content: msg
+              }
+            ]
           })
         });
 
         const data = await response.json();
-        const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Unable to retrieve response.";
+        const aiReply = data.choices?.[0]?.message?.content || "Unable to retrieve response from Groq AI.";
         document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">${aiReply.replace(/\n/g, '<br>')}</div>`;
       } catch(e) {
-        document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">❌ Connection error.</div>`;
+        console.error("Groq AI Error:", e);
+        document.getElementById(loadingId).outerHTML = `<div class="chat-msg bot">❌ Connection error. Please check your Groq API Key.</div>`;
       }
       chatBox.scrollTop = chatBox.scrollHeight;
     }

@@ -867,7 +867,13 @@
 
       <div class="form-group">
         <label>Display Name</label>
-        <input type="text" id="user-name-input" placeholder="Enter display name" value="RC Enthusiast">
+        <input type="text" id="user-name-input" placeholder="Enter display name" value="RC Enthusiast" maxlength="40">
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-brands fa-whatsapp" style="color:#25D366;"></i> WhatsApp Number</label>
+        <input type="tel" id="user-whatsapp-input" placeholder="e.g. 0771234567 or +94771234567" inputmode="tel" autocomplete="tel" maxlength="20">
+        <small style="display:block;margin-top:6px;color:var(--text-secondary);">Used only for the “Chat via WhatsApp” button on your RC Map profile.</small>
       </div>
 
       <button class="btn-primary" onclick="saveProfileDetails()">Save Profile</button>
@@ -1022,7 +1028,9 @@
 
     // Groq API Key Setup
     const GROQ_API_KEY = "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";
-    const GROQ_MODEL = "openai/gpt-oss-120b";
+    // Compound is Groq's full-featured agentic system (web search + code execution).
+    // GPT-OSS 120B is kept as a fallback if Compound is temporarily unavailable.
+    const GROQ_MODELS = ["groq/compound", "openai/gpt-oss-120b"];
     const GROQ_REASONING_EFFORT = "high";
 
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -1365,15 +1373,53 @@
       );
     }
 
+    function normalizeWhatsAppNumber(raw) {
+      let value = String(raw || '').trim().replace(/[^\d+]/g, '');
+      if (!value) return '';
+      if (value.startsWith('00')) value = '+' + value.slice(2);
+      if (value.startsWith('+')) return value.slice(1);
+      // Sri Lanka convenience: 07XXXXXXXX -> 947XXXXXXXX
+      if (value.startsWith('0') && value.length === 10) return '94' + value.slice(1);
+      return value;
+    }
+
+    function getCurrentUserId() {
+      let userId = localStorage.getItem('rc_user_uid');
+      if (!userId) {
+        userId = 'user_' + Math.random().toString(36).slice(2, 11);
+        localStorage.setItem('rc_user_uid', userId);
+      }
+      return userId;
+    }
+
+    async function syncDriverProfileToFirebase() {
+      if (!window.firebaseDB) return false;
+      const lat = parseFloat(localStorage.getItem('rc_user_lat'));
+      const lng = parseFloat(localStorage.getItem('rc_user_lng'));
+      const models = (localStorage.getItem('rc_user_models') || '').trim();
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || !models) return false;
+
+      const driverData = {
+        name: localStorage.getItem('rc_user_name') || 'RC Driver',
+        models,
+        whatsapp: normalizeWhatsAppNumber(localStorage.getItem('rc_user_whatsapp') || ''),
+        lat,
+        lng,
+        updatedAt: new Date().toISOString()
+      };
+
+      await window.dbSet(
+        window.dbRef(window.firebaseDB, 'drivers/' + getCurrentUserId()),
+        driverData
+      );
+      return true;
+    }
+
     async function saveUserMapLocation() {
       const modelsInput = document.getElementById('user-rc-models').value.trim();
       const userName = localStorage.getItem('rc_user_name') || 'RC Driver';
-      let userId = localStorage.getItem('rc_user_uid');
-
-      if (!userId) {
-        userId = 'user_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('rc_user_uid', userId);
-      }
+      const whatsapp = normalizeWhatsAppNumber(localStorage.getItem('rc_user_whatsapp') || '');
+      const userId = getCurrentUserId();
 
       if (!Number.isFinite(selectedLat) || !Number.isFinite(selectedLng)) {
         alert('Please select your location using GPS or clicking on the map first!');
@@ -1388,6 +1434,7 @@
       const driverData = {
         name: userName,
         models: modelsInput,
+        whatsapp,
         lat: selectedLat,
         lng: selectedLng,
         updatedAt: new Date().toISOString()
@@ -1401,9 +1448,9 @@
       if (window.firebaseDB) {
         try {
           await window.dbSet(window.dbRef(window.firebaseDB, 'drivers/' + userId), driverData);
-          alert('Location & RC Models updated on Map successfully!');
+          alert('Location, RC Models & WhatsApp details updated successfully!');
         } catch (err) {
-          console.error("Map save error:", err);
+          console.error('Map save error:', err);
           alert('Firebase save failed. Your details were saved locally.');
         }
       } else {
@@ -1446,12 +1493,22 @@
         if (data) {
           Object.keys(data).forEach(key => {
             const driver = data[key];
-            if (driver.lat && driver.lng) {
+            if (Number.isFinite(Number(driver.lat)) && Number.isFinite(Number(driver.lng))) {
+              const safeName = escapeHtml(driver.name || 'RC Driver');
+              const safeModels = escapeHtml(driver.models || 'RC Models not listed');
+              const waNumber = normalizeWhatsAppNumber(driver.whatsapp || '');
+              const waButton = waNumber
+                ? `<a href="https://wa.me/${waNumber}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;padding:8px 11px;border-radius:9px;background:#25D366;color:#061b0d;text-decoration:none;font-weight:700;font-size:0.78rem;box-shadow:0 3px 10px rgba(37,211,102,.22);"><i class="fa-brands fa-whatsapp"></i> Chat via WhatsApp</a>`
+                : `<div style="margin-top:9px;font-size:0.72rem;color:var(--text-secondary);">WhatsApp not added to this profile.</div>`;
+
               const popupContent = `
-                <div style="font-weight:bold; color:var(--accent-cyan);">${driver.name}</div>
-                <div style="font-size:0.8rem; margin-top:4px;"><strong>Models:</strong> ${driver.models}</div>
+                <div style="min-width:190px;max-width:230px;">
+                  <div style="font-weight:800;color:var(--accent-cyan);font-size:0.95rem;">${safeName}</div>
+                  <div style="font-size:0.8rem;margin-top:6px;line-height:1.45;"><strong>RC:</strong> ${safeModels}</div>
+                  ${waButton}
+                </div>
               `;
-              L.marker([driver.lat, driver.lng])
+              L.marker([Number(driver.lat), Number(driver.lng)])
                 .bindPopup(popupContent)
                 .addTo(markersGroup);
             }
@@ -1616,11 +1673,24 @@
       renderAvatarUI(null);
     };
 
-    window.saveProfileDetails = function() {
+    window.saveProfileDetails = async function() {
       const name = document.getElementById('user-name-input').value.trim();
-      if(name) {
-        localStorage.setItem('rc_user_name', name);
+      const whatsappRaw = document.getElementById('user-whatsapp-input').value.trim();
+      const whatsapp = normalizeWhatsAppNumber(whatsappRaw);
+
+      if (!name) {
+        alert('Please enter a display name.');
+        return;
       }
+
+      if (whatsapp && !/^94\d{9}$/.test(whatsapp)) {
+        alert('Please enter a valid Sri Lankan WhatsApp number, e.g. 0771234567 or +94771234567.');
+        return;
+      }
+
+      localStorage.setItem('rc_user_name', name);
+      if (whatsapp) localStorage.setItem('rc_user_whatsapp', whatsapp);
+      else localStorage.removeItem('rc_user_whatsapp');
       
       if(tempAvatarBase64 !== null) {
         if(tempAvatarBase64 === "") {
@@ -1628,6 +1698,12 @@
         } else {
           localStorage.setItem('rc_user_avatar', tempAvatarBase64);
         }
+      }
+
+      try {
+        await syncDriverProfileToFirebase();
+      } catch (err) {
+        console.error('Profile Firebase sync error:', err);
       }
       
       loadProfileData();
@@ -1637,9 +1713,11 @@
 
     window.loadProfileData = function() {
       const savedName = localStorage.getItem('rc_user_name') || 'RC Enthusiast';
+      const savedWhatsApp = localStorage.getItem('rc_user_whatsapp') || '';
       const customAvatar = localStorage.getItem('rc_user_avatar');
 
       document.getElementById('user-name-input').value = savedName;
+      document.getElementById('user-whatsapp-input').value = savedWhatsApp ? '+' + savedWhatsApp : '';
       
       if(customAvatar && customAvatar.startsWith('data:image')) {
         renderAvatarUI(customAvatar);
@@ -1696,36 +1774,57 @@
         throw new Error("Groq API key is not configured.");
       }
 
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${GROQ_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          messages,
-          temperature: options.temperature ?? 0.3,
-          max_tokens: options.max_tokens ?? 1800,
-          reasoning_effort: options.reasoning_effort ?? GROQ_REASONING_EFFORT
-        })
-      });
+      let lastError = null;
 
-      let data = null;
-      try {
-        data = await response.json();
-      } catch {
-        throw new Error(`Groq returned HTTP ${response.status}.`);
+      for (const model of GROQ_MODELS) {
+        try {
+          const body = {
+            model,
+            messages,
+            max_tokens: model === 'groq/compound' ? 8192 : 4096
+          };
+
+          if (model !== 'groq/compound') {
+            body.temperature = options.temperature ?? 0.25;
+            body.reasoning_effort = options.reasoning_effort ?? GROQ_REASONING_EFFORT;
+          }
+
+          const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${GROQ_API_KEY}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+          });
+
+          let data = null;
+          try {
+            data = await response.json();
+          } catch {
+            throw new Error(`Groq returned HTTP ${response.status}.`);
+          }
+
+          if (!response.ok) {
+            throw new Error(data?.error?.message || `Groq request failed (HTTP ${response.status}).`);
+          }
+
+          const message = data?.choices?.[0]?.message;
+          const content = message?.content?.trim();
+          if (content) return content;
+
+          // Some advanced/tool-enabled responses can expose useful text in reasoning.
+          const reasoning = message?.reasoning?.trim();
+          if (reasoning) return reasoning;
+
+          throw new Error(`Groq returned an empty response from ${model}.`);
+        } catch (error) {
+          lastError = error;
+          console.warn(`Groq model ${model} failed:`, error);
+        }
       }
 
-      if (!response.ok) {
-        const message = data?.error?.message || `Groq request failed (HTTP ${response.status}).`;
-        throw new Error(message);
-      }
-
-      const content = data?.choices?.[0]?.message?.content?.trim();
-      if (!content) throw new Error("Groq returned an empty response.");
-      return content;
+      throw lastError || new Error('Groq request failed.');
     }
 
     async function sendAiMessage() {
@@ -1770,8 +1869,8 @@ transmitters, gearing, suspension, diagnostics and safe modifications.
 IMPORTANT ANSWERING RULES:
 1. Reason carefully before answering. Prefer correct engineering logic over guessing.
 2. If the user names a specific RC model, transmitter, ESC, motor or servo, do NOT assume
-   its exact specifications. State what is known and ask for the exact model/version
-   when that detail changes the recommendation.
+   its exact specifications. Use web search when current manufacturer/product information
+   is needed. If the exact version still cannot be verified, say so clearly.
 3. Separate FACT, CALCULATION and RECOMMENDATION when useful.
 4. For calculations, show the formula and use the user's actual values.
 5. Never invent prices, specifications, compatibility, pinouts or range figures.

@@ -1021,8 +1021,9 @@
     let isEditingMode = true;
 
     // Groq API Key Setup
-    const GROQ_API_KEY = "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";
+    const GROQ_API_KEY = "PASTE_YOUR_GROQ_API_KEY_HERE";
     const GROQ_MODEL = "openai/gpt-oss-120b";
+    const GROQ_REASONING_EFFORT = "high";
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -1180,7 +1181,7 @@
             content: "You are an expert RC mechanic and technical editor. Rewrite the user's RC modification/trick description into clear, concise, easy-to-follow steps. Preserve the user's technical meaning. Do not invent specifications or unsafe instructions."
           },
           { role: "user", content: descInput.value.trim() }
-        ], { temperature: 0.2, max_tokens: 900 });
+        ], { temperature: 0.2, max_tokens: 1200, reasoning_effort: "medium" });
 
         descInput.value = enhanced;
       } catch (err) {
@@ -1675,6 +1676,21 @@
         .replace(/'/g, '&#039;');
     }
 
+    function renderAiText(value) {
+      // Lightweight safe Markdown renderer for AI replies.
+      let text = escapeHtml(value);
+      text = text.replace(/^### (.*)$/gm, '<h4>$1</h4>');
+      text = text.replace(/^## (.*)$/gm, '<h3>$1</h3>');
+      text = text.replace(/^# (.*)$/gm, '<h3>$1</h3>');
+      text = text.replace(/^\*\*([^*]+)\*\*$/gm, '<strong>$1</strong>');
+      text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      text = text.replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>');
+      text = text.replace(/(<li>.*<\/li>)(?=\s*<li>)/gs, '$1');
+      text = text.replace(/(?:<li>.*<\/li>\s*)+/gs, m => `<ul>${m}</ul>`);
+      text = text.replace(/\n/g, '<br>');
+      return text;
+    }
+
     async function callGroq(messages, options = {}) {
       if (!GROQ_API_KEY || GROQ_API_KEY === "PASTE_YOUR_GROQ_API_KEY_HERE") {
         throw new Error("Groq API key is not configured.");
@@ -1690,7 +1706,8 @@
           model: GROQ_MODEL,
           messages,
           temperature: options.temperature ?? 0.3,
-          max_tokens: options.max_tokens ?? 1200
+          max_tokens: options.max_tokens ?? 1800,
+          reasoning_effort: options.reasoning_effort ?? GROQ_REASONING_EFFORT
         })
       });
 
@@ -1745,13 +1762,27 @@
         const aiReply = await callGroq([
           {
             role: "system",
-            content: `You are RC Garage LK's expert remote-control vehicle mechanic.
-Help with RC cars, trucks, crawlers, boats, electronics, batteries, motors, ESCs,
-servos, gearing, suspension, troubleshooting and safe modifications.
-Give practical, technically accurate answers. If the user gives insufficient
-specifications, ask for the missing values. Do not invent exact specifications.
-Use clear headings and short bullet points. Reply in the user's language when possible.
-Do not recommend dangerous stunts or unsafe electrical practices.`
+            content: `You are the senior technical RC mechanic for RC Garage LK.
+Your job is to give accurate, practical, model-specific help for RC cars, trucks,
+crawlers, boats, electronics, batteries, motors, ESCs, servos, receivers,
+transmitters, gearing, suspension, diagnostics and safe modifications.
+
+IMPORTANT ANSWERING RULES:
+1. Reason carefully before answering. Prefer correct engineering logic over guessing.
+2. If the user names a specific RC model, transmitter, ESC, motor or servo, do NOT assume
+   its exact specifications. State what is known and ask for the exact model/version
+   when that detail changes the recommendation.
+3. Separate FACT, CALCULATION and RECOMMENDATION when useful.
+4. For calculations, show the formula and use the user's actual values.
+5. Never invent prices, specifications, compatibility, pinouts or range figures.
+6. For compatibility questions, check all relevant interfaces: voltage, connectors,
+   signal protocol, channel count, current rating, physical fit and programming support.
+7. If the question is ambiguous, ask only the minimum important follow-up questions.
+8. Give a direct answer first, then the explanation. Avoid filler.
+9. Reply in Sinhala, Singlish or English according to the user's language. Keep technical
+   terms such as ESC, BEC, PWM, KV, RPM, LiPo, receiver and dual-rate unchanged.
+10. Use clean Markdown: headings, numbered steps, bullets and small tables when useful.
+11. Do not recommend dangerous stunts or unsafe electrical practices.`
           },
           ...recentMessages
         ]);
@@ -1760,7 +1791,7 @@ Do not recommend dangerous stunts or unsafe electrical practices.`
 
         const loader = document.getElementById(loadingId);
         if (loader) {
-          loader.innerHTML = escapeHtml(aiReply).replace(/\n/g, '<br>');
+          loader.innerHTML = renderAiText(aiReply);
         }
       } catch (e) {
         console.error("Groq AI Error:", e);
@@ -1784,7 +1815,7 @@ Do not recommend dangerous stunts or unsafe electrical practices.`
     function clearAiChat() {
       aiConversation.length = 0;
       document.getElementById('ai-chat-box').innerHTML =
-        `<div class="chat-msg bot">👋 Welcome! im <strong>Groq AI RC Mechanic</strong>. RC vehicl!</div>`;
+        `<div class="chat-msg bot">👋 ආයුබෝවන්! මම <strong>Groq AI RC Mechanic</strong>. RC vehicle එක ගැන ප්‍රශ්නයක් අහන්න!</div>`;
     }
 
     function forceAppUpdate() {

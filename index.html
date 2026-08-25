@@ -922,10 +922,6 @@
           <textarea id="trick-desc" rows="4" placeholder="Explain your trick..." required></textarea>
         </div>
 
-        <button type="button" id="groq-enhance-btn" class="btn-groq" onclick="enhanceTextWithGroq()">
-          ✨ Enhance Text with Groq AI
-        </button>
-
         <div class="form-group">
           <label for="trick-image">Select Photo from Gallery</label>
           <input type="file" id="trick-image" accept="image/*" required>
@@ -1140,8 +1136,8 @@
     const GROQ_API_KEY = "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";
     // Compound is Groq's full-featured agentic system (web search + code execution).
     // GPT-OSS 120B is kept as a fallback if Compound is temporarily unavailable.
-    const GROQ_MODELS = ["qwen/qwen3.6-27b", "openai/gpt-oss-20b"];
-    const GROQ_REASONING_EFFORT = "default";
+    const GROQ_MODELS = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"];
+    const GROQ_REASONING_EFFORT = "medium";
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -1285,49 +1281,63 @@
       document.getElementById('trick-form').reset();
     }
 
-    async function enhanceTextWithGroq() {
-      const descInput = document.getElementById('trick-desc');
-      const groqBtn = document.getElementById('groq-enhance-btn');
+    async function resizeImageForUpload(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const maxSize = 1600;
+            const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(img.width * scale));
+            canvas.height = Math.max(1, Math.round(img.height * scale));
+            const ctx = canvas.getContext('2d', { alpha: false });
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(
+              blob => blob ? resolve(blob) : reject(new Error('Could not prepare the image for upload.')),
+              'image/jpeg',
+              0.82
+            );
+          };
+          img.onerror = () => reject(new Error('The selected image could not be read.'));
+          img.src = reader.result;
+        };
+        reader.onerror = () => reject(new Error('Could not read the selected image.'));
+        reader.readAsDataURL(file);
+      });
+    }
 
-      if (!descInput.value.trim()) {
-        alert("Please enter a description first.");
-        return;
-      }
-
-      groqBtn.innerText = "Enhancing...";
-      groqBtn.disabled = true;
-
-      try {
-        const enhanced = await callGroq([
-          {
-            role: "system",
-            content: "You are an expert RC mechanic and technical editor. Rewrite the user's RC modification/trick description into clear, concise, easy-to-follow steps. Preserve the user's technical meaning. Do not invent specifications or unsafe instructions."
-          },
-          { role: "user", content: descInput.value.trim() }
-        ], { temperature: 0.4, max_tokens: 1600, reasoning_effort: "default" });
-
-        descInput.value = enhanced;
-      } catch (err) {
-        console.error("Groq AI Error:", err);
-        alert(`AI Enhancement failed: ${err.message}`);
-      } finally {
-        groqBtn.innerText = "✨ Enhance Text with Groq AI";
-        groqBtn.disabled = false;
-      }
+    function withTimeout(promise, ms, message) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
+      ]);
     }
 
     async function handleTrickSubmit(e) {
       e.preventDefault();
 
+      const user = window.currentFirebaseUser;
+      if (!user) {
+        alert("Please sign in with Google before uploading an RC trick.");
+        return;
+      }
+
       const title = document.getElementById("trick-title").value.trim();
       const description = document.getElementById("trick-desc").value.trim();
-      const currentUid = localStorage.getItem("rc_user_uid") || null;
-      const currentUserName = localStorage.getItem("rc_user_name") || "RC Enthusiast";
+      const currentUid = user.uid;
+      const currentUserName = user.displayName || localStorage.getItem("rc_user_name") || "RC Enthusiast";
       const imageFile = document.getElementById("trick-image").files[0];
       const submitBtn = document.getElementById("submit-trick-btn");
 
-      if(!imageFile) {
-        alert("Please select an image file.");
+      if (!title || !description) {
+        alert("Please enter a title and description.");
+        return;
+      }
+
+      if (!imageFile) {
+        alert("Please select an image.");
         return;
       }
 
@@ -1336,37 +1346,66 @@
         return;
       }
 
-      if (imageFile.size > 5 * 1024 * 1024) {
-        alert("Trick photo must be 5 MB or smaller.");
+      if (imageFile.size > 15 * 1024 * 1024) {
+        alert("Please choose an image smaller than 15 MB.");
         return;
       }
 
-      submitBtn.innerText = "Uploading...";
+      submitBtn.innerText = "Preparing...";
       submitBtn.disabled = true;
 
       try {
-        // 1. Upload Image to Storage
-        const safeFileName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const fileRef = window.fStorageRef(window.firebaseStorage, `rc_tricks/${Date.now()}_${safeFileName}`);
-        const snapshot = await window.fUploadBytes(fileRef, imageFile);
-        const imageUrl = await window.fGetDownloadURL(snapshot.ref);
+        const compressedImage = await resizeImageForUpload(imageFile);
 
-        // 2. Add Record to Firestore
-        await window.fsAddDoc(window.fsCollection(window.firestoreDB, "rc_tricks"), {
-          title: title,
-          description: description,
-          imageUrl: imageUrl,
-          authorUid: currentUid,
-          authorName: currentUserName,
-          createdAt: window.fsServerTimestamp()
-        });
+        const safeFileName = (imageFile.name || "rc-trick.jpg")
+          .replace(/[^a-zA-Z0-9._-]/g, "_")
+          .replace(/\.[^.]+$/, "") + ".jpg";
+
+        const fileRef = window.fStorageRef(
+          window.firebaseStorage,
+          `rc_tricks/${currentUid}/${Date.now()}_${safeFileName}`
+        );
+
+        submitBtn.innerText = "Uploading...";
+
+        const snapshot = await withTimeout(
+          window.fUploadBytes(fileRef, compressedImage, {
+            contentType: "image/jpeg",
+            customMetadata: {
+              uploadedBy: currentUid,
+              originalName: imageFile.name || "image"
+            }
+          }),
+          30000,
+          "Image upload timed out. Please check your connection and Firebase Storage rules."
+        );
+
+        const imageUrl = await withTimeout(
+          window.fGetDownloadURL(snapshot.ref),
+          15000,
+          "The image uploaded, but Firebase could not return its download URL."
+        );
+
+        await withTimeout(
+          window.fsAddDoc(window.fsCollection(window.firestoreDB, "rc_tricks"), {
+            title,
+            description,
+            imageUrl,
+            authorUid: currentUid,
+            authorName: currentUserName,
+            createdAt: window.fsServerTimestamp()
+          }),
+          20000,
+          "The image uploaded, but the trick post could not be saved to Firestore."
+        );
 
         closeTrickModal();
         loadTricksFeed();
-        alert("Trick uploaded successfully!");
+        alert("RC trick uploaded successfully!");
       } catch (error) {
-        console.error("Upload Error:", error);
-        alert("Error uploading post to Firebase.");
+        console.error("RC Trick Upload Error:", error);
+        const message = error?.message || "Unknown Firebase error.";
+        alert(`Upload failed: ${message}`);
       } finally {
         submitBtn.innerText = "Upload Post";
         submitBtn.disabled = false;
@@ -1860,15 +1899,7 @@
 
     // RC SPECIFICATIONS DATABASE
     const ADMIN_EMAIL = 'kaveeshadenuwan888@gmail.com';
-    const STARTER_RC_SPECS = [
-      { id:'mn-d99s', brand:'MN Models', model:'D99S', category:'Crawler', motor:'Not added yet', servo:'Not added yet', channels:'Not added yet', dimensions:'Not added yet', wheelbase:'Not added yet', diffs:'Not added yet', speed:'Not added yet', esc:'Not added yet', battery:'Not added yet', weight:'Not added yet', drive:'4WD', notes:'Use the Admin panel to enter verified specifications.' },
-      { id:'mn82', brand:'MN Models', model:'MN82', category:'Crawler', motor:'Not added yet', servo:'Not added yet', channels:'Not added yet', dimensions:'Not added yet', wheelbase:'Not added yet', diffs:'Not added yet', speed:'Not added yet', esc:'Not added yet', battery:'Not added yet', weight:'Not added yet', drive:'4WD', notes:'Use the Admin panel to enter verified specifications.' },
-      { id:'mn300', brand:'MN Models', model:'MN300', category:'Truck', motor:'Not added yet', servo:'Not added yet', channels:'Not added yet', dimensions:'Not added yet', wheelbase:'Not added yet', diffs:'Not added yet', speed:'Not added yet', esc:'Not added yet', battery:'Not added yet', weight:'Not added yet', drive:'4WD', notes:'Use the Admin panel to enter verified specifications.' },
-      { id:'mn212', brand:'MN Models', model:'MN212', category:'Truck', motor:'Not added yet', servo:'Not added yet', channels:'Not added yet', dimensions:'Not added yet', wheelbase:'Not added yet', diffs:'Not added yet', speed:'Not added yet', esc:'Not added yet', battery:'Not added yet', weight:'Not added yet', drive:'4WD', notes:'Use the Admin panel to enter verified specifications.' },
-      { id:'mn78', brand:'MN Models', model:'MN78', category:'Crawler', motor:'Not added yet', servo:'Not added yet', channels:'Not added yet', dimensions:'Not added yet', wheelbase:'Not added yet', diffs:'Not added yet', speed:'Not added yet', esc:'Not added yet', battery:'Not added yet', weight:'Not added yet', drive:'4WD', notes:'Use the Admin panel to enter verified specifications.' },
-      { id:'traxxas-trx4', brand:'Traxxas', model:'TRX-4', category:'Crawler / Truck', motor:'Not added yet', servo:'Not added yet', channels:'Not added yet', dimensions:'Not added yet', wheelbase:'Not added yet', diffs:'Not added yet', speed:'Not added yet', esc:'Not added yet', battery:'Not added yet', weight:'Not added yet', drive:'4WD', notes:'Use the Admin panel to enter verified specifications.' },
-      { id:'yikong-y60', brand:'Yikong', model:'Y60', category:'Crawler', motor:'Not added yet', servo:'Not added yet', channels:'Not added yet', dimensions:'Not added yet', wheelbase:'Not added yet', diffs:'Not added yet', speed:'Not added yet', esc:'Not added yet', battery:'Not added yet', weight:'Not added yet', drive:'4WD', notes:'Use the Admin panel to enter verified specifications.' }
-    ];
+    const STARTER_RC_SPECS = [];
     let rcSpecsCache = [];
 
     function isAdminUser() {
@@ -2011,13 +2042,13 @@
           const body = {
             model,
             messages,
-            max_tokens: model === 'qwen/qwen3.6-27b' ? 12000 : 8000
+            temperature: options.temperature ?? 0.25,
+            max_completion_tokens: Math.min(options.max_completion_tokens ?? 2500, 3000)
           };
 
-          if (model.startsWith('qwen/')) {
-            body.temperature = options.temperature ?? 0.25;
-            body.reasoning_effort = options.reasoning_effort ?? GROQ_REASONING_EFFORT;
-            body.reasoning_format = 'hidden';
+          // Reasoning controls are only sent to models that expose them.
+          if (model === "openai/gpt-oss-120b") {
+            body.reasoning_effort = options.reasoning_effort ?? "medium";
           }
 
           const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -2042,11 +2073,11 @@
 
           const message = data?.choices?.[0]?.message;
           const content = message?.content?.trim();
+
           if (content) return content;
 
-          // Some advanced/tool-enabled responses can expose useful text in reasoning.
-          const reasoning = message?.reasoning?.trim();
-          if (reasoning) return reasoning;
+          const refusal = message?.refusal?.trim();
+          if (refusal) return refusal;
 
           throw new Error(`Groq returned an empty response from ${model}.`);
         } catch (error) {
@@ -2055,7 +2086,7 @@
         }
       }
 
-      throw lastError || new Error('Groq request failed.');
+      throw lastError || new Error("Groq request failed.");
     }
 
     async function sendAiMessage() {
@@ -2086,7 +2117,7 @@
       aiConversation.push({ role: "user", content: msg });
 
       // Keep the browser request small while retaining recent context.
-      const recentMessages = aiConversation.slice(-10);
+      const recentMessages = aiConversation.slice(-6);
 
       try {
         const aiReply = await callGroq([

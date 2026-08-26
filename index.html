@@ -1203,7 +1203,7 @@ a {
 
     window.firebaseStorage = storage;
     window.fStorageRef = storageRef;
-    window.fUploadBytes = uploadBytes;
+    window.fUploadBytesResumable = uploadBytesResumable;
     window.fGetDownloadURL = getDownloadURL;
     window.fDeleteObject = deleteObject;
 
@@ -1449,6 +1449,63 @@ a {
       ]);
     }
 
+    function uploadTrickImage(fileRef, blob, uid, originalName) {
+      return new Promise((resolve, reject) => {
+        const uploadTask = window.fUploadBytesResumable(fileRef, blob, {
+          contentType: "image/jpeg",
+          customMetadata: {
+            uploadedBy: uid,
+            originalName
+          }
+        });
+
+        const startedAt = Date.now();
+        const timer = setInterval(() => {
+          if (Date.now() - startedAt > 120000) {
+            clearInterval(timer);
+            try { uploadTask.cancel(); } catch (_) {}
+            reject(new Error("Upload timed out after 120 seconds. Check Firebase Storage rules, the Storage bucket, or your connection."));
+          }
+        }, 1000);
+
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const percent = snapshot.totalBytes
+              ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
+              : 0;
+            const btn = document.getElementById("submit-trick-btn");
+            if (btn) btn.innerText = `Uploading ${percent}%...`;
+          },
+          (error) => {
+            clearInterval(timer);
+            console.error("Firebase Storage upload error:", error);
+
+            const code = error?.code || "unknown";
+            if (code === "storage/unauthorized") {
+              reject(new Error("Firebase Storage denied the upload. Publish the provided storage.rules file and make sure you are signed in with Google."));
+            } else if (code === "storage/canceled") {
+              reject(new Error("The upload was canceled."));
+            } else if (code === "storage/quota-exceeded") {
+              reject(new Error("Firebase Storage quota has been exceeded."));
+            } else if (code === "storage/invalid-checksum") {
+              reject(new Error("Firebase rejected the uploaded image checksum. Please try the image again."));
+            } else if (code === "storage/retry-limit-exceeded") {
+              reject(new Error("Firebase Storage could not complete the upload after retries. Check your network or Storage configuration."));
+            } else if (code === "storage/object-not-found") {
+              reject(new Error("Firebase Storage bucket/object was not found. Check the Storage bucket configuration."));
+            } else {
+              reject(new Error(`Firebase Storage error (${code}): ${error?.message || "Unknown error"}`));
+            }
+          },
+          () => {
+            clearInterval(timer);
+            resolve(uploadTask.snapshot);
+          }
+        );
+      });
+    }
+
     async function handleTrickSubmit(e) {
       e.preventDefault();
 
@@ -1500,23 +1557,13 @@ a {
           `rc_tricks/${currentUid}/${Date.now()}_${safeFileName}`
         );
 
-        submitBtn.innerText = "Uploading...";
+        submitBtn.innerText = "Starting upload...";
 
-        const snapshot = await withTimeout(
-          window.fUploadBytes(fileRef, compressedImage, {
-            contentType: "image/jpeg",
-            customMetadata: {
-              uploadedBy: currentUid,
-              originalName: imageFile.name || "image"
-            }
-          }),
-          30000,
-          "Image upload timed out. Please check your connection and Firebase Storage rules."
-        );
+        const snapshot = await uploadTrickImage(fileRef, compressedImage, currentUid, imageFile.name || "image");
 
         const imageUrl = await withTimeout(
           window.fGetDownloadURL(snapshot.ref),
-          15000,
+          30000,
           "The image uploaded, but Firebase could not return its download URL."
         );
 
@@ -1525,6 +1572,7 @@ a {
             title,
             description,
             imageUrl,
+            storagePath: fileRef.fullPath,
             authorUid: currentUid,
             authorName: currentUserName,
             createdAt: window.fsServerTimestamp(),

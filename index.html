@@ -791,6 +791,48 @@ html.rc-hard-lock body{overflow:hidden!important}
 #profile-modal.profile-required{z-index:10000001!important}
 #profile-modal.profile-required .modal-close{display:none!important}
 </style>
+
+<style id="rc-premium-account-style">
+.rc-account-tab{padding:28px 0 110px!important;min-height:calc(100vh - 130px)}
+.rc-account-shell{width:min(760px,94vw);margin:0 auto}
+.rc-account-hero{padding:12px 0 22px}
+.rc-account-brand{display:flex;align-items:center;gap:16px}
+.rc-account-icon{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;background:#fff;color:#000;font-size:22px;box-shadow:0 18px 45px rgba(255,255,255,.08)}
+.rc-account-kicker{font-size:.68rem;letter-spacing:.18em;color:rgba(255,255,255,.48);font-weight:700}
+.rc-account-hero h1{margin:4px 0 5px;color:#fff;font-size:clamp(1.6rem,4vw,2.1rem)}
+.rc-account-hero p,.rc-account-card p{margin:0;color:rgba(255,255,255,.58);line-height:1.55}
+.rc-account-card{padding:28px;border:1px solid rgba(255,255,255,.14);border-radius:26px;background:rgba(255,255,255,.045);box-shadow:0 25px 80px rgba(0,0,0,.35);backdrop-filter:blur(22px)}
+.rc-account-card-icon{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:#fff;color:#000;font-size:23px;margin-bottom:18px}
+.rc-account-card h2{color:#fff;margin:0 0 8px;font-size:1.25rem}
+.rc-account-primary,.rc-account-secondary{width:100%;min-height:50px;border-radius:15px;font-weight:750;font-size:.94rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .18s ease,opacity .18s ease}
+.rc-account-primary{border:1px solid #fff;background:#fff;color:#000;margin-top:20px}
+.rc-account-primary:hover{transform:translateY(-1px)}
+.rc-account-primary:disabled{opacity:.55;cursor:wait;transform:none}
+.rc-account-secondary{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;margin-top:18px}
+.rc-account-status{min-height:20px;margin-top:12px;color:rgba(255,255,255,.55);font-size:.8rem;text-align:center}
+.rc-profile-head{display:flex;gap:16px;align-items:center;margin-bottom:24px}
+.rc-account-avatar{width:64px;height:64px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:23px;flex:0 0 64px}
+.rc-account-avatar img{width:100%;height:100%;object-fit:cover}
+.rc-account-form{display:grid;gap:9px}
+.rc-account-form label{color:#fff;font-size:.78rem;font-weight:700;margin-top:6px}
+.rc-account-form input[type=text],.rc-account-form input[type=tel]{width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.35);color:#fff;border-radius:14px;padding:14px 15px;outline:none}
+.rc-account-form input[type=text]:focus,.rc-account-form input[type=tel]:focus{border-color:rgba(255,255,255,.45)}
+.rc-account-form input[type=file]{width:100%;box-sizing:border-box;border:1px dashed rgba(255,255,255,.22);background:rgba(255,255,255,.035);color:rgba(255,255,255,.7);border-radius:14px;padding:12px}
+.rc-account-form small{color:rgba(255,255,255,.42);font-size:.72rem;margin-bottom:5px}
+.rc-account-complete{display:flex;align-items:center;gap:10px;padding:14px;border-radius:15px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:.88rem}
+.rc-account-complete i{font-size:19px}
+html.rc-install-lock body>*{visibility:hidden!important}
+html.rc-install-lock #rc-install-gate{visibility:visible!important}
+html.rc-install-lock body{overflow:hidden!important}
+@media(max-width:560px){.rc-account-card{padding:22px}.rc-account-brand{align-items:flex-start}.rc-account-icon{width:50px;height:50px;flex-basis:50px}}
+</style>
+
+<style id="rc-no-auth-profile-modals">
+/* Authentication/profile onboarding is now a normal app screen, never a modal. */
+#profile-modal.profile-required{display:none!important}
+#rc-auth-gate{display:none!important}
+html.rc-hard-lock #profile-modal.profile-required{display:none!important}
+</style>
 </head>
 <body class="rc-install-lock"><div id="rc-install-gate" aria-modal="true" role="dialog">
 <div class="gate-card">
@@ -821,7 +863,7 @@ html.rc-hard-lock body{overflow:hidden!important}
       <button class="pwa-reload-btn" onclick="forceAppUpdate()">
         <i class="fa-solid fa-rotate"></i>
       </button>
-      <div class="profile-avatar-btn" onclick="openProfileModal()">
+      <div class="profile-avatar-btn" onclick="openAccountScreen()" title="Account">
         <span id="header-avatar-container"><i class="fa-solid fa-user" style="font-size:1.2rem; color:var(--text-secondary);"></i></span>
       </div>
     </div>
@@ -1189,6 +1231,81 @@ html.rc-hard-lock body{overflow:hidden!important}
     </div>
   </div>
 
+
+  <!-- ACCOUNT / ONBOARDING TAB: NORMAL APP SCREEN, NO POPUP -->
+  <section id="account-tab" class="tab-content rc-account-tab">
+    <div class="rc-account-shell">
+      <div class="rc-account-hero">
+        <div class="rc-account-brand">
+          <div class="rc-account-icon"><i class="fa-solid fa-user-gear"></i></div>
+          <div>
+            <div class="rc-account-kicker">R/C GARAGE SL</div>
+            <h1 id="account-title">Your Account</h1>
+            <p id="account-subtitle">Sign in and complete your profile to use the community features.</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="account-signin-panel" class="rc-account-card">
+        <div class="rc-account-card-icon"><i class="fa-brands fa-google"></i></div>
+        <h2>Sign in with Google</h2>
+        <p>Use your Google account to securely create your R/C Garage SL profile. No popup is used inside the app.</p>
+        <button id="account-google-btn" class="rc-account-primary">
+          <i class="fa-brands fa-google"></i>
+          <span>Continue with Google</span>
+        </button>
+        <div id="account-auth-status" class="rc-account-status"></div>
+      </div>
+
+      <div id="account-profile-panel" class="rc-account-card" style="display:none;">
+        <div class="rc-profile-head">
+          <div id="account-avatar-preview" class="rc-account-avatar">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <div>
+            <h2>Complete your profile</h2>
+            <p>Your name, WhatsApp number and profile photo are required before continuing.</p>
+          </div>
+        </div>
+
+        <div class="rc-account-form">
+          <label>Display Name</label>
+          <input id="account-name-input" type="text" maxlength="40" placeholder="Your display name" autocomplete="name">
+
+          <label><i class="fa-brands fa-whatsapp"></i> WhatsApp Number</label>
+          <input id="account-phone-input" type="tel" maxlength="20" placeholder="+94771234567" inputmode="tel" autocomplete="tel">
+
+          <label>Profile Photo</label>
+          <input id="account-photo-input" type="file" accept="image/*">
+          <small>Choose a clear photo. Maximum 2 MB.</small>
+
+          <button id="account-save-btn" class="rc-account-primary">
+            <i class="fa-solid fa-check"></i>
+            Save & Continue
+          </button>
+          <div id="account-save-status" class="rc-account-status"></div>
+        </div>
+      </div>
+
+      <div id="account-signed-panel" class="rc-account-card" style="display:none;">
+        <div class="rc-profile-head">
+          <div id="account-signed-avatar" class="rc-account-avatar"><i class="fa-solid fa-user"></i></div>
+          <div>
+            <h2 id="account-signed-name">Account</h2>
+            <p id="account-signed-email"></p>
+          </div>
+        </div>
+        <div class="rc-account-complete">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Your R/C Garage SL profile is complete.</span>
+        </div>
+        <button id="account-signout-btn" class="rc-account-secondary">
+          <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+        </button>
+      </div>
+    </div>
+  </section>
+
   <!-- Bottom Navigation -->
   <nav class="bottom-nav">
     <button class="nav-item active" onclick="switchTab('tools-tab', this)">
@@ -1250,6 +1367,33 @@ html.rc-hard-lock body{overflow:hidden!important}
     const firestore = getFirestore(app);
     const storage = getStorage(app);
     const provider = new GoogleAuthProvider();
+    window.__rcFirebaseNormalAuth = {
+      signIn: async () => {
+        await setPersistence(auth, browserLocalPersistence);
+        try {
+          const result = await signInWithPopup(auth, provider);
+          window.currentFirebaseUser = result.user;
+          window.dispatchEvent(new CustomEvent('rc-google-auth-success', {detail:{uid:result.user.uid,email:result.user.email||''}}));
+          return result.user;
+        } catch (error) {
+          const fallback = ['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request','auth/internal-error','auth/operation-not-supported-in-this-environment'];
+          if(fallback.includes(error?.code)){
+            await signInWithRedirect(auth, provider);
+            return null;
+          }
+          throw error;
+        }
+      },
+      signOut: async () => {
+        await signOut(auth);
+        localStorage.removeItem('rc_is_logged_in');
+        localStorage.removeItem('rc_user_uid');
+        window.currentFirebaseUser=null;
+        if(window.rcRefreshAccount) window.rcRefreshAccount();
+        if(window.openAccountScreen) window.openAccountScreen();
+      }
+    };
+
 
     // Attach to window object for global script access
     window.firebaseDB = db;
@@ -2743,129 +2887,314 @@ VERIFICATION POLICY:
       setTimeout(() => { if (typeof loadRcSpecifications === 'function') loadRcSpecifications(); }, 250);
     };
   </script>
-<script id="rc-true-hard-gate">
-(()=>{
-  const INST='rc_garage_sl_installed_v5';
+<script id="rc-install-only-gate">
+(() => {
+  const INST='rc_garage_sl_installed_v6';
   const $=id=>document.getElementById(id);
-  let installPrompt=null;
-  let installRunning=false;
-  let appReady=false;
-  const standalone=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
-  const ios=()=>/iPad|iPhone|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  const profileComplete=()=>{
+  let installPrompt=null, running=false;
+
+  const standalone=()=>matchMedia('(display-mode: standalone)').matches ||
+    matchMedia('(display-mode: fullscreen)').matches || navigator.standalone===true;
+  const ios=()=>/iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+
+  function lockInstall(){
+    document.documentElement.classList.add('rc-install-lock');
+    document.documentElement.style.overflow='hidden';
+  }
+  function unlockApp(){
+    document.documentElement.classList.remove('rc-install-lock');
+    document.documentElement.style.overflow='';
+    $('rc-install-gate').style.display='none';
+  }
+  function showInstall(){
+    lockInstall();
+    $('rc-install-gate').style.display='flex';
+  }
+
+  async function install(){
+    if(running)return; running=true;
+    const b=$('rc-gate-install'), fill=$('rc-gate-progress'), title=$('rc-gate-title'), text=$('rc-gate-text');
+    b.disabled=true; title.textContent='Downloading R/C Garage SL'; text.textContent='Preparing the app...'; fill.style.width='0%';
+    let p=0;
+    const timer=setInterval(()=>{
+      p=Math.min(94,p+5); fill.style.width=p+'%';
+      text.textContent=p<35?'Preparing R/C Garage SL...':p<70?'Downloading app files...':'Finishing installation...';
+    },90);
+    await new Promise(r=>setTimeout(r,1900));
+    clearInterval(timer); fill.style.width='100%';
+
+    if(installPrompt){
+      text.textContent='Please confirm installation...';
+      try{
+        await installPrompt.prompt();
+        const choice=await installPrompt.userChoice;
+        installPrompt=null;
+        if(choice.outcome==='accepted'){
+          localStorage.setItem(INST,'1');
+          title.textContent='Installation done';
+          text.textContent='R/C Garage SL is ready. Open the installed app shortcut.';
+          $('rc-gate-icon').className='';
+          $('rc-gate-icon').innerHTML='<i class="fa-solid fa-circle-check" style="font-size:58px"></i>';
+          b.style.display='none';
+          $('rc-gate-help').style.display='block';
+          $('rc-gate-help').innerHTML='<b>Next step</b><br>Open <b>R/C Garage SL</b> from your Home Screen. Sign-in and profile setup are part of the normal app screen.';
+          try{window.close()}catch(e){}
+        }else{
+          title.textContent='Installation required';
+          text.textContent='Install R/C Garage SL to continue.';
+          fill.style.width='0%'; b.disabled=false; running=false;
+        }
+      }catch(e){
+        console.error(e); b.disabled=false; running=false;
+        text.textContent='Installation could not be started. Please try again.';
+      }
+      return;
+    }
+
+    if(ios()){
+      title.textContent='Install R/C Garage SL';
+      text.textContent='Add the app to your Home Screen.';
+      $('rc-gate-help').style.display='block';
+      $('rc-gate-help').innerHTML='<b>iPhone / iPad</b><br>1. Tap <b>Share</b> in Safari.<br>2. Tap <b>Add to Home Screen</b>.<br>3. Tap <b>Add</b>.<br><br>Then open the R/C Garage SL shortcut.';
+      b.textContent='I Installed R/C Garage SL'; b.disabled=false; running=false;
+      b.onclick=()=>{localStorage.setItem(INST,'1');unlockApp()};
+      return;
+    }
+
+    title.textContent='Install R/C Garage SL';
+    text.textContent='Install the app from your browser menu.';
+    $('rc-gate-help').style.display='block';
+    $('rc-gate-help').innerHTML='<b>Browser menu</b><br>Choose <b>Install app</b> or <b>Add to Home Screen</b>, then open the R/C Garage SL shortcut.';
+    b.disabled=false; running=false;
+  }
+
+  addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault(); installPrompt=e;
+    if(!standalone()) showInstall();
+  });
+  addEventListener('appinstalled',()=>{
+    localStorage.setItem(INST,'1');
+    $('rc-gate-title').textContent='Installation done';
+    $('rc-gate-text').textContent='Open R/C Garage SL from your Home Screen.';
+  });
+
+  $('rc-gate-install').onclick=install;
+
+  addEventListener('load',()=>{
+    if(standalone()){
+      localStorage.setItem(INST,'1');
+      unlockApp();
+    }else{
+      showInstall();
+    }
+  });
+})();
+</script>
+
+
+
+
+<script id="rc-normal-google-bridge">
+(() => {
+  // This bridge waits for the Firebase module and then exposes clean,
+  // non-modal authentication actions to the normal Account screen.
+  let tries=0;
+  const timer=setInterval(()=>{
+    if(window.__rcFirebaseNormalAuth){
+      clearInterval(timer);
+      window.rcSignInGoogle=window.__rcFirebaseNormalAuth.signIn;
+      window.rcSignOutGoogle=window.__rcFirebaseNormalAuth.signOut;
+      if(window.rcRefreshAccount) window.rcRefreshAccount();
+    }
+    if(++tries>80) clearInterval(timer);
+  },150);
+})();
+</script>
+
+<script id="rc-normal-account-flow">
+(() => {
+  const $ = id => document.getElementById(id);
+  const standalone = () => matchMedia('(display-mode: standalone)').matches ||
+    matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true;
+
+  let photoData = '';
+
+  function hasProfile(){
+    const n=($('account-name-input')?.value || localStorage.getItem('rc_user_name') || '').trim();
+    const p=(localStorage.getItem('rc_user_whatsapp') || '').replace(/\D/g,'');
+    const a=(localStorage.getItem('rc_user_avatar') || '').trim();
+    return n.length>=2 && /^\d{8,15}$/.test(p) && !!a;
+  }
+
+  function completeStoredProfile(){
     const n=(localStorage.getItem('rc_user_name')||'').trim();
     const p=(localStorage.getItem('rc_user_whatsapp')||'').replace(/\D/g,'');
     const a=(localStorage.getItem('rc_user_avatar')||'').trim();
     return n.length>=2 && /^\d{8,15}$/.test(p) && !!a && localStorage.getItem('rc_profile_photo_selected')==='1';
-  };
-  // Firebase auth state is authoritative. localStorage is only a short-lived
-  // hint and must never cause the app to skip/loop the Google sign-in step.
-  const logged=()=>!!window.currentFirebaseUser;
-  function lock(){document.documentElement.classList.add('rc-hard-lock');document.documentElement.classList.add('rc-install-lock');}
-  function showInstall(){lock();$('rc-auth-gate').style.display='none';$('rc-install-gate').style.display='flex';}
-  function showAuth(){lock();$('rc-install-gate').style.display='none';$('rc-auth-gate').style.display='flex';}
-  function keepLocked(){lock();}
-  function showProfile(){
-    lock();
-    $('rc-auth-gate').style.display='none';
-    const m=$('profile-modal');
-    if(m){m.classList.add('profile-required');m.style.display='flex';}
-    const badge=$('profile-required-badge'); if(badge) badge.style.display='inline-flex';
-    if(window.loadProfileData) window.loadProfileData();
   }
-  function unlock(){
-    appReady=true;
-    $('rc-install-gate').style.display='none';$('rc-auth-gate').style.display='none';
-    const m=$('profile-modal'); if(m) m.classList.remove('profile-required');
-    document.documentElement.classList.remove('rc-hard-lock','rc-install-lock');
-    document.documentElement.style.overflow='';
+
+  function renderPhoto(src){
+    const box=$('account-avatar-preview');
+    if(!box)return;
+    box.innerHTML=src ? `<img src="${src}" alt="Profile photo">` : '<i class="fa-solid fa-user"></i>';
   }
-  function wait(ms){return new Promise(r=>setTimeout(r,ms));}
-  async function finishAccepted(){
-    $('rc-gate-title').textContent='Installation done';
-    $('rc-gate-text').textContent='R/C Garage SL is installed. Open the new shortcut to continue.';
-    $('rc-gate-progress').style.width='100%';
-    $('rc-gate-icon').className='';$('rc-gate-icon').innerHTML='<i class="fa-solid fa-circle-check" style="font-size:58px"></i>';
-    $('rc-gate-install').style.display='none';
-    $('rc-gate-help').style.display='block';
-    $('rc-gate-help').innerHTML='<b>Next step</b><br>Close this browser tab/window and open the <b>R/C Garage SL</b> shortcut you just installed. The installed app will ask you to sign in with Google.';
-    try{window.close()}catch(e){}
-    // Never unlock the website in the original browser tab.
-  }
-  async function startInstall(){
-    if(installRunning)return; installRunning=true;
-    const b=$('rc-gate-install'),fill=$('rc-gate-progress'),status=$('rc-gate-text');
-    b.disabled=true;$('rc-gate-title').textContent='Downloading R/C Garage SL';status.textContent='Preparing the app...';fill.style.width='0%';
-    let p=0; const timer=setInterval(()=>{p=Math.min(94,p+5);fill.style.width=p+'%';status.textContent=p<35?'Preparing R/C Garage SL...':p<70?'Downloading app files...':'Finishing installation...';},90);
-    await wait(1900); clearInterval(timer);fill.style.width='100%';
-    if(installPrompt){
-      status.textContent='Please confirm installation...';
-      try{
-        await installPrompt.prompt();
-        const choice=await installPrompt.userChoice; installPrompt=null;
-        if(choice.outcome==='accepted'){localStorage.setItem(INST,'1');await finishAccepted();}
-        else{ $('rc-gate-title').textContent='Installation required';status.textContent='You must install R/C Garage SL before the site can be opened.';fill.style.width='0%';b.disabled=false;installRunning=false;}
-      }catch(e){console.error(e);b.disabled=false;installRunning=false;status.textContent='Installation could not be started. Please try again.';}
+
+  function renderAccount(user){
+    const signin=$('account-signin-panel'), profile=$('account-profile-panel'), signed=$('account-signed-panel');
+    if(!signin||!profile||!signed)return;
+
+    if(!user){
+      signin.style.display='block'; profile.style.display='none'; signed.style.display='none';
       return;
     }
-    if(ios()){
-      $('rc-gate-title').textContent='Install R/C Garage SL';status.textContent='Use Add to Home Screen to install.';
-      $('rc-gate-help').style.display='block';$('rc-gate-help').innerHTML='<b>iPhone / iPad</b><br>1. Tap <b>Share</b> in Safari.<br>2. Tap <b>Add to Home Screen</b>.<br>3. Tap <b>Add</b>.<br><br>Then open the R/C Garage SL shortcut.';
-      b.textContent='I Installed R/C Garage SL';b.disabled=false;b.onclick=()=>{localStorage.setItem(INST,'1');finishAccepted()};installRunning=false;return;
-    }
-    $('rc-gate-title').textContent='Install R/C Garage SL';status.textContent='Install the app from your browser menu.';
-    $('rc-gate-help').style.display='block';$('rc-gate-help').innerHTML='<b>Browser menu</b><br>Choose <b>Install app</b> or <b>Add to Home Screen</b>, then open the R/C Garage SL shortcut.';
-    b.disabled=false;installRunning=false;
-  }
-  function startAuth(){
-    const b=$('rc-gate-google'); if(!b)return;
-    b.disabled=true;$('rc-auth-status').textContent='Opening Google Sign-In...';
-    const existing=$('firebase-google-btn');
-    if(existing) existing.click();
-    setTimeout(()=>{if(!logged()){b.disabled=false;$('rc-auth-status').textContent='If Google did not open, tap the button again.'}},5000);
-  }
-  function authWatch(){
-    if(!standalone())return;
-    if(logged()){
-      showProfile();
-      const timer=setInterval(()=>{if(profileComplete()){clearInterval(timer);unlock();}},400);
+
+    signin.style.display='none';
+    if(completeStoredProfile()){
+      profile.style.display='none'; signed.style.display='block';
+      $('account-signed-name').textContent=localStorage.getItem('rc_user_name') || user.displayName || 'R/C Garage User';
+      $('account-signed-email').textContent=user.email || '';
+      const a=localStorage.getItem('rc_user_avatar') || user.photoURL || '';
+      $('account-signed-avatar').innerHTML=a ? `<img src="${a}" alt="Profile photo">` : '<i class="fa-solid fa-user"></i>';
     }else{
-      showAuth();
+      profile.style.display='block'; signed.style.display='none';
+      $('account-name-input').value=localStorage.getItem('rc_user_name') || user.displayName || '';
+      $('account-phone-input').value=localStorage.getItem('rc_user_whatsapp') ? '+'+localStorage.getItem('rc_user_whatsapp') : '';
+      const saved=localStorage.getItem('rc_user_avatar') || user.photoURL || '';
+      if(saved){ photoData=saved; renderPhoto(saved); }
+      $('account-save-status').textContent='Complete all fields to continue.';
     }
   }
 
-  // The Firebase module dispatches this immediately after popup/redirect auth.
-  addEventListener('rc-google-auth-success',()=>{
+  window.openAccountScreen=function(){
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    $('account-tab').classList.add('active');
+    renderAccount(window.currentFirebaseUser || null);
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+
+  function forceAccountIfNeeded(){
     if(!standalone()) return;
-    showProfile();
-    const timer=setInterval(()=>{
-      if(profileComplete()){clearInterval(timer);unlock();}
-    },400);
+    if(!window.currentFirebaseUser || !completeStoredProfile()) window.openAccountScreen();
+  }
+
+  // Replace the old modal-based required-profile behavior.
+  window.requireCompleteProfile=function(user){
+    if(!standalone()) return true;
+    renderAccount(user || window.currentFirebaseUser || null);
+    if(!user || !completeStoredProfile()){
+      window.openAccountScreen();
+      return false;
+    }
+    return true;
+  };
+
+  // Google auth button — normal in-app action, not a modal.
+  $('account-google-btn').addEventListener('click', async ()=>{
+    const btn=$('account-google-btn'), status=$('account-auth-status');
+    if(!window.rcSignInGoogle){
+      status.textContent='Google Sign-In is still loading. Please try again.';
+      return;
+    }
+    btn.disabled=true;
+    btn.querySelector('span').textContent='Connecting to Google...';
+    status.textContent='';
+    try{ await window.rcSignInGoogle(); }
+    catch(e){ status.textContent=e?.message || 'Google Sign-In failed. Please try again.'; }
+    finally{
+      btn.disabled=false;
+      btn.querySelector('span').textContent='Continue with Google';
+    }
   });
-  addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;if(!standalone()&&!localStorage.getItem(INST))showInstall();});
-  addEventListener('appinstalled',()=>{localStorage.setItem(INST,'1');finishAccepted();});
-  $('rc-gate-install').onclick=startInstall;
-  $('rc-gate-google').onclick=startAuth;
+
+  $('account-photo-input').addEventListener('change',e=>{
+    const f=e.target.files?.[0]; if(!f)return;
+    if(!f.type.startsWith('image/')){alert('Please select an image file.');e.target.value='';return;}
+    if(f.size>2*1024*1024){alert('Profile photo must be 2 MB or smaller.');e.target.value='';return;}
+    const reader=new FileReader();
+    reader.onload=ev=>{photoData=ev.target.result;renderPhoto(photoData);};
+    reader.readAsDataURL(f);
+  });
+
+  $('account-save-btn').addEventListener('click',async()=>{
+    const user=window.currentFirebaseUser;
+    const status=$('account-save-status');
+    const name=$('account-name-input').value.trim();
+    const phoneRaw=$('account-phone-input').value.trim();
+    const phone=typeof normalizeWhatsAppNumber==='function' ? normalizeWhatsAppNumber(phoneRaw) : phoneRaw.replace(/\D/g,'');
+    const avatar=photoData || localStorage.getItem('rc_user_avatar') || '';
+
+    if(!user){status.textContent='Please sign in with Google first.';return;}
+    if(!name){status.textContent='Display name is required.';return;}
+    if(!phone || (typeof isValidInternationalWhatsAppNumber==='function' && !isValidInternationalWhatsAppNumber(phone))){
+      status.textContent='Enter a valid international WhatsApp number.';return;
+    }
+    if(!avatar){status.textContent='Please select a profile photo.';return;}
+
+    const btn=$('account-save-btn'); btn.disabled=true; status.textContent='Saving your profile...';
+    localStorage.setItem('rc_user_name',name);
+    localStorage.setItem('rc_user_whatsapp',phone);
+    localStorage.setItem('rc_user_avatar',avatar);
+    localStorage.setItem('rc_profile_photo_selected','1');
+    localStorage.setItem('rc_garage_sl_profile_complete_v3','1');
+    localStorage.setItem('rc_profile_complete','true');
+    localStorage.setItem('rc_is_logged_in','true');
+    localStorage.setItem('rc_user_uid',user.uid);
+
+    try{
+      if(typeof syncDriverProfileToFirebase==='function') await syncDriverProfileToFirebase();
+    }catch(e){console.warn('Profile sync:',e)}
+
+    status.textContent='Profile saved. Welcome to R/C Garage SL.';
+    renderAccount(user);
+    setTimeout(()=>openNormalApp(),450);
+    btn.disabled=false;
+  });
+
+  $('account-signout-btn').addEventListener('click',async()=>{
+    try{
+      if(window.rcSignOutGoogle) await window.rcSignOutGoogle();
+      else if(window.firebaseSignOut) await window.firebaseSignOut();
+    }catch(e){console.warn(e)}
+  });
+
+  window.openNormalApp=function(){
+    const tools=document.querySelector('.nav-item[onclick*="tools-tab"]');
+    if(typeof switchTab==='function' && tools) switchTab('tools-tab',tools);
+    else{
+      document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+      $('tools-tab').classList.add('active');
+    }
+  };
+
+  // Prevent navigation away from Account until Google + profile are complete.
+  const originalSwitchTab=window.switchTab;
+  window.switchTab=function(tabId,btn){
+    if(standalone() && (!window.currentFirebaseUser || !completeStoredProfile()) && tabId!=='account-tab'){
+      openAccountScreen();
+      return;
+    }
+    return originalSwitchTab.apply(this,arguments);
+  };
+
+  // Expose auth actions to the normal account screen.
+  window.rcRefreshAccount=()=>renderAccount(window.currentFirebaseUser || null);
+
+  addEventListener('rc-google-auth-success',()=>{
+    setTimeout(()=>renderAccount(window.currentFirebaseUser || null),100);
+  });
+
   addEventListener('load',()=>{
-    lock();
-    if(standalone()){
-      localStorage.setItem(INST,'1');
-      setTimeout(authWatch,350);
-    }else{
-      // Always block the shared website until installation is accepted.
-      setTimeout(()=>{if(!standalone()&&!localStorage.getItem(INST))showInstall();else if(!standalone())showInstall();},80);
-    }
+    setTimeout(()=>{
+      if(standalone()){
+        if(window.currentFirebaseUser && completeStoredProfile()) openNormalApp();
+        else forceAccountIfNeeded();
+      }
+    },800);
   });
-  // Firebase auth state can arrive after the module initializes.
-  const poll=setInterval(()=>{
-    if(standalone() && logged()){
-      clearInterval(poll);
-      showProfile();
-    }
-  },500);
 })();
 </script>
-
 
 </body>
 </html>

@@ -776,8 +776,21 @@ a {
 #rc-install-gate .gate-help{display:none;margin-top:18px;text-align:left;padding:14px;border:1px solid rgba(255,255,255,.14);border-radius:15px;background:rgba(255,255,255,.045);font-size:.86rem;line-height:1.55}
 @keyframes rcGateSpin{to{transform:rotate(360deg)}}
 html.rc-install-lock body>*{visibility:hidden!important}
+html.rc-hard-lock body>*{visibility:hidden!important}
+html.rc-hard-lock #rc-install-gate,html.rc-hard-lock #rc-auth-gate{visibility:visible!important}
 html.rc-install-lock #rc-install-gate{visibility:visible!important}
-</style></head>
+</style>
+<style id="rc-true-lock-css">
+#rc-install-gate,#rc-auth-gate{position:fixed;inset:0;z-index:10000000;display:none;align-items:center;justify-content:center;background:#000;color:#fff;font-family:Inter,system-ui,sans-serif;padding:24px}
+#rc-auth-gate .gate-card,#rc-install-gate .gate-card{width:min(440px,94vw);padding:32px 24px;border:1px solid rgba(255,255,255,.18);border-radius:28px;background:rgba(255,255,255,.055);box-shadow:0 30px 100px rgba(0,0,0,.85);text-align:center;backdrop-filter:blur(24px)}
+#rc-auth-gate .gate-card h2,#rc-install-gate .gate-card h2{color:#fff!important}
+.gate-auth-logo{width:58px;height:58px;border-radius:18px;border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:25px;background:#fff;color:#000}
+html.rc-hard-lock #rc-auth-gate{visibility:visible!important}
+html.rc-hard-lock body{overflow:hidden!important}
+#profile-modal.profile-required{z-index:10000001!important}
+#profile-modal.profile-required .modal-close{display:none!important}
+</style>
+</head>
 <body class="rc-install-lock"><div id="rc-install-gate" aria-modal="true" role="dialog">
 <div class="gate-card">
 <div id="rc-gate-icon" class="gate-spinner"></div>
@@ -787,6 +800,16 @@ html.rc-install-lock #rc-install-gate{visibility:visible!important}
 <div class="gate-progress"><span id="rc-gate-progress"></span></div>
 <div id="rc-gate-help" class="gate-help"></div>
 </div></div>
+
+<div id="rc-auth-gate" aria-modal="true" role="dialog">
+  <div class="gate-card">
+    <div class="gate-auth-logo"><i class="fa-brands fa-google"></i></div>
+    <h2>Sign in to R/C Garage SL</h2>
+    <p>Open the installed app and sign in with Google to continue.</p>
+    <button id="rc-gate-google" class="gate-btn"><i class="fa-brands fa-google"></i> Sign in with Google</button>
+    <div id="rc-auth-status" style="margin-top:14px;font-size:.78rem;color:rgba(255,255,255,.55)"></div>
+  </div>
+</div>
 
   <!-- Header -->
   <header>
@@ -1272,7 +1295,7 @@ html.rc-install-lock #rc-install-gate{visibility:visible!important}
         localStorage.setItem('rc_user_uid', user.uid);
 
         if (user.photoURL && !localStorage.getItem('rc_user_avatar')) {
-          localStorage.setItem('rc_user_avatar', user.photoURL);
+          localStorage.setItem('rc_google_avatar_preview', user.photoURL);
         }
 
         window.updateAuthUI(true);
@@ -1326,7 +1349,7 @@ html.rc-install-lock #rc-install-gate{visibility:visible!important}
         localStorage.setItem('rc_user_uid', user.uid);
 
         if (user.photoURL && !localStorage.getItem('rc_user_avatar')) {
-          localStorage.setItem('rc_user_avatar', user.photoURL);
+          localStorage.setItem('rc_google_avatar_preview', user.photoURL);
         }
 
         window.updateAuthUI(true);
@@ -2238,7 +2261,7 @@ html.rc-install-lock #rc-install-gate{visibility:visible!important}
     window.closeProfileModal = function() {
       const modal = document.getElementById('profile-modal');
       if (modal.classList.contains('profile-required')) {
-        alert('Please enter your display name and international WhatsApp number to continue.');
+        alert('Please complete your name, WhatsApp number, and profile photo before continuing.');
         return;
       }
       modal.style.display = 'none';
@@ -2261,6 +2284,7 @@ html.rc-install-lock #rc-install-gate{visibility:visible!important}
         const reader = new FileReader();
         reader.onload = function(evt) {
           tempAvatarBase64 = evt.target.result;
+          localStorage.setItem('rc_profile_photo_selected', '1');
           renderAvatarUI(tempAvatarBase64);
         };
         reader.readAsDataURL(file);
@@ -2269,6 +2293,8 @@ html.rc-install-lock #rc-install-gate{visibility:visible!important}
 
     window.removeSelectedPhoto = function() {
       tempAvatarBase64 = "";
+      localStorage.removeItem('rc_profile_photo_selected');
+      localStorage.removeItem('rc_user_avatar');
       renderAvatarUI(null);
     };
 
@@ -2312,8 +2338,9 @@ html.rc-install-lock #rc-install-gate{visibility:visible!important}
         return;
       }
 
-      const avatar = (localStorage.getItem('rc_user_avatar') || '').trim();
-      if (!avatar) {
+      const selectedPhoto = tempAvatarBase64 && tempAvatarBase64.startsWith('data:image') ? tempAvatarBase64 : (localStorage.getItem('rc_user_avatar') || '');
+      if (selectedPhoto && selectedPhoto.startsWith('data:image')) localStorage.setItem('rc_user_avatar', selectedPhoto);
+      if (!selectedPhoto || localStorage.getItem('rc_profile_photo_selected') !== '1') {
         alert('Please select a profile photo before saving.');
         return;
       }
@@ -2681,32 +2708,109 @@ VERIFICATION POLICY:
       setTimeout(() => { if (typeof loadRcSpecifications === 'function') loadRcSpecifications(); }, 250);
     };
   </script>
-<script id="rc-install-gate-logic">
-(()=>{const KEY='rc_garage_sl_installed_v3',PROFILE='rc_garage_sl_profile_complete_v3';let promptEvent=null;
-const $=id=>document.getElementById(id),gate=$('rc-install-gate');
-const standalone=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
-const ios=()=>/iPad|iPhone|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-const show=()=>{document.documentElement.classList.add('rc-install-lock');gate.style.display='flex'};
-const hide=()=>{gate.style.display='none';document.documentElement.classList.remove('rc-install-lock')};
-addEventListener('beforeinstallprompt',e=>{e.preventDefault();promptEvent=e});
-addEventListener('appinstalled',()=>{localStorage.setItem(KEY,'1');finish()});
-async function finish(){ $('rc-gate-title').textContent='Installation done';$('rc-gate-text').textContent='R/C Garage SL is installed. Closing...';$('rc-gate-progress').style.width='100%';$('rc-gate-icon').className='';$('rc-gate-icon').innerHTML='<i class="fa-solid fa-check" style="font-size:58px"></i>';await new Promise(r=>setTimeout(r,1200));hide();try{window.close()}catch(e){}}
-async function install(){let b=$('rc-gate-install');b.disabled=true;let p=0,t=setInterval(()=>{$('rc-gate-progress').style.width=(p=Math.min(90,p+7))+'%'},120);
-try{if(promptEvent){await promptEvent.prompt();let c=await promptEvent.userChoice;clearInterval(t);if(c.outcome==='accepted'){localStorage.setItem(KEY,'1');await finish()}else{b.disabled=false;$('rc-gate-title').textContent='Installation required';$('rc-gate-text').textContent='Install R/C Garage SL to continue.';$('rc-gate-progress').style.width='0%'}return}
-clearInterval(t);$('rc-gate-progress').style.width='100%';
-$('rc-gate-help').style.display='block';
-if(ios()){$('rc-gate-title').textContent='Add R/C Garage SL';$('rc-gate-text').textContent='Safari requires Add to Home Screen.';$('rc-gate-help').innerHTML='<b>iPhone / iPad</b><br>1. Tap Safari <b>Share</b>.<br>2. Tap <b>Add to Home Screen</b>.<br>3. Tap <b>Add</b>.<br><br>Then open the installed R/C Garage SL app.';b.textContent='I Installed R/C Garage SL';b.disabled=false;b.onclick=()=>{localStorage.setItem(KEY,'1');finish()}}
-else{$('rc-gate-title').textContent='Install R/C Garage SL';$('rc-gate-text').textContent='Use your browser menu to install the app.';$('rc-gate-help').innerHTML='<b>Choose Install app / Add to Home Screen</b> from your browser menu, then open R/C Garage SL from the installed shortcut.';b.disabled=false}
-}catch(e){clearInterval(t);b.disabled=false}}
-function boot(){if(standalone()){localStorage.setItem(KEY,'1');hide();return}if(localStorage.getItem(KEY)!=='1'){show();$('rc-gate-install').onclick=install}else hide()}
-window.rcGarageInstallGate={isInstalled:()=>standalone()||localStorage.getItem(KEY)==='1',profileComplete:()=>localStorage.getItem(PROFILE)==='1'};
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+<script id="rc-true-hard-gate">
+(()=>{
+  const INST='rc_garage_sl_installed_v5';
+  const $=id=>document.getElementById(id);
+  let installPrompt=null;
+  let installRunning=false;
+  let appReady=false;
+  const standalone=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
+  const ios=()=>/iPad|iPhone|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const profileComplete=()=>{
+    const n=(localStorage.getItem('rc_user_name')||'').trim();
+    const p=(localStorage.getItem('rc_user_whatsapp')||'').replace(/\D/g,'');
+    const a=(localStorage.getItem('rc_user_avatar')||'').trim();
+    return n.length>=2 && /^\d{8,15}$/.test(p) && !!a && localStorage.getItem('rc_profile_photo_selected')==='1';
+  };
+  const logged=()=>!!window.currentFirebaseUser || localStorage.getItem('rc_is_logged_in')==='true';
+  function lock(){document.documentElement.classList.add('rc-hard-lock');document.documentElement.classList.add('rc-install-lock');}
+  function showInstall(){lock();$('rc-auth-gate').style.display='none';$('rc-install-gate').style.display='flex';}
+  function showAuth(){lock();$('rc-install-gate').style.display='none';$('rc-auth-gate').style.display='flex';}
+  function keepLocked(){lock();}
+  function showProfile(){
+    lock();
+    $('rc-auth-gate').style.display='none';
+    const m=$('profile-modal');
+    if(m){m.classList.add('profile-required');m.style.display='flex';}
+    const badge=$('profile-required-badge'); if(badge) badge.style.display='inline-flex';
+    if(window.loadProfileData) window.loadProfileData();
+  }
+  function unlock(){
+    appReady=true;
+    $('rc-install-gate').style.display='none';$('rc-auth-gate').style.display='none';
+    const m=$('profile-modal'); if(m) m.classList.remove('profile-required');
+    document.documentElement.classList.remove('rc-hard-lock','rc-install-lock');
+    document.documentElement.style.overflow='';
+  }
+  function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+  async function finishAccepted(){
+    $('rc-gate-title').textContent='Installation done';
+    $('rc-gate-text').textContent='R/C Garage SL is installed. Open the new shortcut to continue.';
+    $('rc-gate-progress').style.width='100%';
+    $('rc-gate-icon').className='';$('rc-gate-icon').innerHTML='<i class="fa-solid fa-circle-check" style="font-size:58px"></i>';
+    $('rc-gate-install').style.display='none';
+    $('rc-gate-help').style.display='block';
+    $('rc-gate-help').innerHTML='<b>Next step</b><br>Close this browser tab/window and open the <b>R/C Garage SL</b> shortcut you just installed. The installed app will ask you to sign in with Google.';
+    try{window.close()}catch(e){}
+    // Never unlock the website in the original browser tab.
+  }
+  async function startInstall(){
+    if(installRunning)return; installRunning=true;
+    const b=$('rc-gate-install'),fill=$('rc-gate-progress'),status=$('rc-gate-text');
+    b.disabled=true;$('rc-gate-title').textContent='Downloading R/C Garage SL';status.textContent='Preparing the app...';fill.style.width='0%';
+    let p=0; const timer=setInterval(()=>{p=Math.min(94,p+5);fill.style.width=p+'%';status.textContent=p<35?'Preparing R/C Garage SL...':p<70?'Downloading app files...':'Finishing installation...';},90);
+    await wait(1900); clearInterval(timer);fill.style.width='100%';
+    if(installPrompt){
+      status.textContent='Please confirm installation...';
+      try{
+        await installPrompt.prompt();
+        const choice=await installPrompt.userChoice; installPrompt=null;
+        if(choice.outcome==='accepted'){localStorage.setItem(INST,'1');await finishAccepted();}
+        else{ $('rc-gate-title').textContent='Installation required';status.textContent='You must install R/C Garage SL before the site can be opened.';fill.style.width='0%';b.disabled=false;installRunning=false;}
+      }catch(e){console.error(e);b.disabled=false;installRunning=false;status.textContent='Installation could not be started. Please try again.';}
+      return;
+    }
+    if(ios()){
+      $('rc-gate-title').textContent='Install R/C Garage SL';status.textContent='Use Add to Home Screen to install.';
+      $('rc-gate-help').style.display='block';$('rc-gate-help').innerHTML='<b>iPhone / iPad</b><br>1. Tap <b>Share</b> in Safari.<br>2. Tap <b>Add to Home Screen</b>.<br>3. Tap <b>Add</b>.<br><br>Then open the R/C Garage SL shortcut.';
+      b.textContent='I Installed R/C Garage SL';b.disabled=false;b.onclick=()=>{localStorage.setItem(INST,'1');finishAccepted()};installRunning=false;return;
+    }
+    $('rc-gate-title').textContent='Install R/C Garage SL';status.textContent='Install the app from your browser menu.';
+    $('rc-gate-help').style.display='block';$('rc-gate-help').innerHTML='<b>Browser menu</b><br>Choose <b>Install app</b> or <b>Add to Home Screen</b>, then open the R/C Garage SL shortcut.';
+    b.disabled=false;installRunning=false;
+  }
+  function startAuth(){
+    const b=$('rc-gate-google'); if(!b)return;
+    b.disabled=true;$('rc-auth-status').textContent='Opening Google Sign-In...';
+    const existing=$('firebase-google-btn');
+    if(existing) existing.click();
+    setTimeout(()=>{if(!logged()){b.disabled=false;$('rc-auth-status').textContent='If Google did not open, tap the button again.'}},5000);
+  }
+  function authWatch(){
+    if(!standalone())return;
+    if(logged()){
+      showProfile();
+      const timer=setInterval(()=>{if(profileComplete()){clearInterval(timer);unlock();}},400);
+    }else showAuth();
+  }
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;if(!standalone()&&!localStorage.getItem(INST))showInstall();});
+  addEventListener('appinstalled',()=>{localStorage.setItem(INST,'1');finishAccepted();});
+  $('rc-gate-install').onclick=startInstall;
+  $('rc-gate-google').onclick=startAuth;
+  addEventListener('load',()=>{
+    lock();
+    if(standalone()){
+      localStorage.setItem(INST,'1');
+      setTimeout(authWatch,350);
+    }else{
+      // Always block the shared website until installation is accepted.
+      setTimeout(()=>{if(!standalone()&&!localStorage.getItem(INST))showInstall();else if(!standalone())showInstall();},80);
+    }
+  });
+  // Firebase auth state can arrive after the module initializes.
+  const poll=setInterval(()=>{if(standalone()&&logged()){clearInterval(poll);showProfile();}},500);
 })();
-</script><script id="rc-installed-profile-gate">
-(()=>{function app(){return matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true}
-function complete(){let n=(localStorage.getItem('rc_user_name')||'').trim(),p=(localStorage.getItem('rc_user_whatsapp')||'').replace(/\D/g,''),a=(localStorage.getItem('rc_user_avatar')||'').trim();return n.length>=2&&/^\d{8,15}$/.test(p)&&!!a}
-function enforce(){if(!app())return;let logged=localStorage.getItem('rc_is_logged_in')==='true';if(!logged){let m=document.getElementById('firebase-login-modal');if(m)m.style.display='flex';return}if(!complete()){let m=document.getElementById('profile-modal');if(m){m.classList.add('profile-required');m.style.display='flex';let b=document.getElementById('profile-required-badge');if(b)b.style.display='inline-flex'}}}
-addEventListener('load',()=>setTimeout(enforce,700));
-})();
-</script></body>
+</script>
+</body>
 </html>

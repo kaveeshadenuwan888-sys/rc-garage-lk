@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>R/C Garage SL</title>
-  <meta name="theme-color" content="#0b0e14">
+  <meta name="theme-color" content="#000000">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -17,12 +17,12 @@
       --bg-dark: #000000;
       --card-bg: rgba(255,255,255,0.055);
       --card-border: rgba(255, 255, 255, 0.08);
-      --accent-cyan: #00f2fe;
-      --accent-blue: #3b82f6;
-      --accent-purple: #8b5cf6;
-      --accent-red: #ef4444;
-      --accent-green: #10b981;
-      --accent-orange: #ff9800;
+      --accent-cyan: #ffffff;
+      --accent-blue: #ffffff;
+      --accent-purple: #ffffff;
+      --accent-red: #ffffff;
+      --accent-green: #ffffff;
+      --accent-orange: #ffffff;
       --text-primary: #ffffff;
       --text-secondary: rgba(255,255,255,0.72);
       --text-muted: rgba(255,255,255,0.52);
@@ -42,7 +42,7 @@
       background-image: none;
       background-attachment: fixed;
       color: var(--text-primary);
-      padding-bottom: 105px;
+      padding-bottom: 120px;
       min-height: 100vh;
     }
 
@@ -66,11 +66,12 @@
       align-items: center;
       gap: 10px;
       font-size: 1.15rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #ffffff, #bdbdbd);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-weight: 850;
+      color: #ffffff;
+      letter-spacing: .2px;
+      text-shadow: 0 0 18px rgba(214,179,106,.18);
     }
+    .logo i { color: var(--accent-cyan); }
 
     .header-actions {
       display: flex;
@@ -553,12 +554,16 @@
 
     /* Bottom Nav */
     .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; height: 68px;
-      background: rgba(0,0,0,0.62);
-      backdrop-filter: blur(20px);
-      border-top: 1px solid var(--card-border);
+      position: fixed; bottom: 12px; left: 12px; right: 12px; height: 70px;
+      background: rgba(8,8,9,.68);
+      backdrop-filter: blur(24px) saturate(135%);
+      -webkit-backdrop-filter: blur(24px) saturate(135%);
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 24px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.13), 0 0 0 1px rgba(214,179,106,.06);
       display: flex; justify-content: space-around;
       align-items: center; z-index: 1000;
+      overflow: hidden;
     }
 
     .nav-item {
@@ -571,7 +576,7 @@
     .nav-item.active { color: #ffffff; }
     .bottom-nav { overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
     .bottom-nav::-webkit-scrollbar { display: none; }
-    .nav-item { flex: 0 0 92px; min-width: 92px; }
+    .nav-item { flex: 1 0 92px; min-width: 92px; height: 100%; justify-content: center; }
 
     .specs-search-row { display:flex; gap:8px; margin-bottom:14px; }
     .spec-brand-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
@@ -592,7 +597,11 @@
     .admin-actions { display:flex; gap:8px; margin-top:10px; }
     .admin-actions button { flex:1; }
     .danger-btn { border:1px solid rgba(239,68,68,.4)!important; color:#fca5a5!important; background:rgba(239,68,68,.08)!important; }
-    @media (max-width:520px) { .spec-detail-grid,.spec-brand-grid { grid-template-columns:1fr; } .nav-item { flex-basis:82px; min-width:82px; } }
+    @media (max-width:520px) {
+      .spec-detail-grid,.spec-brand-grid { grid-template-columns:1fr; }
+      .bottom-nav { left: 8px; right: 8px; bottom: 8px; height: 68px; border-radius: 22px; }
+      .nav-item { flex-basis:82px; min-width:82px; font-size:.62rem; }
+    }
 
 
     /* Chat UI */
@@ -614,9 +623,22 @@
     .chat-input-row { display: flex; gap: 8px; }
     .chat-input-row input { flex: 1; }
     .chat-input-row button {
-      width: 50px; background: var(--accent-cyan); color: #000;
-      border: none; border-radius: 12px; font-size: 1.1rem; cursor: pointer;
+      width: 50px; background: linear-gradient(135deg, #f0d08d, #b88943); color: #0a0a0a;
+      border: 1px solid rgba(255,255,255,.22); border-radius: 12px; font-size: 1.1rem; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(214,179,106,.18);
     }
+    .chat-input-row button:hover, .btn-primary:hover, .pwa-reload-btn:hover {
+      filter: brightness(1.08); transform: translateY(-1px);
+    }
+    .share-trick-btn {
+      margin-top: 12px; width: 100%;
+      border: 1px solid rgba(255,255,255,.18);
+      background: linear-gradient(135deg, rgba(214,179,106,.18), rgba(255,255,255,.06));
+      color: #f7e7bf; border-radius: 10px; padding: 9px 12px;
+      font-weight: 750; cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+    .share-trick-btn i { margin-right: 6px; }
   
     /* R/C Garage SL glass visual system */
     .card, .modal-content, .chat-box, .trick-card, .model-card, .spec-brand-card, .spec-detail-item {
@@ -627,13 +649,105 @@
     }
     button, input, textarea, select { color: #fff; }
     input::placeholder, textarea::placeholder { color: rgba(255,255,255,.48); }
-    .logo { -webkit-text-fill-color: #fff; background: none; }
-    .nav-item { color: rgba(255,255,255,.56); }
-    .nav-item.active { color: #fff; text-shadow: 0 0 16px rgba(255,255,255,.35); }
-    .bottom-nav::before { content:""; position:absolute; inset:1px; border-radius:23px; pointer-events:none; background:linear-gradient(180deg,rgba(255,255,255,.06),transparent 45%); }
+    .logo { -webkit-text-fill-color: initial; background: none; }
+    .nav-item { color: rgba(255,255,255,.55); transition: color .2s ease, transform .2s ease; }
+    .nav-item i { font-size: .95rem; margin-bottom: 2px; }
+    .nav-item.active { color: #ffffff; text-shadow: 0 0 16px rgba(214,179,106,.32); }
+    .nav-item:hover { color: #fff; transform: translateY(-1px); }
+    .bottom-nav::before { content:""; position:absolute; inset:0; border-radius:23px; pointer-events:none; background:linear-gradient(180deg,rgba(255,255,255,.10),transparent 48%,rgba(0,0,0,.12)); }
+    .bottom-nav::after { content:""; position:absolute; inset:0; border-radius:23px; pointer-events:none; box-shadow: inset 0 0 0 1px rgba(214,179,106,.08); }
     .bottom-nav .nav-item { position:relative; z-index:1; }
+    .card-title > span:first-child, .card-title i { color: #ffffff; }
+    .btn-primary { background: linear-gradient(135deg,#ead08e,#b98c48) !important; color:#080808 !important; border:1px solid rgba(255,255,255,.2) !important; box-shadow:0 8px 22px rgba(214,179,106,.16); }
+    .pwa-reload-btn { border-color:rgba(255,255,255,.18); background:rgba(255,255,255,.06); color:#ffffff; }
+    .trick-card-body h3 { color:#ffffff; }
+    .news-tag { background:rgba(214,179,106,.12); color:#ffffff; }
+    .spec-brand-card:hover, .model-card:hover { border-color:rgba(214,179,106,.55); }
 
   </style>
+
+<style id="pure-white-professional-theme">
+:root {
+  --bg-dark:#000000 !important;
+  --card-bg:rgba(255,255,255,.055) !important;
+  --card-border:rgba(255,255,255,.16) !important;
+  --accent-cyan:#ffffff !important;
+  --accent-blue:#ffffff !important;
+  --accent-purple:#ffffff !important;
+  --accent-red:#ffffff !important;
+  --accent-green:#ffffff !important;
+  --accent-orange:#ffffff !important;
+  --text-primary:#ffffff !important;
+  --text-secondary:#ffffff !important;
+  --text-muted:#ffffff !important;
+}
+html,body {
+  background:#000000 !important;
+  color:#ffffff !important;
+}
+body {
+  background-image:none !important;
+}
+h1,h2,h3,h4,h5,h6,p,span,label,i,small,strong,li,
+.card-title,.logo,.nav-item,.nav-item span,.nav-item i,
+button,input,select,textarea,.pwa-reload-btn {
+  color:#ffffff !important;
+}
+.logo {
+  background:none !important;
+  -webkit-text-fill-color:#ffffff !important;
+  color:#ffffff !important;
+}
+button,
+.btn-primary,
+.btn-secondary,
+.install-btn,
+.share-trick-btn,
+.chat-input-row button {
+  background:rgba(255,255,255,.10) !important;
+  border-color:rgba(255,255,255,.24) !important;
+  color:#ffffff !important;
+}
+button:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.share-trick-btn:hover {
+  background:rgba(255,255,255,.18) !important;
+}
+.bottom-nav {
+  background:rgba(0,0,0,.72) !important;
+  border:1px solid rgba(255,255,255,.35) !important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 18px 50px rgba(0,0,0,.65) !important;
+}
+.nav-item.active {
+  background:rgba(255,255,255,.14) !important;
+  color:#ffffff !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.20), 0 0 20px rgba(255,255,255,.08) !important;
+}
+input,select,textarea {
+  background:rgba(255,255,255,.045) !important;
+  border-color:rgba(255,255,255,.16) !important;
+  color:#ffffff !important;
+}
+input::placeholder,textarea::placeholder {
+  color:rgba(255,255,255,.65) !important;
+}
+.glass-card,.modal-card,.chat-box,.chat-msg.bot {
+  background:rgba(255,255,255,.055) !important;
+  border-color:rgba(255,255,255,.14) !important;
+}
+.chat-msg.user {
+  background:#ffffff !important;
+  color:#000000 !important;
+}
+.chat-msg.user * {
+  color:#000000 !important;
+}
+a {
+  color:#ffffff !important;
+}
+</style>
+
 </head>
 <body>
 
@@ -856,7 +970,7 @@
           <button class="pwa-reload-btn" type="button" onclick="clearAiChat()">Clear</button>
         </div>
         <div class="chat-box" id="ai-chat-box">
-          <div class="chat-msg bot">👋 Welcome! I am your <strong>Groq AI RC Mechanic</strong>. Ask me anything about RC vehicles, electronics, setup, troubleshooting, and compatibility.</div>
+          <div class="chat-msg bot"><strong>R/C Garage SL AI Mechanic</strong><br><span style="color:var(--text-secondary);">Ask about RC models, specifications, electronics, setup, troubleshooting, and compatibility.</span></div>
         </div>
         <div class="chat-input-row">
           <input type="text" id="ai-input" placeholder="Ask Groq AI..." onkeypress="if(event.key==='Enter') sendAiMessage()">
@@ -1140,6 +1254,7 @@
       }
       window.loadProfileData();
       setTimeout(() => { if (typeof loadRcSpecifications === 'function') loadRcSpecifications(); }, 100);
+      setTimeout(() => { if (typeof loadSharedTrick === 'function') loadSharedTrick(); }, 900);
     });
   </script>
 
@@ -1153,10 +1268,10 @@
 
     // Groq API Key Setup
     const GROQ_API_KEY = "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";
-    // Compound is Groq's full-featured agentic system (web search + code execution).
-    // GPT-OSS 120B is kept as a fallback if Compound is temporarily unavailable.
-    const GROQ_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.6-27b"];
-    const GROQ_REASONING_EFFORT = "default";
+    // Groq Compound is the primary RC mechanic: it can search the web and run code when needed.
+    // GPT-OSS 120B is the high-capability fallback.
+    const GROQ_MODELS = ["groq/compound", "openai/gpt-oss-120b"];
+    const GROQ_REASONING_EFFORT = "high";
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -1412,7 +1527,8 @@
             imageUrl,
             authorUid: currentUid,
             authorName: currentUserName,
-            createdAt: window.fsServerTimestamp()
+            createdAt: window.fsServerTimestamp(),
+            expiresAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString()
           }),
           20000,
           "The image uploaded, but the trick post could not be saved to Firestore."
@@ -1458,6 +1574,47 @@
       if (tasks.length) await Promise.allSettled(tasks);
     }
 
+    async function shareTrickPost(id, data) {
+      const shareUrl = `${window.location.origin}${window.location.pathname}?trick=${encodeURIComponent(id)}`;
+      const shareData = {
+        title: `${data.title || "RC Trick"} — R/C Garage SL`,
+        text: data.description ? `${data.title || "RC Trick"}\n\n${data.description}` : (data.title || "RC Trick"),
+        url: shareUrl
+      };
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+          return;
+        }
+        await navigator.clipboard.writeText(shareUrl);
+        alert("Share link copied to clipboard.");
+      } catch (err) {
+        if (err?.name !== "AbortError") {
+          try {
+            await navigator.clipboard.writeText(shareUrl);
+            alert("Share link copied to clipboard.");
+          } catch {
+            prompt("Copy this share link:", shareUrl);
+          }
+        }
+      }
+    }
+
+    async function loadSharedTrick() {
+      const id = new URLSearchParams(window.location.search).get("trick");
+      if (!id) return;
+      try {
+        const snap = await window.fsGetDoc(window.fsDoc(window.firestoreDB, "rc_tricks", id));
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const card = document.createElement("div");
+        card.className = "modal-overlay";
+        card.style.display = "flex";
+        card.innerHTML = `<div class="modal-card" style="max-height:85vh;overflow:auto;"><button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button><h2 style="margin-bottom:10px;color:#ffffff;">${escapeHtml(data.title || "RC Trick")}</h2>${data.imageUrl ? `<img src="${escapeHtml(data.imageUrl)}" alt="" style="width:100%;max-height:55vh;object-fit:contain;border-radius:14px;margin-bottom:12px;">` : ""}<p style="color:var(--text-secondary);white-space:pre-line;line-height:1.55;">${escapeHtml(data.description || "")}</p></div>`;
+        document.body.appendChild(card);
+      } catch (e) { console.warn("Shared trick load failed:", e); }
+    }
+
     async function loadTricksFeed() {
       const feedContainer = document.getElementById("tricks-feed");
       feedContainer.innerHTML = "<p style='color:var(--text-secondary);'>Loading tricks...</p>";
@@ -1498,7 +1655,12 @@
           const descEl = document.createElement("p");
           descEl.textContent = data.description || "";
 
-          body.append(titleEl, descEl);
+          const shareBtn = document.createElement("button");
+          shareBtn.className = "share-trick-btn";
+          shareBtn.innerHTML = '<i class="fa-solid fa-share-nodes"></i> Share Trick';
+          shareBtn.addEventListener("click", () => shareTrickPost(doc.id, data));
+
+          body.append(titleEl, descEl, shareBtn);
           card.append(img, body);
           feedContainer.appendChild(card);
         });
@@ -2066,7 +2228,7 @@
 
     function renderAiText(value) {
       // Lightweight safe Markdown renderer for AI replies.
-      let text = escapeHtml(value);
+      let text = escapeHtml(value).replace(/&lt;br\s*\/??&gt;/gi, '<br>');
       text = text.replace(/^### (.*)$/gm, '<h4>$1</h4>');
       text = text.replace(/^## (.*)$/gm, '<h3>$1</h3>');
       text = text.replace(/^# (.*)$/gm, '<h3>$1</h3>');
@@ -2085,33 +2247,35 @@
       }
 
       let lastError = null;
-
       for (const model of GROQ_MODELS) {
         try {
+          const isCompound = model === "groq/compound";
           const body = {
             model,
             messages,
-            temperature: options.temperature ?? (model === "qwen/qwen3.6-27b" ? 0.6 : 0.25),
-            max_completion_tokens: Math.min(options.max_completion_tokens ?? 1800, model === "qwen/qwen3.6-27b" ? 4000 : 3000)
+            temperature: isCompound ? 0.15 : 0.2,
+            max_completion_tokens: isCompound ? 3500 : 2200
           };
 
-          if (model === "qwen/qwen3.6-27b") {
-            body.reasoning_effort = options.reasoning_effort ?? "default";
+          if (isCompound) {
+            body.compound_custom = {
+              tools: {
+                enabled_tools: ["web_search", "visit_website", "code_interpreter", "wolfram_alpha"]
+              }
+            };
+          } else {
+            body.reasoning_effort = options.reasoning_effort ?? "high";
             body.reasoning_format = "hidden";
-            body.top_p = 0.95;
-            body.top_k = 20;
-            body.min_p = 0;
-          } else if (model === "openai/gpt-oss-120b") {
-            body.reasoning_effort = options.reasoning_effort ?? "medium";
           }
 
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000);
+          const timeoutId = setTimeout(() => controller.abort(), 45000);
           const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {
               "Authorization": `Bearer ${GROQ_API_KEY}`,
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              "Groq-Model-Version": "latest"
             },
             body: JSON.stringify(body),
             signal: controller.signal
@@ -2119,11 +2283,8 @@
           clearTimeout(timeoutId);
 
           let data = null;
-          try {
-            data = await response.json();
-          } catch {
-            throw new Error(`Groq returned HTTP ${response.status}.`);
-          }
+          try { data = await response.json(); }
+          catch { throw new Error(`Groq returned HTTP ${response.status} with an invalid response body.`); }
 
           if (!response.ok) {
             const apiMessage = data?.error?.message || `Groq request failed (HTTP ${response.status}).`;
@@ -2132,11 +2293,7 @@
 
           const message = data?.choices?.[0]?.message;
           const content = message?.content?.trim();
-
           if (content) return content;
-
-          const refusal = message?.refusal?.trim();
-          if (refusal) return refusal;
 
           throw new Error(`Groq returned an empty response from ${model}.`);
         } catch (error) {
@@ -2144,7 +2301,6 @@
           console.warn(`Groq model ${model} failed:`, error);
         }
       }
-
       throw lastError || new Error("Groq request failed.");
     }
 
@@ -2182,27 +2338,28 @@
         const aiReply = await callGroq([
           {
             role: "system",
-            content: `You are the senior technical RC mechanic and RC engineering assistant for R/C Garage SL.
-Your job is to give accurate, practical, model-specific help for RC cars, trucks,
-crawlers, boats, electronics, batteries, motors, ESCs, servos, receivers,
-transmitters, gearing, suspension, diagnostics and safe modifications.
+            content: `You are the senior technical RC engineer and verified-specification assistant for R/C Garage SL.
+Your priority is ACCURACY, not sounding confident.
 
-IMPORTANT ANSWERING RULES:
-1. Reason carefully before answering. Prefer correct engineering logic over guessing.
-2. If the user names a specific RC model, transmitter, ESC, motor or servo, do NOT assume
-   its exact specifications. Use web search when current manufacturer/product information
-   is needed. If the exact version still cannot be verified, say so clearly.
-3. Separate FACT, CALCULATION and RECOMMENDATION when useful.
-4. For calculations, show the formula and use the user's actual values.
-5. Never invent prices, specifications, compatibility, pinouts or range figures.
-6. For compatibility questions, check all relevant interfaces: voltage, connectors,
-   signal protocol, channel count, current rating, physical fit and programming support.
-7. If the question is ambiguous, ask only the minimum important follow-up questions.
-8. Give a direct answer first, then the explanation. Avoid filler.
-9. Reply in English only. Keep technical
-   terms such as ESC, BEC, PWM, KV, RPM, LiPo, receiver and dual-rate unchanged.
-10. Use clean Markdown: headings, numbered steps, bullets and small tables when useful.
-11. Do not recommend dangerous stunts or unsafe electrical practices.`
+You handle RC cars, crawlers, trucks, electronics, batteries, motors, ESCs, servos, receivers,
+transmitters, gearing, suspension, diagnostics, setup and compatibility.
+
+VERIFICATION POLICY:
+1. Never invent a model specification. If the exact model/version is unknown, say that it is unverified.
+2. For manufacturer specifications, current products, model compatibility, dimensions, motor size,
+   servo torque, transmitter channels, gearing, speed or other factual product details, USE WEB SEARCH
+   when available and prefer manufacturer manuals/product pages or reputable technical sources.
+3. If sources disagree, state the disagreement and explain which source is more authoritative.
+4. Do not turn a guess into a fact. Clearly label FACT, CALCULATION and RECOMMENDATION when useful.
+5. For calculations, use the user's actual values and show the formula briefly.
+6. For compatibility, check voltage, connector, signal protocol, channel count, current/BEC rating,
+   physical fit, gearing and programming requirements.
+7. If the user asks about a specific RC model and the exact version matters, ask for the minimum missing detail.
+8. Give the direct answer first. Keep answers practical and concise unless the user asks for detail.
+9. Reply in English only. Never output Sinhala text.
+10. Use clean Markdown. Do not output raw HTML tags such as <br>.
+11. Do not claim that you searched or verified something unless you actually did so.
+12. For live/current information, prefer verified web results over memory.`
           },
           ...recentMessages
         ]);

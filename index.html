@@ -748,6 +748,22 @@ a {
 }
 </style>
 
+
+<style id="premium-onboarding-css">
+.install-banner-overlay,.download-anim-overlay{background:rgba(0,0,0,.78)!important;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.install-flex{border:1px solid rgba(255,255,255,.22)!important;background:rgba(255,255,255,.07)!important;box-shadow:0 24px 70px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.08)!important}
+.install-btn{background:#fff!important;color:#000!important;border:0!important;font-weight:700!important}
+.download-progress-wrap{width:min(320px,78vw);margin-top:22px}
+.download-progress-track{height:5px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+.download-progress-fill{height:100%;width:0;background:#fff;border-radius:999px;transition:width .18s ease}
+.download-spinner{width:54px;height:54px;border:3px solid rgba(255,255,255,.18);border-top-color:#fff;border-radius:50%;animation:rcSpin .8s linear infinite;margin:0 auto}
+@keyframes rcSpin{to{transform:rotate(360deg)}}
+.install-help-card{max-width:420px;margin:18px auto 0;padding:16px;border:1px solid rgba(255,255,255,.18);border-radius:18px;background:rgba(255,255,255,.06);color:#fff;text-align:left;line-height:1.55;font-size:.85rem}
+.profile-required-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.06);color:#fff;font-size:.75rem;margin-bottom:12px}
+#profile-modal.profile-required .modal-close{display:none}
+#profile-modal.profile-required .modal-card{border-color:rgba(255,255,255,.25);box-shadow:0 30px 100px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.06)}
+</style>
+
 </head>
 <body>
 
@@ -779,11 +795,14 @@ a {
 
   <!-- Download Overlay -->
   <div class="download-anim-overlay" id="download-overlay">
-    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--accent-cyan);"></i>
-    <h3 style="margin-top:20px; font-size:1.1rem; color:#fff;" id="download-status-txt">Downloading R/C Garage SL...</h3>
-    <div class="progress-bar-container">
-      <div class="progress-bar-fill" id="progress-fill"></div>
+    <div class="download-spinner"></div>
+    <h3 style="margin-top:20px; font-size:1.1rem; color:#fff;" id="download-status-txt">Preparing R/C Garage SL...</h3>
+    <div class="download-progress-wrap">
+      <div class="download-progress-track">
+        <div class="download-progress-fill" id="download-progress-fill"></div>
+      </div>
     </div>
+    <div class="install-help-card" id="install-help" style="display:none;"></div>
   </div>
 
   <div class="container">
@@ -1068,6 +1087,9 @@ a {
     <div class="modal-card">
       <button class="modal-close" onclick="closeProfileModal()"><i class="fa-solid fa-xmark"></i></button>
       <div class="card-title"><span><i class="fa-solid fa-circle-user"></i> User Profile</span></div>
+      <div id="profile-required-badge" class="profile-required-badge" style="display:none;">
+        <i class="fa-solid fa-lock"></i> Complete your profile to continue
+      </div>
 
       <!-- Photo Upload Box -->
       <div class="avatar-upload-box">
@@ -1087,13 +1109,13 @@ a {
 
       <div class="form-group">
         <label>Display Name</label>
-        <input type="text" id="user-name-input" placeholder="Enter display name" value="RC Enthusiast" maxlength="40">
+        <input type="text" id="user-name-input" placeholder="Enter display name" value="" maxlength="40">
       </div>
 
       <div class="form-group">
         <label><i class="fa-brands fa-whatsapp" style="color:#25D366;"></i> WhatsApp Number</label>
-        <input type="tel" id="user-whatsapp-input" placeholder="e.g. 0771234567 or +94771234567" inputmode="tel" autocomplete="tel" maxlength="20">
-        <small style="display:block;margin-top:6px;color:var(--text-secondary);">Used only for the “Chat via WhatsApp” button on your RC Map profile.</small>
+        <input type="tel" id="user-whatsapp-input" placeholder="+94771234567 or +14155552671" inputmode="tel" autocomplete="tel" maxlength="20">
+        <small style="display:block;margin-top:6px;color:var(--text-secondary);">International format required. Used for your RC Map WhatsApp contact button.</small>
       </div>
 
       <button class="btn-primary" onclick="saveProfileDetails()">Save Profile</button>
@@ -1160,10 +1182,10 @@ a {
   <!-- FIREBASE SDK v10 (Modular Import) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, signInWithPopup, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, set, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, Timestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+    import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDc3kDN1KPnXK98NI2NvwZyxCvDZxLa13w",
@@ -1208,23 +1230,58 @@ a {
     window.fDeleteObject = deleteObject;
 
     document.getElementById('firebase-google-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('firebase-google-btn');
+
       try {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Connecting to Google...';
+
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        // Mobile browsers are more reliable with redirect authentication.
+        if (isMobile) {
+          await signInWithRedirect(auth, provider);
+          return;
+        }
+
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
-        
-        if (!localStorage.getItem('rc_user_name') || localStorage.getItem('rc_user_name') === 'RC Enthusiast') {
-          localStorage.setItem('rc_user_name', user.displayName || 'RC Enthusiast');
-        }
+
         localStorage.setItem('rc_is_logged_in', 'true');
         localStorage.setItem('rc_user_uid', user.uid);
 
+        if (user.photoURL && !localStorage.getItem('rc_user_avatar')) {
+          localStorage.setItem('rc_user_avatar', user.photoURL);
+        }
+
         window.updateAuthUI(true);
         window.loadProfileData();
-        alert(`Signed in as ${user.displayName || user.email}`);
+        window.requireCompleteProfile(user);
 
       } catch (error) {
         console.error("Firebase Sign-In Error:", error);
-        alert("Google Sign-In Failed: " + error.message);
+
+        const fallbackCodes = [
+          'auth/popup-blocked',
+          'auth/popup-closed-by-user',
+          'auth/cancelled-popup-request',
+          'auth/internal-error'
+        ];
+
+        if (fallbackCodes.includes(error?.code)) {
+          try {
+            await signInWithRedirect(auth, provider);
+            return;
+          } catch (redirectError) {
+            console.error("Firebase Redirect Sign-In Error:", redirectError);
+            alert("Google Sign-In failed: " + (redirectError?.message || "Please try again."));
+          }
+        } else {
+          alert("Google Sign-In failed: " + (error?.message || "Please try again."));
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" alt="Google"> Sign in with Google';
       }
     });
 
@@ -1246,7 +1303,13 @@ a {
       if (user) {
         localStorage.setItem('rc_is_logged_in', 'true');
         localStorage.setItem('rc_user_uid', user.uid);
+
+        if (user.photoURL && !localStorage.getItem('rc_user_avatar')) {
+          localStorage.setItem('rc_user_avatar', user.photoURL);
+        }
+
         window.updateAuthUI(true);
+        setTimeout(() => window.requireCompleteProfile(user), 150);
       } else {
         localStorage.removeItem('rc_is_logged_in');
         localStorage.removeItem('rc_user_uid');
@@ -1266,58 +1329,145 @@ a {
     let selectedLat = null, selectedLng = null;
     let isEditingMode = true;
 
-    // Groq API Key Setup
-    const GROQ_API_KEY = "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";
-    // Groq Compound is the primary RC mechanic: it can search the web and run code when needed.
-    // GPT-OSS 120B is the high-capability fallback.
-    const GROQ_MODELS = ["groq/compound", "openai/gpt-oss-120b"];
-    const GROQ_REASONING_EFFORT = "high";
+    function isStandaloneApp() {
+      return window.matchMedia('(display-mode: standalone)').matches ||
+             window.matchMedia('(display-mode: fullscreen)').matches ||
+             window.navigator.standalone === true;
+    }
+
+    function isIOSDevice() {
+      return /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      if(!localStorage.getItem('rc_app_installed')) {
-        document.getElementById('install-banner').style.display = 'block';
+      if (!isStandaloneApp() && !localStorage.getItem('rc_install_seen')) {
+        setTimeout(() => {
+          document.getElementById('install-banner').style.display = 'block';
+        }, 900);
       }
     });
 
-    function triggerAppDownloadAnimation() {
-      document.getElementById('install-banner').style.display = 'none';
+    window.addEventListener('appinstalled', () => {
+      localStorage.setItem('rc_app_installed', 'true');
+      localStorage.setItem('rc_install_seen', 'true');
+      deferredPrompt = null;
       const overlay = document.getElementById('download-overlay');
-      const progressFill = document.getElementById('progress-fill');
-      const statusTxt = document.getElementById('download-status-txt');
+      if (overlay) overlay.style.display = 'none';
+    });
+
+    function showIOSInstallInstructions() {
+      const overlay = document.getElementById('download-overlay');
+      const status = document.getElementById('download-status-txt');
+      const help = document.getElementById('install-help');
+
+      status.textContent = 'Ready to install';
+      help.innerHTML = `
+        <strong>Install R/C Garage SL on iPhone/iPad</strong><br>
+        1. Tap Safari's <strong>Share</strong> button.<br>
+        2. Choose <strong>Add to Home Screen</strong>.<br>
+        3. Tap <strong>Add</strong>.<br><br>
+        Then open the R/C Garage SL icon from your Home Screen.
+      `;
+      help.style.display = 'block';
+      document.getElementById('download-progress-fill').style.width = '100%';
+
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        localStorage.setItem('rc_install_seen', 'true');
+      }, 7000);
+    }
+
+    async function triggerAppDownloadAnimation() {
+      document.getElementById('install-banner').style.display = 'none';
+
+      const overlay = document.getElementById('download-overlay');
+      const fill = document.getElementById('download-progress-fill');
+      const status = document.getElementById('download-status-txt');
+      const help = document.getElementById('install-help');
 
       overlay.style.display = 'flex';
+      help.style.display = 'none';
+      fill.style.width = '0%';
+      status.textContent = 'Preparing R/C Garage SL...';
+
       let progress = 0;
-
       const interval = setInterval(() => {
-        progress += 20;
-        progressFill.style.width = progress + '%';
+        progress = Math.min(progress + 8, 92);
+        fill.style.width = progress + '%';
+        status.textContent =
+          progress < 40 ? 'Preparing app...' :
+          progress < 75 ? 'Optimizing for your device...' :
+          'Almost ready...';
+      }, 110);
 
-        if(progress >= 100) {
-          clearInterval(interval);
-          statusTxt.innerText = "Adding to Home Screen...";
-          setTimeout(() => {
-            overlay.style.display = 'none';
-            if (deferredPrompt) {
-              deferredPrompt.prompt();
-              deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                  localStorage.setItem('rc_app_installed', 'true');
-                }
-              });
-            }
-          }, 800);
+      await new Promise(r => setTimeout(r, 1400));
+      clearInterval(interval);
+      fill.style.width = '100%';
+
+      if (deferredPrompt) {
+        status.textContent = 'Add R/C Garage SL to your Home Screen';
+        await new Promise(r => setTimeout(r, 450));
+
+        try {
+          deferredPrompt.prompt();
+          const choice = await deferredPrompt.userChoice;
+
+          if (choice.outcome === 'accepted') {
+            localStorage.setItem('rc_app_installed', 'true');
+            status.textContent = 'Installation complete';
+            await new Promise(r => setTimeout(r, 900));
+          } else {
+            status.textContent = 'Installation cancelled';
+            await new Promise(r => setTimeout(r, 900));
+          }
+        } catch (err) {
+          console.warn('PWA install prompt failed:', err);
         }
-      }, 300);
+
+        overlay.style.display = 'none';
+        deferredPrompt = null;
+        localStorage.setItem('rc_install_seen', 'true');
+        return;
+      }
+
+      if (isIOSDevice()) {
+        showIOSInstallInstructions();
+        return;
+      }
+
+      status.textContent = 'Use your browser menu to install';
+      help.innerHTML = `
+        <strong>Install R/C Garage SL</strong><br>
+        Open the browser menu and choose <strong>Install app</strong> or
+        <strong>Add to Home Screen</strong>.
+      `;
+      help.style.display = 'block';
+
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        localStorage.setItem('rc_install_seen', 'true');
+      }, 6000);
+    }
+
+    function checkFirstVisitInstall() {
+      if (isStandaloneApp()) {
+        localStorage.setItem('rc_app_installed', 'true');
+        return;
+      }
+
+      if (!localStorage.getItem('rc_install_seen')) {
+        setTimeout(() => {
+          document.getElementById('install-banner').style.display = 'block';
+        }, 1100);
+      }
     }
 
     function checkAppLaunchMode() {
-      const isPwa = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      const isLoggedIn = localStorage.getItem('rc_is_logged_in');
-
-      if (isPwa && !isLoggedIn) {
-        setTimeout(() => openProfileModal(), 500);
+      if (isStandaloneApp() && window.currentFirebaseUser) {
+        setTimeout(() => window.requireCompleteProfile(window.currentFirebaseUser), 500);
       }
     }
 
@@ -1518,7 +1668,7 @@ a {
       const title = document.getElementById("trick-title").value.trim();
       const description = document.getElementById("trick-desc").value.trim();
       const currentUid = user.uid;
-      const currentUserName = user.displayName || localStorage.getItem("rc_user_name") || "RC Enthusiast";
+      const currentUserName = user.displayName || localStorage.getItem("rc_user_name") || "";
       const imageFile = document.getElementById("trick-image").files[0];
       const submitBtn = document.getElementById("submit-trick-btn");
 
@@ -1787,13 +1937,16 @@ a {
     }
 
     function normalizeWhatsAppNumber(raw) {
-      let value = String(raw || '').trim().replace(/[^\d+]/g, '');
+      let value = String(raw || '').trim().replace(/[\s().-]/g, '');
       if (!value) return '';
       if (value.startsWith('00')) value = '+' + value.slice(2);
-      if (value.startsWith('+')) return value.slice(1);
-      // Sri Lanka convenience: 07XXXXXXXX -> 947XXXXXXXX
-      if (value.startsWith('0') && value.length === 10) return '94' + value.slice(1);
-      return value;
+      if (value.startsWith('+')) return value.slice(1).replace(/\D/g, '');
+      return value.replace(/\D/g, '');
+    }
+
+    function isValidInternationalWhatsAppNumber(raw) {
+      const digits = normalizeWhatsAppNumber(raw);
+      return /^\d{8,15}$/.test(digits);
     }
 
     function getCurrentUserId() {
@@ -1813,7 +1966,7 @@ a {
       if (!Number.isFinite(lat) || !Number.isFinite(lng) || !models) return false;
 
       const driverData = {
-        name: localStorage.getItem('rc_user_name') || 'RC Driver',
+        name: localStorage.getItem('rc_user_name') || '',
         models,
         whatsapp: normalizeWhatsAppNumber(localStorage.getItem('rc_user_whatsapp') || ''),
         lat,
@@ -1829,8 +1982,16 @@ a {
     }
 
     async function saveUserMapLocation() {
+      if (!localStorage.getItem('rc_user_name') ||
+          !isValidInternationalWhatsAppNumber(localStorage.getItem('rc_user_whatsapp') || '')) {
+        if (window.currentFirebaseUser) window.requireCompleteProfile(window.currentFirebaseUser);
+        else openProfileModal();
+        alert('Please complete your profile first.');
+        return;
+      }
+
       const modelsInput = document.getElementById('user-rc-models').value.trim();
-      const userName = localStorage.getItem('rc_user_name') || 'RC Driver';
+      const userName = localStorage.getItem('rc_user_name') || '';
       const whatsapp = normalizeWhatsAppNumber(localStorage.getItem('rc_user_whatsapp') || '');
       const userId = getCurrentUserId();
 
@@ -1907,7 +2068,7 @@ a {
           Object.keys(data).forEach(key => {
             const driver = data[key];
             if (Number.isFinite(Number(driver.lat)) && Number.isFinite(Number(driver.lng))) {
-              const safeName = escapeHtml(driver.name || 'RC Driver');
+              const safeName = escapeHtml(driver.name || '');
               const safeModels = escapeHtml(driver.models || 'RC Models not listed');
               const waNumber = normalizeWhatsAppNumber(driver.whatsapp || '');
               const waButton = waNumber
@@ -2054,8 +2215,12 @@ a {
     };
 
     window.closeProfileModal = function() {
-      tempAvatarBase64 = null;
-      document.getElementById('profile-modal').style.display = 'none';
+      const modal = document.getElementById('profile-modal');
+      if (modal.classList.contains('profile-required')) {
+        alert('Please enter your display name and international WhatsApp number to continue.');
+        return;
+      }
+      modal.style.display = 'none';
     };
 
     window.handleImageUpload = function(e) {
@@ -2086,6 +2251,31 @@ a {
       renderAvatarUI(null);
     };
 
+    window.requireCompleteProfile = function(user) {
+      const name = (localStorage.getItem('rc_user_name') || '').trim();
+      const phone = (localStorage.getItem('rc_user_whatsapp') || '').trim();
+
+      if (!name || !phone || !isValidInternationalWhatsAppNumber(phone)) {
+        const modal = document.getElementById('profile-modal');
+        const badge = document.getElementById('profile-required-badge');
+
+        modal.classList.add('profile-required');
+        badge.style.display = 'inline-flex';
+
+        if (user?.photoURL && !localStorage.getItem('rc_user_avatar')) {
+          localStorage.setItem('rc_user_avatar', user.photoURL);
+          renderAvatarUI(user.photoURL);
+        }
+
+        document.getElementById('user-name-input').value = name;
+        document.getElementById('user-whatsapp-input').value = phone ? '+' + phone : '';
+        modal.style.display = 'flex';
+        return false;
+      }
+
+      return true;
+    };
+
     window.saveProfileDetails = async function() {
       const name = document.getElementById('user-name-input').value.trim();
       const whatsappRaw = document.getElementById('user-whatsapp-input').value.trim();
@@ -2096,14 +2286,14 @@ a {
         return;
       }
 
-      if (whatsapp && !/^94\d{9}$/.test(whatsapp)) {
-        alert('Please enter a valid Sri Lankan WhatsApp number, e.g. 0771234567 or +94771234567.');
+      if (!whatsapp || !isValidInternationalWhatsAppNumber(whatsapp)) {
+        alert('Please enter a valid international WhatsApp number with country code, e.g. +94771234567 or +14155552671.');
         return;
       }
 
       localStorage.setItem('rc_user_name', name);
-      if (whatsapp) localStorage.setItem('rc_user_whatsapp', whatsapp);
-      else localStorage.removeItem('rc_user_whatsapp');
+      localStorage.setItem('rc_user_whatsapp', whatsapp);
+      localStorage.setItem('rc_profile_complete', 'true');
       
       if(tempAvatarBase64 !== null) {
         if(tempAvatarBase64 === "") {
@@ -2120,19 +2310,21 @@ a {
       }
       
       loadProfileData();
+      document.getElementById('profile-modal').classList.remove('profile-required');
+      document.getElementById('profile-required-badge').style.display = 'none';
       alert('Profile details saved successfully!');
       closeProfileModal();
     };
 
     window.loadProfileData = function() {
-      const savedName = localStorage.getItem('rc_user_name') || 'RC Enthusiast';
+      const savedName = localStorage.getItem('rc_user_name') || '';
       const savedWhatsApp = localStorage.getItem('rc_user_whatsapp') || '';
       const customAvatar = localStorage.getItem('rc_user_avatar');
 
       document.getElementById('user-name-input').value = savedName;
       document.getElementById('user-whatsapp-input').value = savedWhatsApp ? '+' + savedWhatsApp : '';
-      
-      if(customAvatar && customAvatar.startsWith('data:image')) {
+
+      if (customAvatar && (customAvatar.startsWith('data:image') || customAvatar.startsWith('http'))) {
         renderAvatarUI(customAvatar);
       } else {
         renderAvatarUI(null);
@@ -2263,6 +2455,10 @@ a {
     }
 
     // AI MECHANIC VIA GROQ API
+    // NOTE: For production, move this key to a Firebase Cloud Function so it is not exposed in the browser.
+    const GROQ_API_KEY = "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";
+    const GROQ_MODELS = ["groq/compound", "openai/gpt-oss-120b"];
+    const GROQ_REASONING_EFFORT = "high";
     const aiConversation = [];
 
     function escapeHtml(value) {
@@ -2290,7 +2486,7 @@ a {
     }
 
     async function callGroq(messages, options = {}) {
-      if (!GROQ_API_KEY || GROQ_API_KEY === "PASTE_YOUR_GROQ_API_KEY_HERE") {
+      if (!GROQ_API_KEY || GROQ_API_KEY === "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") {
         throw new Error("Groq API key is not configured.");
       }
 
@@ -2453,6 +2649,7 @@ VERIFICATION POLICY:
 
     window.onload = function() {
       loadProfileData();
+      checkFirstVisitInstall();
       checkAppLaunchMode();
       setTimeout(() => { if (typeof loadRcSpecifications === 'function') loadRcSpecifications(); }, 250);
     };

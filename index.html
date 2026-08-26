@@ -1226,7 +1226,7 @@ html.rc-hard-lock body{overflow:hidden!important}
   <!-- FIREBASE SDK v10 (Modular Import) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInWithPopup, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, set, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, Timestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
@@ -1243,6 +1243,8 @@ html.rc-hard-lock body{overflow:hidden!important}
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    // Keep Google authentication across PWA restarts / launches.
+    setPersistence(auth, browserLocalPersistence).catch(err => console.warn("Auth persistence:", err));
     const db = getDatabase(app);
     const firestore = getFirestore(app);
     const storage = getStorage(app);
@@ -1282,13 +1284,20 @@ html.rc-hard-lock body{overflow:hidden!important}
 
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-        // Mobile browsers are more reliable with redirect authentication.
-        if (isMobile) {
-          await signInWithRedirect(auth, provider);
-          return;
+        // In an installed PWA, popup authentication is preferred because it
+        // returns the Firebase credential directly to this document.
+        // If the browser blocks popups, fall back to redirect authentication.
+        let result;
+        try {
+          result = await signInWithPopup(auth, provider);
+        } catch (popupError) {
+          console.warn("Popup sign-in failed; trying redirect:", popupError);
+          if (['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request','auth/internal-error'].includes(popupError?.code)) {
+            await signInWithRedirect(auth, provider);
+            return;
+          }
+          throw popupError;
         }
-
-        const result = await signInWithPopup(auth, provider);
         const user = result.user;
 
         localStorage.setItem('rc_is_logged_in', 'true');
@@ -1338,6 +1347,29 @@ html.rc-hard-lock body{overflow:hidden!important}
       } catch (error) {
         console.error("Sign Out Error:", error);
       }
+    });
+
+    // Complete a redirect sign-in after Google sends the user back to the PWA.
+    // This is essential on Android/iOS where the redirect flow can return to
+    // the app without the previous page receiving a popup result.
+    getRedirectResult(auth).then((result) => {
+      if (!result || !result.user) return;
+      const user = result.user;
+      localStorage.setItem('rc_is_logged_in', 'true');
+      localStorage.setItem('rc_user_uid', user.uid);
+      if (user.email) localStorage.setItem('rc_google_email', user.email);
+      if (user.displayName) localStorage.setItem('rc_google_display_name', user.displayName);
+      if (user.photoURL) localStorage.setItem('rc_google_avatar_preview', user.photoURL);
+      window.currentFirebaseUser = user;
+      const lm = document.getElementById('firebase-login-modal');
+      if (lm) lm.style.display = 'none';
+      if (window.updateAuthUI) window.updateAuthUI(true);
+      setTimeout(() => {
+        if (window.requireCompleteProfile) window.requireCompleteProfile(user);
+        window.dispatchEvent(new CustomEvent('rc-google-auth-success', {detail:{uid:user.uid,email:user.email||''}}));
+      }, 100);
+    }).catch((error) => {
+      console.warn('Firebase redirect result:', error);
     });
 
     onAuthStateChanged(auth, (user) => {
@@ -2725,7 +2757,9 @@ VERIFICATION POLICY:
     const a=(localStorage.getItem('rc_user_avatar')||'').trim();
     return n.length>=2 && /^\d{8,15}$/.test(p) && !!a && localStorage.getItem('rc_profile_photo_selected')==='1';
   };
-  const logged=()=>!!window.currentFirebaseUser || localStorage.getItem('rc_is_logged_in')==='true';
+  // Firebase auth state is authoritative. localStorage is only a short-lived
+  // hint and must never cause the app to skip/loop the Google sign-in step.
+  const logged=()=>!!window.currentFirebaseUser;
   function lock(){document.documentElement.classList.add('rc-hard-lock');document.documentElement.classList.add('rc-install-lock');}
   function showInstall(){lock();$('rc-auth-gate').style.display='none';$('rc-install-gate').style.display='flex';}
   function showAuth(){lock();$('rc-install-gate').style.display='none';$('rc-auth-gate').style.display='flex';}
@@ -2794,8 +2828,19 @@ VERIFICATION POLICY:
     if(logged()){
       showProfile();
       const timer=setInterval(()=>{if(profileComplete()){clearInterval(timer);unlock();}},400);
-    }else showAuth();
+    }else{
+      showAuth();
+    }
   }
+
+  // The Firebase module dispatches this immediately after popup/redirect auth.
+  addEventListener('rc-google-auth-success',()=>{
+    if(!standalone()) return;
+    showProfile();
+    const timer=setInterval(()=>{
+      if(profileComplete()){clearInterval(timer);unlock();}
+    },400);
+  });
   addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;if(!standalone()&&!localStorage.getItem(INST))showInstall();});
   addEventListener('appinstalled',()=>{localStorage.setItem(INST,'1');finishAccepted();});
   $('rc-gate-install').onclick=startInstall;
@@ -2811,53 +2856,15 @@ VERIFICATION POLICY:
     }
   });
   // Firebase auth state can arrive after the module initializes.
-  const poll=setInterval(()=>{if(standalone()&&logged()){clearInterval(poll);showProfile();}},500);
+  const poll=setInterval(()=>{
+    if(standalone() && logged()){
+      clearInterval(poll);
+      showProfile();
+    }
+  },500);
 })();
 </script>
 
-<script id="rc-google-auth-bridge">
-(() => {
-  const markSignedIn = user => {
-    if (!user) return;
-    localStorage.setItem('rc_is_logged_in','true');
-    localStorage.setItem('rc_google_uid', user.uid || '');
-    localStorage.setItem('rc_google_email', user.email || '');
-    if (user.displayName) localStorage.setItem('rc_google_display_name', user.displayName);
-    if (user.photoURL) {
-      localStorage.setItem('rc_google_photo', user.photoURL);
-      if (!localStorage.getItem('rc_user_avatar')) {
-        localStorage.setItem('rc_user_avatar', user.photoURL);
-      }
-    }
-    const lm = document.getElementById('firebase-login-modal');
-    if (lm) lm.style.display = 'none';
-    const pm = document.getElementById('profile-modal');
-    const n = (localStorage.getItem('rc_user_name') || '').trim();
-    const p = (localStorage.getItem('rc_user_whatsapp') || '').replace(/\D/g,'');
-    const a = (localStorage.getItem('rc_user_avatar') || '').trim();
-    if (pm && !(n.length >= 2 && /^\d{8,15}$/.test(p) && a)) {
-      pm.classList.add('profile-required');
-      pm.style.display = 'flex';
-    }
-  };
 
-  const attach = () => {
-    try {
-      if (window.firebase && firebase.auth) {
-        firebase.auth().onAuthStateChanged(user => {
-          if (user) markSignedIn(user);
-        });
-        return true;
-      }
-    } catch(e) {}
-    return false;
-  };
-
-  if (!attach()) {
-    let tries=0;
-    const t=setInterval(()=>{if(attach() || ++tries>50) clearInterval(t)},200);
-  }
-})();
-</script>
 </body>
 </html>

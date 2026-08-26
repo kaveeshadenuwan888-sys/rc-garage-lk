@@ -2348,6 +2348,8 @@ html.rc-hard-lock body{overflow:hidden!important}
       localStorage.setItem('rc_user_whatsapp', whatsapp);
       localStorage.setItem('rc_garage_sl_profile_complete_v3', '1');
       localStorage.setItem('rc_profile_complete', 'true');
+      localStorage.setItem('rc_is_logged_in', 'true');
+      localStorage.setItem('rc_profile_complete', 'true');
       
       if(tempAvatarBase64 !== null) {
         if(tempAvatarBase64 === "") {
@@ -2810,6 +2812,51 @@ VERIFICATION POLICY:
   });
   // Firebase auth state can arrive after the module initializes.
   const poll=setInterval(()=>{if(standalone()&&logged()){clearInterval(poll);showProfile();}},500);
+})();
+</script>
+
+<script id="rc-google-auth-bridge">
+(() => {
+  const markSignedIn = user => {
+    if (!user) return;
+    localStorage.setItem('rc_is_logged_in','true');
+    localStorage.setItem('rc_google_uid', user.uid || '');
+    localStorage.setItem('rc_google_email', user.email || '');
+    if (user.displayName) localStorage.setItem('rc_google_display_name', user.displayName);
+    if (user.photoURL) {
+      localStorage.setItem('rc_google_photo', user.photoURL);
+      if (!localStorage.getItem('rc_user_avatar')) {
+        localStorage.setItem('rc_user_avatar', user.photoURL);
+      }
+    }
+    const lm = document.getElementById('firebase-login-modal');
+    if (lm) lm.style.display = 'none';
+    const pm = document.getElementById('profile-modal');
+    const n = (localStorage.getItem('rc_user_name') || '').trim();
+    const p = (localStorage.getItem('rc_user_whatsapp') || '').replace(/\D/g,'');
+    const a = (localStorage.getItem('rc_user_avatar') || '').trim();
+    if (pm && !(n.length >= 2 && /^\d{8,15}$/.test(p) && a)) {
+      pm.classList.add('profile-required');
+      pm.style.display = 'flex';
+    }
+  };
+
+  const attach = () => {
+    try {
+      if (window.firebase && firebase.auth) {
+        firebase.auth().onAuthStateChanged(user => {
+          if (user) markSignedIn(user);
+        });
+        return true;
+      }
+    } catch(e) {}
+    return false;
+  };
+
+  if (!attach()) {
+    let tries=0;
+    const t=setInterval(()=>{if(attach() || ++tries>50) clearInterval(t)},200);
+  }
 })();
 </script>
 </body>

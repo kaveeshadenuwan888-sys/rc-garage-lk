@@ -107,6 +107,9 @@
       height: 100%;
       object-fit: cover;
     }
+    #header-avatar-container{display:grid;place-items:center;width:100%;height:100%;overflow:hidden;border-radius:50%}
+    #header-avatar-container img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
+
 
     /* Install Banner */
     .install-banner-overlay {
@@ -985,6 +988,30 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
         </div>
       </div>
 
+      <!-- TOOL 4: BATTERY CURRENT ESTIMATOR -->
+      <div class="glass-card">
+        <div class="card-title"><span><i class="fa-solid fa-plug-circle-bolt"></i> Battery Current Estimator</span></div>
+        <div class="grid-2">
+          <div class="form-group"><label>Capacity (mAh)</label><input type="number" id="rc-current-capacity" value="2200" min="1"></div>
+          <div class="form-group"><label>Discharge Rating (C)</label><input type="number" id="rc-current-c-rating" value="20" min="1" step="0.5"></div>
+        </div>
+        <button class="btn-primary" onclick="calculateBatteryCurrent()"><i class="fa-solid fa-calculator"></i> Calculate Max Current</button>
+        <div class="calc-result"><span>Estimated theoretical max:</span><span id="rc-current-result">-- A</span></div>
+        <small style="color:var(--text-secondary)">Use the battery maker's rating; real safe current may be lower.</small>
+      </div>
+
+      <!-- TOOL 5: GEAR RATIO CALCULATOR -->
+      <div class="glass-card">
+        <div class="card-title"><span><i class="fa-solid fa-gears"></i> Gear Ratio Calculator</span></div>
+        <div class="grid-2">
+          <div class="form-group"><label>Pinion teeth</label><input type="number" id="rc-pinion-teeth" value="14" min="1"></div>
+          <div class="form-group"><label>Spur teeth</label><input type="number" id="rc-spur-teeth" value="54" min="1"></div>
+        </div>
+        <button class="btn-primary" onclick="calculateGearRatio()"><i class="fa-solid fa-calculator"></i> Calculate Ratio</button>
+        <div class="calc-result"><span>Spur / pinion ratio:</span><span id="rc-gear-ratio-result">-- : 1</span></div>
+        <small style="color:var(--text-secondary)">This is only the spur-to-pinion ratio, not the full drivetrain ratio.</small>
+      </div>
+
     </div>
 
     <!-- TAB 2: TRICKS & MODS FEED -->
@@ -1552,6 +1579,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
         window.updateAuthUI(false);
       }
       window.loadProfileData();
+      if (window.refreshHeaderAvatar) window.refreshHeaderAvatar();
       setTimeout(() => { if (typeof loadRcSpecifications === 'function') loadRcSpecifications(); }, 100);
       setTimeout(() => { if (typeof loadSharedTrick === 'function') loadSharedTrick(); }, 900);
     });
@@ -1743,6 +1771,23 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       document.getElementById('climb-val').innerText = `~${angleDeg.toFixed(1)}°`;
     }
 
+    window.calculateBatteryCurrent = function() {
+      const capacity = Number(document.getElementById('rc-current-capacity')?.value);
+      const cRating = Number(document.getElementById('rc-current-c-rating')?.value);
+      const out = document.getElementById('rc-current-result');
+      if (!out) return;
+      if (!(capacity > 0) || !(cRating > 0)) { out.textContent = 'Enter valid values'; return; }
+      out.textContent = `${(capacity / 1000 * cRating).toFixed(2)} A`;
+    };
+    window.calculateGearRatio = function() {
+      const pinion = Number(document.getElementById('rc-pinion-teeth')?.value);
+      const spur = Number(document.getElementById('rc-spur-teeth')?.value);
+      const out = document.getElementById('rc-gear-ratio-result');
+      if (!out) return;
+      if (!(pinion > 0) || !(spur > 0)) { out.textContent = 'Enter valid values'; return; }
+      out.textContent = `${(spur / pinion).toFixed(2)} : 1`;
+    };
+
     /* TRICKS & MODS FEED FUNCTIONS */
 
     function openTrickModal() {
@@ -1878,6 +1923,11 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 
       if (imageFile.size > 15 * 1024 * 1024) {
         alert("Please choose an image smaller than 15 MB.");
+        return;
+      }
+
+      if (!window.firebaseStorage || !window.fStorageRef || !window.fUploadBytesResumable || !window.firestoreDB || !window.fsAddDoc) {
+        alert("Upload service is not ready. Refresh the page and try again. If it keeps happening, check Firebase Storage and Firestore setup.");
         return;
       }
 
@@ -2520,7 +2570,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     window.loadProfileData = function() {
       const savedName = localStorage.getItem('rc_user_name') || '';
       const savedWhatsApp = localStorage.getItem('rc_user_whatsapp') || '';
-      const customAvatar = localStorage.getItem('rc_user_avatar');
+      const customAvatar = localStorage.getItem('rc_user_avatar') || (window.currentFirebaseUser && window.currentFirebaseUser.photoURL) || localStorage.getItem('rc_google_avatar_preview');
 
       document.getElementById('user-name-input').value = savedName;
       document.getElementById('user-whatsapp-input').value = savedWhatsApp ? '+' + savedWhatsApp : '';
@@ -2548,6 +2598,15 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       }
     }
 
+
+    // Keep the top-right account button in sync with the signed-in user's chosen photo.
+    window.refreshHeaderAvatar = function() {
+      const custom = localStorage.getItem('rc_user_avatar');
+      const google = window.currentFirebaseUser?.photoURL || localStorage.getItem('rc_google_avatar_preview');
+      renderAvatarUI(custom || google || null);
+    };
+    window.addEventListener('rc-google-auth-success', () => setTimeout(() => window.refreshHeaderAvatar(), 80));
+    window.addEventListener('load', () => setTimeout(() => window.refreshHeaderAvatar(), 500));
 
     // RC SPECIFICATIONS DATABASE
     const ADMIN_EMAIL = 'kaveeshadenuwan888@gmail.com';
@@ -3017,6 +3076,7 @@ VERIFICATION POLICY:
     localStorage.setItem('rc_user_whatsapp',phone);
     localStorage.setItem('rc_user_avatar',avatar);
     localStorage.setItem('rc_profile_photo_selected','1');
+    if (window.refreshHeaderAvatar) window.refreshHeaderAvatar();
     localStorage.setItem('rc_garage_sl_profile_complete_v3','1');
     localStorage.setItem('rc_profile_complete','true');
     localStorage.setItem('rc_is_logged_in','true');
@@ -3175,6 +3235,7 @@ VERIFICATION POLICY:
           localStorage.setItem('rc_user_whatsapp',p);
           localStorage.setItem('rc_user_avatar',photo);
           localStorage.setItem('rc_profile_photo_selected','1');
+          if (window.refreshHeaderAvatar) window.refreshHeaderAvatar();
           localStorage.setItem('rc_garage_sl_profile_complete_v3','1');
           localStorage.setItem('rc_profile_complete','true');
 

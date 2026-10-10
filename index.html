@@ -846,25 +846,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 @media(max-width:600px){.rc-edit-grid{grid-template-columns:1fr}.rc-edit-actions{flex-direction:column}}
 </style>
 </head>
-<body class="rc-install-lock"><div id="rc-install-gate" aria-modal="true" role="dialog">
-<div class="gate-card">
-<div id="rc-gate-icon" class="gate-spinner"></div>
-<h2 id="rc-gate-title">Download R/C Garage SL</h2>
-<p id="rc-gate-text">Install R/C Garage SL to continue.</p>
-<button id="rc-gate-install" class="gate-btn">Download R/C Garage SL</button>
-<div class="gate-progress"><span id="rc-gate-progress"></span></div>
-<div id="rc-gate-help" class="gate-help"></div>
-</div></div>
-
-<div id="rc-auth-gate" aria-modal="true" role="dialog">
-  <div class="gate-card">
-    <div class="gate-auth-logo"><i class="fa-brands fa-google"></i></div>
-    <h2>Sign in to R/C Garage SL</h2>
-    <p>Open the installed app and sign in with Google to continue.</p>
-    <button id="rc-gate-google" class="gate-btn"><i class="fa-brands fa-google"></i> Sign in with Google</button>
-    <div id="rc-auth-status" style="margin-top:14px;font-size:.78rem;color:rgba(255,255,255,.55)"></div>
-  </div>
-</div>
+<body>
 
   <!-- Header -->
   <header>
@@ -885,10 +867,10 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
   <div class="install-banner-overlay" id="install-banner">
     <div class="install-flex">
       <div>
-        <div style="font-weight:700; font-size:0.95rem; color:#fff;">Download R/C Garage SL</div>
-        <div style="font-size:0.75rem; color:var(--text-secondary);">Add to Home Screen for quick access</div>
+        <div style="font-weight:700; font-size:0.95rem; color:#fff;">Install R/C Garage SL</div>
+        <div style="font-size:0.75rem; color:var(--text-secondary);">Add to your Home Screen for quick access</div>
       </div>
-      <button class="install-btn" onclick="triggerAppDownloadAnimation()">Download</button>
+      <button class="install-btn" onclick="triggerAppInstallPrompt()">Install</button>
     </div>
   </div>
 
@@ -1613,76 +1595,45 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       }, 7000);
     }
 
-    async function triggerAppDownloadAnimation() {
-      document.getElementById('install-banner').style.display = 'none';
-
-      const overlay = document.getElementById('download-overlay');
-      const fill = document.getElementById('download-progress-fill');
-      const status = document.getElementById('download-status-txt');
-      const help = document.getElementById('install-help');
-
-      overlay.style.display = 'flex';
-      help.style.display = 'none';
-      fill.style.width = '0%';
-      status.textContent = 'Preparing R/C Garage SL...';
-
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress = Math.min(progress + 8, 92);
-        fill.style.width = progress + '%';
-        status.textContent =
-          progress < 40 ? 'Preparing app...' :
-          progress < 75 ? 'Optimizing for your device...' :
-          'Almost ready...';
-      }, 110);
-
-      await new Promise(r => setTimeout(r, 1400));
-      clearInterval(interval);
-      fill.style.width = '100%';
+    async function triggerAppInstallPrompt() {
+      const banner = document.getElementById('install-banner');
+      const title = banner.querySelector('div div:first-child');
+      const subtitle = banner.querySelector('div div:nth-child(2)');
+      const button = banner.querySelector('.install-btn');
 
       if (deferredPrompt) {
-        status.textContent = 'Add R/C Garage SL to your Home Screen';
-        await new Promise(r => setTimeout(r, 450));
-
         try {
           deferredPrompt.prompt();
           const choice = await deferredPrompt.userChoice;
-
+          deferredPrompt = null;
           if (choice.outcome === 'accepted') {
             localStorage.setItem('rc_app_installed', 'true');
-            status.textContent = 'Installation complete';
-            await new Promise(r => setTimeout(r, 900));
+            localStorage.setItem('rc_install_seen', 'true');
+            banner.style.display = 'none';
           } else {
-            status.textContent = 'Installation cancelled';
-            await new Promise(r => setTimeout(r, 900));
+            // Keep the normal website usable if the user dismisses installation.
+            localStorage.setItem('rc_install_seen', 'true');
+            banner.style.display = 'none';
           }
         } catch (err) {
           console.warn('PWA install prompt failed:', err);
+          subtitle.textContent = 'Open your browser menu and choose Install app or Add to Home Screen.';
+          button.textContent = 'Got it';
+          button.onclick = () => { banner.style.display = 'none'; localStorage.setItem('rc_install_seen', 'true'); };
         }
-
-        overlay.style.display = 'none';
-        deferredPrompt = null;
-        localStorage.setItem('rc_install_seen', 'true');
         return;
       }
 
       if (isIOSDevice()) {
-        showIOSInstallInstructions();
-        return;
+        subtitle.textContent = 'In Safari, tap Share, then “Add to Home Screen”.';
+      } else {
+        subtitle.textContent = 'Open your browser menu and choose “Install app” or “Add to Home Screen”.';
       }
-
-      status.textContent = 'Use your browser menu to install';
-      help.innerHTML = `
-        <strong>Install R/C Garage SL</strong><br>
-        Open the browser menu and choose <strong>Install app</strong> or
-        <strong>Add to Home Screen</strong>.
-      `;
-      help.style.display = 'block';
-
-      setTimeout(() => {
-        overlay.style.display = 'none';
+      button.textContent = 'Got it';
+      button.onclick = () => {
+        banner.style.display = 'none';
         localStorage.setItem('rc_install_seen', 'true');
-      }, 6000);
+      };
     }
 
     function checkFirstVisitInstall() {
@@ -2899,119 +2850,7 @@ VERIFICATION POLICY:
       setTimeout(() => { if (typeof loadRcSpecifications === 'function') loadRcSpecifications(); }, 250);
     };
   </script>
-<script id="rc-install-only-gate">
-(() => {
-  const INST='rc_garage_sl_installed_v6';
-  const $=id=>document.getElementById(id);
-  let installPrompt=null, running=false;
 
-  const standalone=()=>matchMedia('(display-mode: standalone)').matches ||
-    matchMedia('(display-mode: fullscreen)').matches || navigator.standalone===true;
-  const ios=()=>/iPad|iPhone|iPod/i.test(navigator.userAgent) ||
-    (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
-
-  function lockInstall(){
-    document.documentElement.classList.add('rc-install-lock');
-    document.documentElement.style.overflow='hidden';
-  }
-  function unlockApp(){
-    document.documentElement.classList.remove('rc-install-lock');
-    document.documentElement.style.overflow='';
-    $('rc-install-gate').style.display='none';
-  }
-  function isMobileDevice(){
-    return /Android|iPhone|iPad|iPod|IEMobile|Windows Phone/i.test(navigator.userAgent) ||
-      (navigator.maxTouchPoints > 1 && window.innerWidth < 1200);
-  }
-
-  function showInstall(){
-    if(!isMobileDevice()){
-      unlockApp();
-      return;
-    }
-    lockInstall();
-    $('rc-install-gate').style.display='flex';
-  }
-
-  async function install(){
-    if(running)return; running=true;
-    const b=$('rc-gate-install'), fill=$('rc-gate-progress'), title=$('rc-gate-title'), text=$('rc-gate-text');
-    b.disabled=true; title.textContent='Downloading R/C Garage SL'; text.textContent='Preparing the app...'; fill.style.width='0%';
-    let p=0;
-    const timer=setInterval(()=>{
-      p=Math.min(94,p+5); fill.style.width=p+'%';
-      text.textContent=p<35?'Preparing R/C Garage SL...':p<70?'Downloading app files...':'Finishing installation...';
-    },90);
-    await new Promise(r=>setTimeout(r,1900));
-    clearInterval(timer); fill.style.width='100%';
-
-    if(installPrompt){
-      text.textContent='Please confirm installation...';
-      try{
-        await installPrompt.prompt();
-        const choice=await installPrompt.userChoice;
-        installPrompt=null;
-        if(choice.outcome==='accepted'){
-          localStorage.setItem(INST,'1');
-          title.textContent='Installation done';
-          text.textContent='R/C Garage SL is ready. Open the installed app shortcut.';
-          $('rc-gate-icon').className='';
-          $('rc-gate-icon').innerHTML='<i class="fa-solid fa-circle-check" style="font-size:58px"></i>';
-          b.style.display='none';
-          $('rc-gate-help').style.display='block';
-          $('rc-gate-help').innerHTML='<b>Next step</b><br>Open <b>R/C Garage SL</b> from your Home Screen. Sign-in and profile setup are part of the normal app screen.';
-          try{window.close()}catch(e){}
-        }else{
-          title.textContent='Installation required';
-          text.textContent='Install R/C Garage SL to continue.';
-          fill.style.width='0%'; b.disabled=false; running=false;
-        }
-      }catch(e){
-        console.error(e); b.disabled=false; running=false;
-        text.textContent='Installation could not be started. Please try again.';
-      }
-      return;
-    }
-
-    if(ios()){
-      title.textContent='Install R/C Garage SL';
-      text.textContent='Add the app to your Home Screen.';
-      $('rc-gate-help').style.display='block';
-      $('rc-gate-help').innerHTML='<b>iPhone / iPad</b><br>1. Tap <b>Share</b> in Safari.<br>2. Tap <b>Add to Home Screen</b>.<br>3. Tap <b>Add</b>.<br><br>Then open the R/C Garage SL shortcut.';
-      b.textContent='I Installed R/C Garage SL'; b.disabled=false; running=false;
-      b.onclick=()=>{localStorage.setItem(INST,'1');unlockApp()};
-      return;
-    }
-
-    title.textContent='Install R/C Garage SL';
-    text.textContent='Install the app from your browser menu.';
-    $('rc-gate-help').style.display='block';
-    $('rc-gate-help').innerHTML='<b>Browser menu</b><br>Choose <b>Install app</b> or <b>Add to Home Screen</b>, then open the R/C Garage SL shortcut.';
-    b.disabled=false; running=false;
-  }
-
-  addEventListener('beforeinstallprompt',e=>{
-    e.preventDefault(); installPrompt=e;
-    if(!standalone() && isMobileDevice()) showInstall();
-  });
-  addEventListener('appinstalled',()=>{
-    localStorage.setItem(INST,'1');
-    $('rc-gate-title').textContent='Installation done';
-    $('rc-gate-text').textContent='Open R/C Garage SL from your Home Screen.';
-  });
-
-  $('rc-gate-install').onclick=install;
-
-  addEventListener('load',()=>{
-    if(standalone() || !isMobileDevice()){
-      localStorage.setItem(INST,'1');
-      unlockApp();
-    }else{
-      showInstall();
-    }
-  });
-})();
-</script>
 
 
 

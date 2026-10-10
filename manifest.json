@@ -3,12 +3,12 @@
   "name": "R/C Garage LK",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3085/3085336.png",
+      "src": "assets/icon-192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3085/3085336.png",
+      "src": "assets/icon-512.png",
       "type": "image/png",
       "sizes": "512x512"
     }

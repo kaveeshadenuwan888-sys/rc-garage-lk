@@ -854,6 +854,9 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       <i class="fa-solid fa-gear"></i> R/C Garage SL
     </div>
     <div class="header-actions">
+      <button id="native-install-btn" class="pwa-reload-btn" onclick="triggerAppInstallPrompt()" style="display:none;" title="Install R/C Garage SL" aria-label="Install R/C Garage SL">
+        <i class="fa-solid fa-download"></i> Install
+      </button>
       <button class="pwa-reload-btn" onclick="forceAppUpdate()">
         <i class="fa-solid fa-rotate"></i>
       </button>
@@ -863,16 +866,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     </div>
   </header>
 
-  <!-- PWA Install Banner -->
-  <div class="install-banner-overlay" id="install-banner">
-    <div class="install-flex">
-      <div>
-        <div style="font-weight:700; font-size:0.95rem; color:#fff;">Install R/C Garage SL</div>
-        <div style="font-size:0.75rem; color:var(--text-secondary);">Add to your Home Screen for quick access</div>
-      </div>
-      <button class="install-btn" onclick="triggerAppInstallPrompt()">Install</button>
-    </div>
-  </div>
+  <!-- Native browser install prompt is triggered from the header Install button. -->
 
   <!-- Download Overlay -->
   <div class="download-anim-overlay" id="download-overlay">
@@ -1556,19 +1550,19 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     }
 
     window.addEventListener('beforeinstallprompt', (e) => {
+      // Keep Chrome's native install prompt available for a real user gesture.
       e.preventDefault();
       deferredPrompt = e;
-      if (!isStandaloneApp() && !localStorage.getItem('rc_install_seen')) {
-        setTimeout(() => {
-          document.getElementById('install-banner').style.display = 'block';
-        }, 900);
-      }
+      const installButton = document.getElementById('native-install-btn');
+      if (installButton && !isStandaloneApp()) installButton.style.display = 'inline-flex';
     });
 
     window.addEventListener('appinstalled', () => {
       localStorage.setItem('rc_app_installed', 'true');
       localStorage.setItem('rc_install_seen', 'true');
       deferredPrompt = null;
+      const installButton = document.getElementById('native-install-btn');
+      if (installButton) installButton.style.display = 'none';
       const overlay = document.getElementById('download-overlay');
       if (overlay) overlay.style.display = 'none';
     });
@@ -1596,56 +1590,40 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     }
 
     async function triggerAppInstallPrompt() {
-      const banner = document.getElementById('install-banner');
-      const title = banner.querySelector('div div:first-child');
-      const subtitle = banner.querySelector('div div:nth-child(2)');
-      const button = banner.querySelector('.install-btn');
-
-      if (deferredPrompt) {
-        try {
-          deferredPrompt.prompt();
-          const choice = await deferredPrompt.userChoice;
-          deferredPrompt = null;
-          if (choice.outcome === 'accepted') {
-            localStorage.setItem('rc_app_installed', 'true');
-            localStorage.setItem('rc_install_seen', 'true');
-            banner.style.display = 'none';
-          } else {
-            // Keep the normal website usable if the user dismisses installation.
-            localStorage.setItem('rc_install_seen', 'true');
-            banner.style.display = 'none';
-          }
-        } catch (err) {
-          console.warn('PWA install prompt failed:', err);
-          subtitle.textContent = 'Open your browser menu and choose Install app or Add to Home Screen.';
-          button.textContent = 'Got it';
-          button.onclick = () => { banner.style.display = 'none'; localStorage.setItem('rc_install_seen', 'true'); };
+      // The browser's own prompt can only be shown when Chrome has fired
+      // beforeinstallprompt and the user clicks this button.
+      if (!deferredPrompt) {
+        if (isIOSDevice()) {
+          alert('To install R/C Garage SL on iPhone/iPad: open this page in Safari, tap Share, then Add to Home Screen.');
+        } else {
+          alert('If Chrome supports installation for this site, use the Install icon in the address bar or choose Install app from the Chrome menu.');
         }
         return;
       }
 
-      if (isIOSDevice()) {
-        subtitle.textContent = 'In Safari, tap Share, then “Add to Home Screen”.';
-      } else {
-        subtitle.textContent = 'Open your browser menu and choose “Install app” or “Add to Home Screen”.';
+      const promptEvent = deferredPrompt;
+      deferredPrompt = null;
+      try {
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+          localStorage.setItem('rc_app_installed', 'true');
+          localStorage.setItem('rc_install_seen', 'true');
+          const installButton = document.getElementById('native-install-btn');
+          if (installButton) installButton.style.display = 'none';
+        }
+      } catch (err) {
+        console.warn('Native PWA install prompt could not be shown:', err);
       }
-      button.textContent = 'Got it';
-      button.onclick = () => {
-        banner.style.display = 'none';
-        localStorage.setItem('rc_install_seen', 'true');
-      };
     }
 
     function checkFirstVisitInstall() {
+      // Do not show a custom install popup. The native Install button appears
+      // only when the browser says the app is installable.
       if (isStandaloneApp()) {
         localStorage.setItem('rc_app_installed', 'true');
-        return;
-      }
-
-      if (!localStorage.getItem('rc_install_seen')) {
-        setTimeout(() => {
-          document.getElementById('install-banner').style.display = 'block';
-        }, 1100);
+        const installButton = document.getElementById('native-install-btn');
+        if (installButton) installButton.style.display = 'none';
       }
     }
 

@@ -1428,9 +1428,13 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       },
       signOut: async () => {
         await signOut(auth);
-        localStorage.removeItem('rc_is_logged_in');
-        localStorage.removeItem('rc_user_uid');
+        // Clear account-specific profile data and avatar on logout so the
+        // header returns to the default user icon for the signed-out state.
+        ['rc_is_logged_in','rc_user_uid','rc_user_name','rc_user_whatsapp',
+         'rc_user_avatar','rc_google_avatar_preview','rc_profile_photo_selected',
+         'rc_garage_sl_profile_complete_v3','rc_profile_complete'].forEach(key => localStorage.removeItem(key));
         window.currentFirebaseUser=null;
+        if(window.refreshHeaderAvatar) window.refreshHeaderAvatar();
         if(window.rcRefreshAccount) window.rcRefreshAccount();
         if(window.openAccountScreen) window.openAccountScreen();
       }
@@ -1528,8 +1532,12 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     document.getElementById('firebase-signout-btn').addEventListener('click', async () => {
       try {
         await signOut(auth);
-        localStorage.removeItem('rc_is_logged_in');
+        ['rc_is_logged_in','rc_user_uid','rc_user_name','rc_user_whatsapp',
+         'rc_user_avatar','rc_google_avatar_preview','rc_profile_photo_selected',
+         'rc_garage_sl_profile_complete_v3','rc_profile_complete'].forEach(key => localStorage.removeItem(key));
         window.updateAuthUI(false);
+        if (window.refreshHeaderAvatar) window.refreshHeaderAvatar();
+        if (window.rcRefreshAccount) window.rcRefreshAccount();
         alert("Successfully signed out!");
       } catch (error) {
         console.error("Sign Out Error:", error);
@@ -1576,6 +1584,10 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       } else {
         localStorage.removeItem('rc_is_logged_in');
         localStorage.removeItem('rc_user_uid');
+        // Clear cached account photo/details when Firebase confirms sign-out.
+        ['rc_user_name','rc_user_whatsapp','rc_user_avatar','rc_google_avatar_preview',
+         'rc_profile_photo_selected','rc_garage_sl_profile_complete_v3','rc_profile_complete']
+          .forEach(key => localStorage.removeItem(key));
         window.updateAuthUI(false);
       }
       window.loadProfileData();

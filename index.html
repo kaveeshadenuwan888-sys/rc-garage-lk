@@ -72,6 +72,19 @@
       text-shadow: 0 0 18px rgba(214,179,106,.18);
     }
     .logo i { color: var(--accent-cyan); }
+    .site-logo-image {
+      display: block;
+      width: 160px;
+      height: 64px;
+      object-fit: contain;
+      object-position: left center;
+    }
+    @media (max-width: 520px) {
+      .site-logo-image {
+        width: 128px;
+        height: 52px;
+      }
+    }
 
     .header-actions {
       display: flex;
@@ -880,8 +893,12 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 
   <!-- Header -->
   <header>
-    <div class="logo">
-      <i class="fa-solid fa-gear"></i> R/C Garage SL
+    <div class="logo" aria-label="R/C Garage SL">
+      <img
+        src="assets/rc-garage-sl-logo.svg"
+        alt="R/C Garage SL"
+        class="site-logo-image"
+      >
     </div>
     <div class="header-actions">
       <button id="native-install-btn" class="pwa-reload-btn" onclick="triggerAppInstallPrompt()" style="display:none;" title="Install R/C Garage SL" aria-label="Install R/C Garage SL">

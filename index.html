@@ -845,6 +845,33 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 .rc-edit-actions button{margin-top:8px}
 @media(max-width:600px){.rc-edit-grid{grid-template-columns:1fr}.rc-edit-actions{flex-direction:column}}
 </style>
+<style id="rc-account-clean-web-style">
+/* A straightforward, responsive account page that keeps the existing account features intact. */
+#account-tab.rc-account-tab{padding:34px 0 120px!important;min-height:calc(100vh - 130px);}
+#account-tab .rc-account-shell{width:min(480px,calc(100% - 32px));margin:0 auto;}
+#account-tab .rc-account-hero{padding:4px 0 20px;}
+#account-tab .rc-account-brand{gap:12px;align-items:center;}
+#account-tab .rc-account-icon{width:44px;height:44px;flex:0 0 44px;border-radius:13px;font-size:17px;box-shadow:none;}
+#account-tab .rc-account-kicker{font-size:.66rem;letter-spacing:.12em;}
+#account-tab .rc-account-hero h1{font-size:1.55rem;line-height:1.25;margin:3px 0 5px;}
+#account-tab .rc-account-hero p{font-size:.9rem;}
+#account-tab .rc-account-card{padding:24px;border-radius:18px;background:#101010;border:1px solid rgba(255,255,255,.13);box-shadow:0 12px 36px rgba(0,0,0,.22);backdrop-filter:none;}
+#account-tab .rc-account-card-icon{width:42px;height:42px;border-radius:12px;font-size:19px;margin-bottom:15px;}
+#account-tab .rc-account-card h2{font-size:1.12rem;margin-bottom:7px;}
+#account-tab .rc-account-card p{font-size:.88rem;line-height:1.5;}
+#account-tab .rc-account-primary,#account-tab .rc-account-secondary{min-height:46px;border-radius:11px;font-size:.9rem;}
+#account-tab .rc-account-primary{margin-top:18px;}
+#account-tab .rc-account-form{gap:8px;margin-top:2px;}
+#account-tab .rc-account-form label{font-size:.82rem;margin-top:8px;}
+#account-tab .rc-account-form input[type=text],#account-tab .rc-account-form input[type=tel]{min-height:46px;padding:12px 13px;border-radius:10px;background:#080808;border-color:rgba(255,255,255,.18);font:inherit;font-size:.92rem;}
+#account-tab .rc-account-form input[type=file]{border-radius:10px;background:#080808;font-size:.84rem;}
+#account-tab .rc-account-form small{line-height:1.45;}
+#account-tab .rc-profile-head{gap:13px;margin-bottom:18px;}
+#account-tab .rc-account-avatar{width:54px;height:54px;flex-basis:54px;font-size:19px;}
+#account-tab .rc-account-status{font-size:.8rem;line-height:1.4;}
+#account-tab .rc-account-complete{border-radius:11px;line-height:1.4;}
+@media(max-width:560px){#account-tab.rc-account-tab{padding-top:24px!important}#account-tab .rc-account-card{padding:20px}#account-tab .rc-account-brand{align-items:center}}
+</style>
 </head>
 <body>
 
@@ -1237,7 +1264,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       <div id="account-signin-panel" class="rc-account-card">
         <div class="rc-account-card-icon"><i class="fa-brands fa-google"></i></div>
         <h2>Sign in with Google</h2>
-        <p>Use your Google account to securely create your R/C Garage SL profile. No popup is used inside the app.</p>
+        <p>Use your Google account to create or access your R/C Garage SL account.</p>
         <button id="account-google-btn" class="rc-account-primary">
           <i class="fa-brands fa-google"></i>
           <span>Continue with Google</span>

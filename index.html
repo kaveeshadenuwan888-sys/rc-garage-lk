@@ -901,7 +901,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       >
     </div>
     <div class="header-actions">
-      <button id="native-install-btn" class="pwa-reload-btn" onclick="triggerAppInstallPrompt()" style="display:none;" title="Install R/C Garage SL" aria-label="Install R/C Garage SL">
+      <button id="native-install-btn" class="pwa-reload-btn" onclick="triggerAppInstallPrompt()" style="display:inline-flex;align-items:center;gap:6px;" title="Install R/C Garage SL" aria-label="Install R/C Garage SL">
         <i class="fa-solid fa-download"></i> Install
       </button>
       <button class="pwa-reload-btn" onclick="forceAppUpdate()">
@@ -1673,32 +1673,100 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       }, 7000);
     }
 
+    function showInstallGuide() {
+      const old = document.getElementById('install-guide-modal');
+      if (old) old.remove();
+    
+      const ua = navigator.userAgent;
+      const isIOS = isIOSDevice();
+      const isAndroid = /Android/i.test(ua);
+      const isFirefox = /Firefox|FxiOS/i.test(ua);
+      const isSafariMac = !isIOS && /Safari/i.test(ua) && !/Chrome|Chromium|Edg|OPR|Android/i.test(ua);
+    
+      let title, steps;
+      if (isIOS) {
+        title = 'Install on iPhone / iPad';
+        steps = [
+          'Open this page in <strong>Safari</strong>.',
+          'Tap the <strong>Share</strong> button (<i class="fa-solid fa-arrow-up-from-bracket"></i>) at the bottom or top of the screen.',
+          'Scroll down and tap <strong>Add to Home Screen</strong>.',
+          'Tap <strong>Add</strong>. The R/C Garage SL icon will appear on your Home Screen.'
+        ];
+      } else if (isAndroid) {
+        title = 'Install on Android';
+        steps = [
+          'Tap the <strong>&#8942; menu</strong> at the top of Chrome.',
+          'Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.',
+          'Tap <strong>Install</strong> to confirm.'
+        ];
+      } else if (isSafariMac) {
+        title = 'Install on Mac (Safari)';
+        steps = [
+          'Click <strong>File</strong> in the menu bar.',
+          'Choose <strong>Add to Dock</strong>.',
+          'Click <strong>Add</strong>.'
+        ];
+      } else if (isFirefox) {
+        title = 'Install on Desktop';
+        steps = [
+          'Firefox on desktop does not support installing web apps.',
+          'Open this page in <strong>Chrome</strong> or <strong>Edge</strong> and click the <strong>Install</strong> icon in the address bar.'
+        ];
+      } else {
+        title = 'Install on Laptop / PC';
+        steps = [
+          'Click the <strong>Install</strong> icon (<i class="fa-solid fa-download"></i>) at the right end of the address bar.',
+          'If you do not see it: <strong>&#8942; menu &rarr; Cast, save and share &rarr; Install page as app</strong> (Edge: <strong>Apps &rarr; Install this site as an app</strong>).',
+          'Click <strong>Install</strong> to confirm.'
+        ];
+      }
+    
+      const modal = document.createElement('div');
+      modal.id = 'install-guide-modal';
+      modal.className = 'modal-overlay';
+      modal.style.display = 'flex';
+      modal.innerHTML = `
+        <div class="modal-card">
+          <button class="modal-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+          <div class="card-title"><span><i class="fa-solid fa-download"></i> ${title}</span></div>
+          <ol style="padding-left:20px;line-height:1.7;font-size:.9rem;">
+            ${steps.map(s => `<li style="margin-bottom:8px;">${s}</li>`).join('')}
+          </ol>
+          <button class="btn-primary" style="margin-top:14px;">Got it</button>
+        </div>`;
+      document.body.appendChild(modal);
+      const close = () => modal.remove();
+      modal.querySelector('.modal-close').addEventListener('click', close);
+      modal.querySelector('.btn-primary').addEventListener('click', close);
+      modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    }
+    
     async function triggerAppInstallPrompt() {
-      // The browser's own prompt can only be shown when Chrome has fired
-      // beforeinstallprompt and the user clicks this button.
-      if (!deferredPrompt) {
-        if (isIOSDevice()) {
-          alert('To install R/C Garage SL on iPhone/iPad: open this page in Safari, tap Share, then Add to Home Screen.');
-        } else {
-          alert('If Chrome supports installation for this site, use the Install icon in the address bar or choose Install app from the Chrome menu.');
+      if (isStandaloneApp()) {
+        alert('R/C Garage SL is already installed.');
+        return;
+      }
+    
+      if (deferredPrompt) {
+        const promptEvent = deferredPrompt;
+        deferredPrompt = null;
+        try {
+          await promptEvent.prompt();
+          const choice = await promptEvent.userChoice;
+          if (choice && choice.outcome === 'accepted') {
+            localStorage.setItem('rc_app_installed', 'true');
+            localStorage.setItem('rc_install_seen', 'true');
+            const installButton = document.getElementById('native-install-btn');
+            if (installButton) installButton.style.display = 'none';
+          }
+        } catch (err) {
+          console.warn('Install prompt failed:', err);
+          showInstallGuide();
         }
         return;
       }
-
-      const promptEvent = deferredPrompt;
-      deferredPrompt = null;
-      try {
-        await promptEvent.prompt();
-        const choice = await promptEvent.userChoice;
-        if (choice && choice.outcome === 'accepted') {
-          localStorage.setItem('rc_app_installed', 'true');
-          localStorage.setItem('rc_install_seen', 'true');
-          const installButton = document.getElementById('native-install-btn');
-          if (installButton) installButton.style.display = 'none';
-        }
-      } catch (err) {
-        console.warn('Native PWA install prompt could not be shown:', err);
-      }
+    
+      showInstallGuide();
     }
 
     function checkFirstVisitInstall() {

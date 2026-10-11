@@ -1,17 +1,23 @@
 {
-  "id": "/",
+  "id": "./",
   "short_name": "RC Garage",
   "name": "R/C Garage SL",
   "icons": [
     {
-      "src": "assets/rc-garage-sl-logo.svg",
-      "type": "image/svg+xml",
-      "sizes": "any",
+      "src": "assets/rc-garage-icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/rc-garage-icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
       "purpose": "any"
     }
   ],
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "background_color": "#0d1117",
   "theme_color": "#0d1117",
   "display": "standalone",

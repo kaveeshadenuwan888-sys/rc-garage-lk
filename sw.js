@@ -1,52 +1,82 @@
-const CACHE_NAME = 'rc-garage-v2'; // Version update when you deploy
+const CACHE_NAME = 'rc-garage-v3';
+
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/assets/rc-garage-sl-logo.svg'
 ];
 
 // Install Event
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Instantly activate new service worker
+  self.skipWaiting();
+
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const results = await Promise.allSettled(
+        ASSETS_TO_CACHE.map((url) => cache.add(url))
+      );
+
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.warn('Could not cache:', ASSETS_TO_CACHE[index]);
+        }
+      });
     })
   );
 });
 
-// Activate Event - Clear old caches instantly
+// Activate Event - remove old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache); // Delete old version cache immediately
-          }
-        })
-      );
-    }).then(() => self.clients.claim()) // Take control of all open tabs immediately
+    caches.keys()
+      .then((cacheNames) =>
+        Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              return caches.delete(cacheName);
+            }
+          })
+        )
+      )
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch Event - Network First Strategy (Always fetch fresh content first)
+// Fetch Event - network first, cache fallback
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
+  const requestUrl = new URL(event.request.url);
+
+  if (requestUrl.origin !== self.location.origin) return;
+
   event.respondWith(
     fetch(event.request)
-      .then((networkResponse) => {
-        // If network request succeeds, update the cache
-        if (networkResponse && networkResponse.status === 200) {
-          const responseClone = networkResponse.clone();
+      .then((response) => {
+        if (response && response.ok) {
+          const responseClone = response.clone();
+
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
           });
         }
-        return networkResponse;
+
+        return response;
       })
-      .catch(() => {
-        // If offline, fallback to cache
-        return caches.match(event.request);
+      .catch(async () => {
+        const cachedResponse = await caches.match(event.request);
+
+        if (cachedResponse) return cachedResponse;
+
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+
+        return new Response('Offline', {
+          status: 503,
+          statusText: 'Service Unavailable'
+        });
       })
   );
 });

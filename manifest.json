@@ -1,41 +1,19 @@
 {
-
+  "id": "/",
   "short_name": "RC Garage",
-
-  "name": "R/C Garage LK",
-
+  "name": "R/C Garage SL",
   "icons": [
-
     {
-
-      "src": "https://cdn-icons-png.flaticon.com/512/3085/3085336.png",
-
-      "type": "image/png",
-
-      "sizes": "192x192"
-
-    },
-
-    {
-
-      "src": "https://cdn-icons-png.flaticon.com/512/3085/3085336.png",
-
-      "type": "image/png",
-
-      "sizes": "512x512"
-
+      "src": "assets/rc-garage-sl-logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
     }
-
   ],
-
   "start_url": "/",
-
+  "scope": "/",
   "background_color": "#0d1117",
-
-  "theme_color": "#2563eb",
-
+  "theme_color": "#0d1117",
   "display": "standalone",
-
   "orientation": "portrait"
-
-} 
+}

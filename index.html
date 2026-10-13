@@ -898,6 +898,25 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 .trick-actions .like-btn.liked{border-color:#fff!important;background:rgba(255,255,255,.24)!important}
 .trick-actions .del-btn{flex:0 0 auto}
 </style>
+<style id="rc-reviews-css">
+.trick-card .trick-avatar img{width:100%!important;height:100%!important;object-fit:cover;display:block;margin:0!important}
+.review-list{display:grid;gap:14px}
+.review-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--card-radius);padding:16px}
+.rv-head{display:flex;align-items:center;gap:10px}
+.rv-avatar{width:40px;height:40px;flex:0 0 40px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.1)}
+.rv-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.rv-who{flex:1;min-width:0}
+.rv-who strong{display:block;font-size:.88rem}
+.rv-who small{opacity:.6;font-size:.72rem}
+.rv-title{margin:12px 0 4px;font-size:1.05rem}
+.rv-stars{font-size:.85rem;margin-bottom:8px}
+.rv-stars span{opacity:.7;margin-left:6px}
+.rv-text{white-space:pre-line;line-height:1.5;font-size:.88rem;margin:0 0 10px}
+.rv-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rv-box{background:rgba(255,255,255,.05);border:1px solid var(--card-border);border-radius:10px;padding:10px;font-size:.82rem}
+.rv-box ul{margin:6px 0 0 16px;padding:0}
+@media(max-width:520px){.rv-cols{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 
@@ -1120,7 +1139,28 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     </div>
 
 
-    <!-- TAB 5: RC SPECIFICATIONS -->
+        <!-- TAB: REVIEWS -->
+    <div id="reviews-tab" class="tab-content">
+      <div class="glass-card">
+        <div class="card-title">
+          <span><i class="fa-solid fa-star-half-stroke"></i> RC Reviews</span>
+          <button class="pwa-reload-btn" onclick="openReviewModal()">+ Write Review</button>
+        </div>
+        <div class="specs-search-row">
+          <input type="search" id="review-search" placeholder="Search model or brand..." oninput="renderReviews()">
+          <select id="review-type-filter" onchange="renderReviews()" style="max-width:140px;">
+            <option value="">All</option>
+            <option value="Owner Review">Reviews</option>
+            <option value="Comparison">Comparisons</option>
+            <option value="Pros & Cons">Pros &amp; Cons</option>
+          </select>
+        </div>
+        <div id="review-summary" style="font-size:.82rem;margin-bottom:12px;"></div>
+        <div id="reviews-feed" class="review-list"></div>
+      </div>
+    </div>
+
+        <!-- TAB 5: RC SPECIFICATIONS -->
     <div id="specs-tab" class="tab-content">
       <div class="glass-card">
         <div class="card-title">
@@ -1136,23 +1176,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
         <div id="spec-detail-card" style="display:none;margin-top:16px;"></div>
       </div>
     </div>
-
-    <!-- TAB 6: GROQ AI MECHANIC -->
-    <div id="ai-tab" class="tab-content">
-      <div class="glass-card">
-        <div class="card-title">
-          <span><i class="fa-solid fa-robot"></i> AI RC Mechanic</span>
-          <button class="pwa-reload-btn" type="button" onclick="clearAiChat()">Clear</button>
-        </div>
-        <div class="chat-box" id="ai-chat-box">
-          <div class="chat-msg bot"><strong>R/C Garage SL AI Mechanic</strong><br><span style="color:var(--text-secondary);">Ask about RC models, specifications, electronics, setup, troubleshooting, and compatibility.</span></div>
-        </div>
-        <div class="chat-input-row">
-          <input type="text" id="ai-input" placeholder="Ask the AI mechanic..." onkeypress="if(event.key==='Enter') sendAiMessage()">
-          <button onclick="sendAiMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
-      </div>
-    </div>
+    
 
   </div>
 
@@ -1207,6 +1231,32 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
         <div id="admin-spec-list" class="model-list"></div>
       </div>
     </div>
+
+    <!-- WRITE REVIEW MODAL -->
+  <div class="modal-overlay" id="review-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeReviewModal()"><i class="fa-solid fa-xmark"></i></button>
+      <div class="card-title"><span><i class="fa-solid fa-star"></i> Write a Review</span></div>
+      <form id="review-form" onsubmit="handleReviewSubmit(event)">
+        <div class="form-group"><label>Post type</label>
+          <select id="review-type" onchange="toggleReviewVs()">
+            <option value="Owner Review">Owner Review</option>
+            <option value="Comparison">Model Comparison</option>
+            <option value="Pros & Cons">Pros &amp; Cons</option>
+          </select></div>
+        <div class="form-group"><label>Model</label><input id="review-model" required maxlength="80" placeholder="e.g. MN D99S"></div>
+        <div class="form-group" id="review-vs-wrap" style="display:none;"><label>Compared with</label><input id="review-vs" maxlength="80" placeholder="e.g. WPL C24"></div>
+        <div class="form-group"><label>Rating</label>
+          <select id="review-rating">
+            <option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Okay</option><option value="2">2 - Poor</option><option value="1">1 - Bad</option>
+          </select></div>
+        <div class="form-group"><label>Pros (one per line)</label><textarea id="review-pros" rows="3" placeholder="Strong motor&#10;Good battery life"></textarea></div>
+        <div class="form-group"><label>Cons (one per line)</label><textarea id="review-cons" rows="3" placeholder="Weak plastic gears"></textarea></div>
+        <div class="form-group"><label>Your review</label><textarea id="review-text" rows="4" required maxlength="1500" placeholder="Tell other drivers about your experience..."></textarea></div>
+        <button type="submit" id="submit-review-btn" class="btn-primary">Post Review</button>
+      </form>
+    </div>
+  </div>
 
   <!-- POST A TRICK MODAL -->
   <div class="modal-overlay" id="trick-modal">
@@ -1397,9 +1447,9 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       <i class="fa-solid fa-list-check"></i>
       <span>RC Specs</span>
     </button>
-    <button class="nav-item" onclick="switchTab('ai-tab', this)" id="ai-nav-btn">
-      <i class="fa-solid fa-robot"></i>
-      <span>AI Mechanic</span>
+    <button class="nav-item" onclick="switchTab('reviews-tab', this)">
+      <i class="fa-solid fa-star-half-stroke"></i>
+      <span>Reviews</span>
     </button>
     <button class="nav-item" onclick="switchTab('admin-tab', this)" id="admin-nav-btn" style="display:none;">
       <i class="fa-solid fa-user-shield"></i>
@@ -1778,6 +1828,8 @@ async function triggerAppInstallPrompt() {
         initRcMap();
       } else if(tabId === 'tricks-tab') {
         loadTricksFeed();
+      } else if(tabId === 'reviews-tab') {
+        loadReviews();
       } else if(tabId === 'specs-tab') {
         loadRcSpecifications();
       } else if(tabId === 'admin-tab') {
@@ -2114,10 +2166,10 @@ async function handleTrickSubmit(e) {
     const img = new Image();
     img.onload = () => {
       const c = document.createElement('canvas');
-      c.width = c.height = 96;
+      c.width = c.height = 128;
       const s = Math.min(img.width, img.height);
-      c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 96, 96);
-      res(c.toDataURL('image/jpeg', 0.7));
+      c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 128, 128);
+      res(c.toDataURL('image/jpeg', 0.85));
     };
     img.onerror = () => res('');
     img.src = src;
@@ -2523,61 +2575,184 @@ async function loadTricksFeed() {
     }
 
     // REAL-TIME RC NEWS FETCHING
+    const RC_NEWS_FEEDS = [
+      { name: 'RC Driver', url: 'https://www.rcdriver.com/feed/' },
+      { name: 'Big Squid RC', url: 'https://www.bigsquidrc.com/feed/' },
+      { name: 'RC Car Action', url: 'https://www.rccaraction.com/feed/' }
+    ];
+
     async function fetchLiveRcNews() {
       const container = document.getElementById('news-container');
       const defaultImg = "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=600&q=80";
-      const rssUrl = "https://www.rcdriver.com/feed/";
-      const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+      const toTime = s => { const t = Date.parse(String(s || '').replace(' ', 'T') + 'Z'); return Number.isFinite(t) ? t : 0; };
 
-      try {
-        const response = await fetch(apiUrl, {
-          headers: { "Accept": "application/json" }
-        });
-        if (!response.ok) throw new Error(`News service returned HTTP ${response.status}`);
-        const data = await response.json();
+      const results = await Promise.allSettled(RC_NEWS_FEEDS.map(async f => {
+        const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f.url));
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data.status !== 'ok' || !Array.isArray(data.items)) throw new Error('Invalid feed');
+        return data.items.slice(0, 8).map(i => ({ ...i, source: f.name }));
+      }));
 
-        if (data.status === 'ok' && Array.isArray(data.items) && data.items.length > 0) {
-          container.innerHTML = '';
-          
-          data.items.slice(0, 10).forEach(item => {
-            let imgUrl = item.thumbnail || defaultImg;
-            if (imgUrl === defaultImg && item.description) {
-              const imgMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
-              if (imgMatch) imgUrl = imgMatch[1];
-            }
+      const items = results.filter(r => r.status === 'fulfilled').flatMap(r => r.value)
+        .filter(i => /^https?:\/\//.test(i.link || ''))
+        .sort((a, b) => toTime(b.pubDate) - toTime(a.pubDate))
+        .slice(0, 20);
 
-            const cleanDesc = item.description.replace(/<[^>]*>?/gm, '').substring(0, 120) + '...';
-            const pubDate = new Date(item.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-            container.innerHTML += `
-              <a href="${item.link}" target="_blank" class="news-card">
-                <img src="${imgUrl}" class="news-img" alt="RC News" onerror="this.src='${defaultImg}'">
-                <div class="news-body">
-                  <div class="news-meta">
-                    <span class="news-tag">GLOBAL RC</span>
-                    <span class="news-date"><i class="fa-regular fa-clock"></i> ${pubDate}</span>
-                  </div>
-                  <div class="news-title">${item.title}</div>
-                  <div class="news-desc">${cleanDesc}</div>
-                </div>
-              </a>
-            `;
-          });
-        } else {
-          throw new Error('Invalid feed data');
-        }
-
-      } catch (error) {
-        console.error("Failed to load RC news:", error);
+      if (!items.length) {
         container.innerHTML = `
           <div class="glass-card" style="text-align:center; padding:30px;">
             <i class="fa-solid fa-wifi" style="font-size:2rem; color:var(--text-muted); margin-bottom:10px;"></i>
             <div style="font-size:0.9rem; color:var(--text-secondary);">Unable to load latest news right now.</div>
             <button class="pwa-reload-btn" style="margin-top:12px;" onclick="fetchLiveRcNews()">Try Again</button>
-          </div>
-        `;
+          </div>`;
+        return;
       }
+
+      container.innerHTML = items.map(item => {
+        let imgUrl = item.thumbnail || (item.enclosure && item.enclosure.link) || '';
+        if (!imgUrl) {
+          const m = String(item.content || item.description || '').match(/<img[^>]+src="([^">]+)"/);
+          imgUrl = m ? m[1] : defaultImg;
+        }
+        const desc = String(item.description || '').replace(/<[^>]*>?/gm, '').trim().substring(0, 120) + '...';
+        const t = toTime(item.pubDate);
+        const date = t ? new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+        return `
+          <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" class="news-card">
+            <img src="${escapeHtml(imgUrl)}" class="news-img" alt="RC News" onerror="this.src='${defaultImg}'">
+            <div class="news-body">
+              <div class="news-meta">
+                <span class="news-tag">${escapeHtml(item.source)}</span>
+                <span class="news-date"><i class="fa-regular fa-clock"></i> ${date}</span>
+              </div>
+              <div class="news-title">${escapeHtml(item.title || '')}</div>
+              <div class="news-desc">${escapeHtml(desc)}</div>
+            </div>
+          </a>`;
+      }).join('');
     }
+
+    /* RC REVIEWS */
+let reviewsCache = [];
+
+function toggleReviewVs() {
+  document.getElementById('review-vs-wrap').style.display = document.getElementById('review-type').value === 'Comparison' ? 'block' : 'none';
+}
+function openReviewModal() {
+  if (!window.currentFirebaseUser) { alert('Please sign in with Google to post a review.'); return; }
+  document.getElementById('review-modal').style.display = 'flex';
+}
+function closeReviewModal() {
+  document.getElementById('review-modal').style.display = 'none';
+  document.getElementById('review-form').reset();
+  toggleReviewVs();
+}
+function starsHtml(n) {
+  let s = '';
+  for (let i = 1; i <= 5; i++) s += `<i class="fa-${i <= n ? 'solid' : 'regular'} fa-star"></i>`;
+  return s;
+}
+const reviewLines = t => t.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 8).map(s => s.slice(0, 140));
+
+async function handleReviewSubmit(e) {
+  e.preventDefault();
+  const user = window.currentFirebaseUser;
+  if (!user) { alert('Please sign in with Google first.'); return; }
+  const g = id => document.getElementById(id).value.trim();
+  const type = g('review-type');
+  const data = {
+    type,
+    model: g('review-model'),
+    compareWith: type === 'Comparison' ? g('review-vs') : '',
+    rating: Number(g('review-rating')),
+    pros: reviewLines(g('review-pros')),
+    cons: reviewLines(g('review-cons')),
+    text: g('review-text'),
+    authorUid: user.uid,
+    authorName: localStorage.getItem('rc_user_name') || user.displayName || 'RC Driver',
+    createdAt: window.fsServerTimestamp()
+  };
+  if (!data.model || !data.text) { alert('Please enter the model and your review.'); return; }
+  const btn = document.getElementById('submit-review-btn');
+  btn.disabled = true; btn.innerText = 'Posting...';
+  try {
+    data.authorPhoto = await getAvatarThumb(user);
+    await withTimeout(window.fsAddDoc(window.fsCollection(window.firestoreDB, 'rc_reviews'), data), 20000, 'Could not save the review. Check your Firestore rules.');
+    closeReviewModal();
+    await loadReviews();
+  } catch (err) {
+    alert('Post failed: ' + (err.message || err));
+  } finally {
+    btn.disabled = false; btn.innerText = 'Post Review';
+  }
+}
+
+async function loadReviews() {
+  const feed = document.getElementById('reviews-feed');
+  feed.innerHTML = "<p style='color:var(--text-secondary);'>Loading reviews...</p>";
+  try {
+    const q = window.fsQuery(window.fsCollection(window.firestoreDB, 'rc_reviews'), window.fsOrderBy('createdAt', 'desc'));
+    const snap = await window.fsGetDocs(q);
+    reviewsCache = [];
+    snap.forEach(d => reviewsCache.push({ id: d.id, ...d.data() }));
+    renderReviews();
+  } catch (err) {
+    console.error('Reviews error:', err);
+    feed.innerHTML = "<p style='color:var(--accent-red);'>Unable to load reviews.</p>";
+  }
+}
+
+function renderReviews() {
+  const feed = document.getElementById('reviews-feed');
+  const sum = document.getElementById('review-summary');
+  const q = (document.getElementById('review-search').value || '').trim().toLowerCase();
+  const tf = document.getElementById('review-type-filter').value;
+  const list = reviewsCache.filter(r => (!tf || r.type === tf) && (!q || (r.model + ' ' + (r.compareWith || '')).toLowerCase().includes(q)));
+
+  if (q && list.length) {
+    const avg = list.reduce((a, r) => a + (r.rating || 0), 0) / list.length;
+    sum.innerHTML = `${list.length} post${list.length > 1 ? 's' : ''} &middot; average ${avg.toFixed(1)}/5 ${starsHtml(Math.round(avg))}`;
+  } else sum.textContent = list.length + ' post' + (list.length === 1 ? '' : 's');
+
+  if (!list.length) { feed.innerHTML = "<p style='color:var(--text-secondary);'>No reviews yet. Be the first to write one!</p>"; return; }
+
+  const me = window.currentFirebaseUser;
+  const admin = typeof isAdminUser === 'function' && isAdminUser();
+  const li = a => (a || []).map(x => `<li>${escapeHtml(x)}</li>`).join('');
+
+  feed.innerHTML = list.map(r => {
+    const photo = r.authorPhoto && /^(data:image|https?:)/.test(r.authorPhoto)
+      ? `<img src="${escapeHtml(r.authorPhoto)}" referrerpolicy="no-referrer" alt="">`
+      : '<i class="fa-solid fa-user"></i>';
+    const ms = r.createdAt && r.createdAt.toMillis ? r.createdAt.toMillis() : 0;
+    const title = escapeHtml(r.model || '') + (r.compareWith ? ' vs ' + escapeHtml(r.compareWith) : '');
+    const hasPC = (r.pros && r.pros.length) || (r.cons && r.cons.length);
+    const canDel = me && (r.authorUid === me.uid || admin);
+    return `<div class="review-card">
+      <div class="rv-head">
+        <div class="rv-avatar">${photo}</div>
+        <div class="rv-who"><strong>${escapeHtml(r.authorName || 'RC Driver')}</strong><small>${timeAgo(ms)}</small></div>
+        <span class="news-tag">${escapeHtml(r.type || 'Review')}</span>
+      </div>
+      <h3 class="rv-title">${title}</h3>
+      <div class="rv-stars">${starsHtml(r.rating || 0)}<span>${r.rating || 0}/5</span></div>
+      <p class="rv-text">${escapeHtml(r.text || '')}</p>
+      ${hasPC ? `<div class="rv-cols"><div class="rv-box"><strong><i class="fa-solid fa-thumbs-up"></i> Pros</strong><ul>${li(r.pros)}</ul></div><div class="rv-box"><strong><i class="fa-solid fa-thumbs-down"></i> Cons</strong><ul>${li(r.cons)}</ul></div></div>` : ''}
+      ${canDel ? `<button class="share-trick-btn del-review" data-id="${escapeHtml(r.id)}"><i class="fa-solid fa-trash"></i> Delete</button>` : ''}
+    </div>`;
+  }).join('');
+  feed.querySelectorAll('.del-review').forEach(b => b.addEventListener('click', () => deleteReview(b.dataset.id)));
+}
+
+async function deleteReview(id) {
+  if (!confirm('Delete this review? This cannot be undone.')) return;
+  try {
+    await window.fsDeleteDoc(window.fsDoc(window.firestoreDB, 'rc_reviews', id));
+    reviewsCache = reviewsCache.filter(r => r.id !== id);
+    renderReviews();
+  } catch (e) { alert('Could not delete: ' + (e.message || e)); }
+}
 
     // Dynamic Auth Section UI Switcher
     window.updateAuthUI = function(isLoggedIn) {
@@ -2865,9 +3040,9 @@ async function loadTricksFeed() {
       catch(err){ console.error(err); alert('Could not delete specification: '+err.message); }
     }
 
-    // AI MECHANIC VIA GROQ API
+    // Shared helpers
     // NOTE: For production, move this key to a Firebase Cloud Function so it is not exposed in the browser.
-    const aiConversation = [];
+    
 
     function escapeHtml(value) {
       return String(value)
@@ -2878,170 +3053,9 @@ async function loadTricksFeed() {
         .replace(/'/g, '&#039;');
     }
 
-    function renderAiText(value) {
-      // Lightweight safe Markdown renderer for AI replies.
-      let text = escapeHtml(value).replace(/&lt;br\s*\/??&gt;/gi, '<br>');
-      text = text.replace(/^### (.*)$/gm, '<h4>$1</h4>');
-      text = text.replace(/^## (.*)$/gm, '<h3>$1</h3>');
-      text = text.replace(/^# (.*)$/gm, '<h3>$1</h3>');
-      text = text.replace(/^\*\*([^*]+)\*\*$/gm, '<strong>$1</strong>');
-      text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-      text = text.replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>');
-      text = text.replace(/(<li>.*<\/li>)(?=\s*<li>)/gs, '$1');
-      text = text.replace(/(?:<li>.*<\/li>\s*)+/gs, m => `<ul>${m}</ul>`);
-      text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-      text = text.replace(/\n/g, '<br>');
-      return text;
-    }
-
-    async function callGroq(messages) {
-      const sys = messages.filter(m => m.role === 'system').map(m => m.content).join('\n\n');
-      const chat = messages.filter(m => m.role !== 'system');
-      const q = ((chat[chat.length - 1] || {}).content || '').trim();
-      const enc = encodeURIComponent(q + ' RC');
-      const links = `\n\nSearch more: [Google](https://www.google.com/search?q=${enc}) | [YouTube](https://www.youtube.com/results?search_query=${enc})`;
-
-      // 1. Your own spec database
-      const words = q.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 1);
-      const specs = (typeof rcSpecsCache !== 'undefined' ? rcSpecsCache : [])
-        .filter(s => words.some(w => (s.brand + ' ' + s.model).toLowerCase().includes(w)))
-        .slice(0, 3);
-      let ctx = '';
-      if (specs.length) ctx += 'SITE SPEC DATABASE:\n' + specs.map(s => JSON.stringify(s)).join('\n') + '\n\n';
-
-      // 2. Web search (Wikipedia, no key needed)
-      let wiki = [];
-      try {
-        const r = await fetch('https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrlimit=3&prop=extracts&exintro=1&explaintext=1&exchars=600&format=json&origin=*&gsrsearch=' + encodeURIComponent(q));
-        const d = await r.json();
-        wiki = Object.values((d && d.query && d.query.pages) || {}).map(p => ({ title: p.title, text: (p.extract || '').trim() })).filter(p => p.text);
-      } catch (e) { console.warn('Web search failed:', e); }
-      if (wiki.length) ctx += 'WEB (Wikipedia):\n' + wiki.map(p => p.title + ': ' + p.text).join('\n\n');
-
-      // 3. Free keyless AI writes the answer from the search results
-      try {
-        const c = new AbortController();
-        const t = setTimeout(() => c.abort(), 30000);
-        const r = await fetch('https://text.pollinations.ai/openai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'openai',
-            messages: [
-              { role: 'system', content: sys + '\n\nUse the search context below when relevant. If it is not enough, say so honestly and do not invent specifications.\n\n' + (ctx || '(no context found)') },
-              ...chat.slice(-6)
-            ]
-          }),
-          signal: c.signal
-        });
-        clearTimeout(t);
-        const d = await r.json();
-        const text = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
-        if (text && text.trim()) return text.trim() + links;
-      } catch (e) { console.warn('Keyless AI failed:', e); }
-
-      // 4. Fallback: show the search results directly
-      let out = 'The AI service is not reachable right now, so here is what I found.\n\n';
-      if (specs.length) out += specs.map(s => '**' + s.brand + ' ' + s.model + '**: ' + [s.category, s.motor && 'Motor: ' + s.motor, s.battery && 'Battery: ' + s.battery, s.speed && 'Top speed: ' + s.speed].filter(Boolean).join(' · ')).join('\n') + '\n\n';
-      if (wiki.length) out += wiki.map(p => '**' + p.title + '**\n' + p.text).join('\n\n');
-      if (!specs.length && !wiki.length) out += 'No direct results were found.';
-      return out + links;
-    }
-
-    async function sendAiMessage() {
-      const input = document.getElementById('ai-input');
-      const msg = input.value.trim();
-      if (!msg) return;
-
-      const chatBox = document.getElementById('ai-chat-box');
-      const sendButton = document.querySelector('.chat-input-row button');
-
-      // Never insert user text directly into innerHTML.
-      chatBox.insertAdjacentHTML(
-        'beforeend',
-        `<div class="chat-msg user">${escapeHtml(msg).replace(/\n/g, '<br>')}</div>`
-      );
-
-      input.value = '';
-      input.disabled = true;
-      if (sendButton) sendButton.disabled = true;
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      const loadingId = 'loader-' + Date.now();
-      chatBox.insertAdjacentHTML(
-        'beforeend',
-        `<div class="chat-msg bot" id="${loadingId}"><i class="fa-solid fa-spinner fa-spin"></i> Processing...</div>`
-      );
-
-      aiConversation.push({ role: "user", content: msg });
-
-      // Keep the browser request small while retaining recent context.
-      const recentMessages = aiConversation.slice(-6);
-
-      try {
-        const aiReply = await callGroq([
-          {
-            role: "system",
-            content: `You are the senior technical RC engineer and verified-specification assistant for R/C Garage SL.
-Your priority is ACCURACY, not sounding confident.
-
-You handle RC cars, crawlers, trucks, electronics, batteries, motors, ESCs, servos, receivers,
-transmitters, gearing, suspension, diagnostics, setup and compatibility.
-
-VERIFICATION POLICY:
-1. Never invent a model specification. If the exact model/version is unknown, say that it is unverified.
-2. For manufacturer specifications, current products, model compatibility, dimensions, motor size,
-   servo torque, transmitter channels, gearing, speed or other factual product details, USE WEB SEARCH
-   when available and prefer manufacturer manuals/product pages or reputable technical sources.
-3. If sources disagree, state the disagreement and explain which source is more authoritative.
-4. Do not turn a guess into a fact. Clearly label FACT, CALCULATION and RECOMMENDATION when useful.
-5. For calculations, use the user's actual values and show the formula briefly.
-6. For compatibility, check voltage, connector, signal protocol, channel count, current/BEC rating,
-   physical fit, gearing and programming requirements.
-7. If the user asks about a specific RC model and the exact version matters, ask for the minimum missing detail.
-8. Give the direct answer first. Keep answers practical and concise unless the user asks for detail.
-9. Reply in English only. Never output Sinhala text.
-10. Use clean Markdown. Do not output raw HTML tags such as <br>.
-11. Do not claim that you searched or verified something unless you actually did so.
-12. For live/current information, prefer verified web results over memory.`
-          },
-          ...recentMessages
-        ]);
-
-        aiConversation.push({ role: "assistant", content: aiReply });
-
-        const loader = document.getElementById(loadingId);
-        if (loader) {
-          loader.innerHTML = renderAiText(aiReply);
-        }
-      } catch (e) {
-        console.error("Groq AI Error:", e);
-        aiConversation.pop(); // Do not keep a failed user message in context.
-
-        const loader = document.getElementById(loadingId);
-        if (loader) {
-          loader.textContent =
-            e.message === "Groq API key is not configured."
-              ? "⚠️ Please configure your Gemini API key in index.html."
-              : `❌ AI request failed: ${e.message}`;
-        }
-      } finally {
-        input.disabled = false;
-        if (sendButton) sendButton.disabled = false;
-        input.focus();
-        chatBox.scrollTop = chatBox.scrollHeight;
-      }
-    }
-
     // Periodic cleanup keeps Firestore documents and Storage images from accumulating.
     // For guaranteed server-side cleanup, also enable Firestore TTL on `expiresAt` and deploy a scheduled Storage cleanup function.
     setInterval(() => { if (window.firestoreDB) loadTricksFeed().catch(() => {}); }, 24 * 60 * 60 * 1000);
-
-    function clearAiChat() {
-      aiConversation.length = 0;
-      document.getElementById('ai-chat-box').innerHTML =
-        `<div class="chat-msg bot">👋 Welcome! I am your <strong>AI RC Mechanic</strong>. Ask me an RC question.</div>`;
-    }
 
     function forceAppUpdate() {
       window.location.reload();

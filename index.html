@@ -888,6 +888,16 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 #account-tab .rc-account-complete{border-radius:11px;line-height:1.4;}
 @media(max-width:560px){#account-tab.rc-account-tab{padding-top:24px!important}#account-tab .rc-account-card{padding:20px}#account-tab .rc-account-brand{align-items:center}}
 </style>
+<style id="rc-trick-social-css">
+.trick-card .trick-author{display:flex;align-items:center;gap:10px;padding:12px 16px 0}
+.trick-card .trick-avatar{width:36px!important;height:36px!important;flex:0 0 36px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.1);display:grid;place-items:center;overflow:hidden}
+.trick-author strong{display:block;font-size:.88rem}
+.trick-author small{opacity:.6;font-size:.72rem}
+.trick-actions{display:flex;gap:8px;margin-top:12px}
+.trick-actions button{flex:1;padding:9px 12px;border-radius:10px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.2)}
+.trick-actions .like-btn.liked{border-color:#fff!important;background:rgba(255,255,255,.24)!important}
+.trick-actions .del-btn{flex:0 0 auto}
+</style>
 </head>
 <body>
 
@@ -1405,7 +1415,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, set, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, Timestamp, deleteDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, Timestamp, deleteDoc, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
@@ -1476,6 +1486,9 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     window.fsTimestamp = Timestamp;
     window.fsDeleteDoc = deleteDoc;
     window.fsDoc = doc;
+    window.fsUpdateDoc = updateDoc;
+    window.fsArrayUnion = arrayUnion;
+    window.fsArrayRemove = arrayRemove;
     window.fsGetDoc = getDoc;
 
     window.firebaseStorage = storage;
@@ -2004,7 +2017,9 @@ async function handleTrickSubmit(e) {
         description,
         imageUrl,
         authorUid: user.uid,
-        authorName: user.displayName || localStorage.getItem("rc_user_name") || "",
+        authorName: localStorage.getItem("rc_user_name") || user.displayName || "",
+        authorPhoto: await getAvatarThumb(user),
+        likedBy: [],
         createdAt: window.fsServerTimestamp(),
         expiresAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString()
       }),
@@ -2091,60 +2106,157 @@ async function handleTrickSubmit(e) {
       } catch (e) { console.warn("Shared trick load failed:", e); }
     }
 
-    async function loadTricksFeed() {
-      const feedContainer = document.getElementById("tricks-feed");
-      feedContainer.innerHTML = "<p style='color:var(--text-secondary);'>Loading tricks...</p>";
+    async function getAvatarThumb(user) {
+  const src = localStorage.getItem('rc_user_avatar') || (user && user.photoURL) || '';
+  if (!src) return '';
+  if (/^https?:/.test(src)) return src;
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = c.height = 96;
+      const s = Math.min(img.width, img.height);
+      c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 96, 96);
+      res(c.toDataURL('image/jpeg', 0.7));
+    };
+    img.onerror = () => res('');
+    img.src = src;
+  });
+}
 
-      try {
-        const q = window.fsQuery(
-          window.fsCollection(window.firestoreDB, "rc_tricks"), 
-          window.fsOrderBy("createdAt", "desc")
-        );
-        const querySnapshot = await window.fsGetDocs(q);
-        await cleanupExpiredTricks(querySnapshot);
+function timeAgo(ms) {
+  if (!ms) return '';
+  const m = Math.floor((Date.now() - ms) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + ' min ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + ' h ago';
+  return Math.floor(h / 24) + ' d ago';
+}
 
-        if (querySnapshot.empty) {
-          feedContainer.innerHTML = "<p style='color:var(--text-secondary);'>No community posts yet. Be the first to share an RC trick!</p>";
-          return;
-        }
+function paintLike(btn, data) {
+  const user = window.currentFirebaseUser;
+  const likes = data.likedBy || [];
+  const liked = !!user && likes.includes(user.uid);
+  btn.classList.toggle('liked', liked);
+  btn.innerHTML = `<i class="fa-${liked ? 'solid' : 'regular'} fa-heart"></i> ${likes.length} ${liked ? 'Liked' : 'Useful'}`;
+}
 
-        feedContainer.innerHTML = "";
+async function toggleTrickLike(id, btn, data) {
+  const user = window.currentFirebaseUser;
+  if (!user) { alert('Please sign in with Google to like a trick.'); return; }
+  const liked = (data.likedBy || []).includes(user.uid);
+  btn.disabled = true;
+  try {
+    await window.fsUpdateDoc(window.fsDoc(window.firestoreDB, 'rc_tricks', id), {
+      likedBy: liked ? window.fsArrayRemove(user.uid) : window.fsArrayUnion(user.uid)
+    });
+    data.likedBy = liked ? data.likedBy.filter(u => u !== user.uid) : [...(data.likedBy || []), user.uid];
+    paintLike(btn, data);
+  } catch (e) { alert('Could not update like: ' + (e.message || e)); }
+  btn.disabled = false;
+}
 
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          const expiry = data.expiresAt?.toMillis ? data.expiresAt.toMillis() : (data.expiresAt ? Date.parse(data.expiresAt) : 0);
-          if (expiry && expiry <= Date.now()) return;
-          const card = document.createElement("div");
-          card.className = "trick-card";
-          const img = document.createElement("img");
-          img.src = data.imageUrl || "";
-          img.alt = data.title || "RC Trick";
-          img.loading = "lazy";
-          img.onerror = () => { img.style.display = "none"; };
-
-          const body = document.createElement("div");
-          body.className = "trick-card-body";
-
-          const titleEl = document.createElement("h3");
-          titleEl.textContent = data.title || "Untitled Trick";
-
-          const descEl = document.createElement("p");
-          descEl.textContent = data.description || "";
-
-          const shareBtn = document.createElement("button");
-          shareBtn.className = "share-trick-btn";
-          shareBtn.innerHTML = '<i class="fa-solid fa-share-nodes"></i> Share Trick';
-          shareBtn.addEventListener("click", () => shareTrickPost(doc.id, data));
-
-          body.append(titleEl, descEl, shareBtn);
-          card.append(img, body);
-          feedContainer.appendChild(card);
-        });
-      } catch (err) {
-        console.error("Feed Error:", err);
-        feedContainer.innerHTML = "<p style='color:var(--accent-red);'>Unable to load the community feed.</p>";
-      }
+async function deleteTrick(id, data, card) {
+  if (!confirm('Delete this trick? This cannot be undone.')) return;
+  try {
+    await window.fsDeleteDoc(window.fsDoc(window.firestoreDB, 'rc_tricks', id));
+    if (data.storagePath && window.firebaseStorage) {
+      try { await window.fDeleteObject(window.fStorageRef(window.firebaseStorage, data.storagePath)); } catch (_) {}
     }
+    card.remove();
+  } catch (e) { alert('Could not delete: ' + (e.message || e)); }
+}
+
+async function loadTricksFeed() {
+  const feed = document.getElementById('tricks-feed');
+  feed.innerHTML = "<p style='color:var(--text-secondary);'>Loading tricks...</p>";
+  try {
+    const q = window.fsQuery(window.fsCollection(window.firestoreDB, 'rc_tricks'), window.fsOrderBy('createdAt', 'desc'));
+    const snap = await window.fsGetDocs(q);
+    await cleanupExpiredTricks(snap);
+    if (snap.empty) {
+      feed.innerHTML = "<p style='color:var(--text-secondary);'>No community posts yet. Be the first to share an RC trick!</p>";
+      return;
+    }
+    feed.innerHTML = '';
+    const me = window.currentFirebaseUser;
+    const admin = typeof isAdminUser === 'function' && isAdminUser();
+
+    snap.forEach(d => {
+      const data = d.data();
+      data.likedBy = data.likedBy || [];
+      const expiry = data.expiresAt && data.expiresAt.toMillis ? data.expiresAt.toMillis() : (data.expiresAt ? Date.parse(data.expiresAt) : 0);
+      if (expiry && expiry <= Date.now()) return;
+
+      const card = document.createElement('div');
+      card.className = 'trick-card';
+
+      const author = document.createElement('div');
+      author.className = 'trick-author';
+      const av = document.createElement('div');
+      av.className = 'trick-avatar';
+      if (data.authorPhoto && /^(data:image|https?:)/.test(data.authorPhoto)) {
+        const ai = document.createElement('img');
+        ai.src = data.authorPhoto;
+        ai.referrerPolicy = 'no-referrer';
+        ai.alt = '';
+        ai.onerror = () => { av.innerHTML = '<i class="fa-solid fa-user"></i>'; };
+        av.appendChild(ai);
+      } else av.innerHTML = '<i class="fa-solid fa-user"></i>';
+      const who = document.createElement('div');
+      const nm = document.createElement('strong');
+      nm.textContent = data.authorName || 'RC Driver';
+      const dt = document.createElement('small');
+      dt.textContent = timeAgo(data.createdAt && data.createdAt.toMillis ? data.createdAt.toMillis() : 0);
+      who.append(nm, dt);
+      author.append(av, who);
+
+      const img = document.createElement('img');
+      img.src = data.imageUrl || '';
+      img.alt = data.title || 'RC Trick';
+      img.loading = 'lazy';
+      img.style.marginTop = '12px';
+      img.onerror = () => { img.style.display = 'none'; };
+
+      const body = document.createElement('div');
+      body.className = 'trick-card-body';
+      const h = document.createElement('h3');
+      h.textContent = data.title || 'Untitled Trick';
+      const p = document.createElement('p');
+      p.textContent = data.description || '';
+
+      const actions = document.createElement('div');
+      actions.className = 'trick-actions';
+      const like = document.createElement('button');
+      like.className = 'like-btn';
+      paintLike(like, data);
+      like.addEventListener('click', () => toggleTrickLike(d.id, like, data));
+      actions.appendChild(like);
+
+      if (me && (data.authorUid === me.uid || admin)) {
+        const del = document.createElement('button');
+        del.className = 'del-btn';
+        del.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        del.title = 'Delete my trick';
+        del.addEventListener('click', () => deleteTrick(d.id, data, card));
+        actions.appendChild(del);
+      }
+
+      const share = document.createElement('button');
+      share.className = 'share-trick-btn';
+      share.innerHTML = '<i class="fa-solid fa-share-nodes"></i> Share Trick';
+      share.addEventListener('click', () => shareTrickPost(d.id, data));
+
+      body.append(h, p, actions, share);
+      card.append(author, img, body);
+      feed.appendChild(card);
+    });
+  } catch (err) {
+    console.error('Feed Error:', err);
+    feed.innerHTML = "<p style='color:var(--accent-red);'>Unable to load the community feed.</p>";
+  }
+}
 
 
     /* SRI LANKA RC MAP & GPS FUNCTIONS */
@@ -2755,8 +2867,6 @@ async function handleTrickSubmit(e) {
 
     // AI MECHANIC VIA GROQ API
     // NOTE: For production, move this key to a Firebase Cloud Function so it is not exposed in the browser.
-    const GEMINI_API_KEY = "AQ.Ab8RN6JS4qIrtJQAV0c4vh3w6yPjHT8gJthdkb1yBMKdrUnuig";
-    const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
     const aiConversation = [];
 
     function escapeHtml(value) {
@@ -2779,52 +2889,63 @@ async function handleTrickSubmit(e) {
       text = text.replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>');
       text = text.replace(/(<li>.*<\/li>)(?=\s*<li>)/gs, '$1');
       text = text.replace(/(?:<li>.*<\/li>\s*)+/gs, m => `<ul>${m}</ul>`);
+      text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
       text = text.replace(/\n/g, '<br>');
       return text;
     }
 
     async function callGroq(messages) {
-      if (!GEMINI_API_KEY || GEMINI_API_KEY.startsWith("PASTE_")) {
-        throw new Error("Groq API key is not configured.");
-      }
-      const system = messages.filter(m => m.role === "system").map(m => m.content).join("\n\n");
-      const contents = messages
-        .filter(m => m.role !== "system")
-        .map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
+      const sys = messages.filter(m => m.role === 'system').map(m => m.content).join('\n\n');
+      const chat = messages.filter(m => m.role !== 'system');
+      const q = ((chat[chat.length - 1] || {}).content || '').trim();
+      const enc = encodeURIComponent(q + ' RC');
+      const links = `\n\nSearch more: [Google](https://www.google.com/search?q=${enc}) | [YouTube](https://www.youtube.com/results?search_query=${enc})`;
 
-      let lastError = null;
-      for (const model of GEMINI_MODELS) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 45000);
-          const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
-              body: JSON.stringify({
-                systemInstruction: { parts: [{ text: system }] },
-                contents,
-                tools: [{ google_search: {} }],
-                generationConfig: { temperature: 0.2, maxOutputTokens: 4000 }
-              }),
-              signal: controller.signal
-            }
-          );
-          clearTimeout(timeoutId);
-          let data = null;
-          try { data = await response.json(); }
-          catch { throw new Error(`Gemini returned HTTP ${response.status} with an invalid response.`); }
-          if (!response.ok) throw new Error(data?.error?.message || `Gemini request failed (HTTP ${response.status}).`);
-          const text = (data?.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("").trim();
-          if (text) return text;
-          throw new Error(`Gemini returned an empty response from ${model}.`);
-        } catch (error) {
-          lastError = error;
-          console.warn(`Gemini model ${model} failed:`, error);
-        }
-      }
-      throw lastError || new Error("Gemini request failed.");
+      // 1. Your own spec database
+      const words = q.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 1);
+      const specs = (typeof rcSpecsCache !== 'undefined' ? rcSpecsCache : [])
+        .filter(s => words.some(w => (s.brand + ' ' + s.model).toLowerCase().includes(w)))
+        .slice(0, 3);
+      let ctx = '';
+      if (specs.length) ctx += 'SITE SPEC DATABASE:\n' + specs.map(s => JSON.stringify(s)).join('\n') + '\n\n';
+
+      // 2. Web search (Wikipedia, no key needed)
+      let wiki = [];
+      try {
+        const r = await fetch('https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrlimit=3&prop=extracts&exintro=1&explaintext=1&exchars=600&format=json&origin=*&gsrsearch=' + encodeURIComponent(q));
+        const d = await r.json();
+        wiki = Object.values((d && d.query && d.query.pages) || {}).map(p => ({ title: p.title, text: (p.extract || '').trim() })).filter(p => p.text);
+      } catch (e) { console.warn('Web search failed:', e); }
+      if (wiki.length) ctx += 'WEB (Wikipedia):\n' + wiki.map(p => p.title + ': ' + p.text).join('\n\n');
+
+      // 3. Free keyless AI writes the answer from the search results
+      try {
+        const c = new AbortController();
+        const t = setTimeout(() => c.abort(), 30000);
+        const r = await fetch('https://text.pollinations.ai/openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'openai',
+            messages: [
+              { role: 'system', content: sys + '\n\nUse the search context below when relevant. If it is not enough, say so honestly and do not invent specifications.\n\n' + (ctx || '(no context found)') },
+              ...chat.slice(-6)
+            ]
+          }),
+          signal: c.signal
+        });
+        clearTimeout(t);
+        const d = await r.json();
+        const text = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
+        if (text && text.trim()) return text.trim() + links;
+      } catch (e) { console.warn('Keyless AI failed:', e); }
+
+      // 4. Fallback: show the search results directly
+      let out = 'The AI service is not reachable right now, so here is what I found.\n\n';
+      if (specs.length) out += specs.map(s => '**' + s.brand + ' ' + s.model + '**: ' + [s.category, s.motor && 'Motor: ' + s.motor, s.battery && 'Battery: ' + s.battery, s.speed && 'Top speed: ' + s.speed].filter(Boolean).join(' · ')).join('\n') + '\n\n';
+      if (wiki.length) out += wiki.map(p => '**' + p.title + '**\n' + p.text).join('\n\n');
+      if (!specs.length && !wiki.length) out += 'No direct results were found.';
+      return out + links;
     }
 
     async function sendAiMessage() {

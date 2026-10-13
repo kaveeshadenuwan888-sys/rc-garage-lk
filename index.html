@@ -917,6 +917,23 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 .rv-box ul{margin:6px 0 0 16px;padding:0}
 @media(max-width:520px){.rv-cols{grid-template-columns:1fr}}
 </style>
+<style id="rc-social-css">
+.bell-badge{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#fff;color:#000!important;font-size:.65rem;font-weight:800;display:grid;place-items:center}
+#rc-toast{position:fixed;top:72px;left:50%;transform:translate(-50%,-20px);opacity:0;background:#fff;color:#000;padding:10px 16px;border-radius:12px;font-weight:700;font-size:.85rem;z-index:99999;transition:.25s;pointer-events:none;max-width:90vw}
+#rc-toast.show{opacity:1;transform:translate(-50%,0)}
+.drv-head,.rq-head{display:flex;align-items:center;gap:10px}
+.drv-photo{width:44px;height:44px;flex:0 0 44px;border-radius:50%;object-fit:cover;display:grid;place-items:center;background:rgba(255,255,255,.1)}
+.drv-req-btn{margin-top:10px;width:100%;padding:8px 10px;border-radius:9px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-weight:700;font-size:.78rem;cursor:pointer}
+.rq-avatar{width:42px;height:42px;flex:0 0 42px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.1)}
+.rq-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.rq-head small{display:block;opacity:.65;font-size:.72rem}
+.rq-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;padding:12px;margin-bottom:10px;font-size:.84rem}
+.rq-card p{margin:8px 0 0}
+.rq-reply{background:rgba(255,255,255,.06);border-radius:10px;padding:8px 10px;margin-top:8px}
+.rq-actions{display:flex;gap:8px;margin-top:8px}
+.rq-actions button,.rq-actions a{flex:1;text-align:center;padding:9px;border-radius:10px;font-weight:700;font-size:.8rem;cursor:pointer;border:1px solid rgba(255,255,255,.25);text-decoration:none}
+.rq-h{font-size:.72rem;opacity:.7;text-transform:uppercase;margin:14px 0 8px}
+</style>
 </head>
 <body>
 
@@ -935,6 +952,9 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       </button>
       <button class="pwa-reload-btn" onclick="forceAppUpdate()">
         <i class="fa-solid fa-rotate"></i>
+      </button>
+      <button id="bell-btn" class="pwa-reload-btn" onclick="openNotifPanel()" aria-label="Requests" title="Requests" style="position:relative;">
+        <i class="fa-solid fa-bell"></i><span id="bell-badge" class="bell-badge" style="display:none;">0</span>
       </button>
       <div class="profile-avatar-btn" onclick="openAccountScreen()" title="Account">
         <span id="header-avatar-container"><i class="fa-solid fa-user" style="font-size:1.2rem; color:var(--text-secondary);"></i></span>
@@ -1258,6 +1278,21 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     </div>
   </div>
 
+    <!-- WHATSAPP REQUEST + NOTIFICATIONS -->
+  <div class="modal-overlay" id="wa-request-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeWaRequest()"><i class="fa-solid fa-xmark"></i></button>
+      <div id="wa-request-body"></div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="notif-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeNotifPanel()"><i class="fa-solid fa-xmark"></i></button>
+      <div class="card-title"><span><i class="fa-solid fa-bell"></i> Requests</span></div>
+      <div id="notif-body"></div>
+    </div>
+  </div>
+
   <!-- POST A TRICK MODAL -->
   <div class="modal-overlay" id="trick-modal">
     <div class="modal-card">
@@ -1465,7 +1500,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, set, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, Timestamp, deleteDoc, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, Timestamp, deleteDoc, doc, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, where, limit, setDoc, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
@@ -1483,7 +1518,9 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     // Keep Google authentication across PWA restarts / launches.
     setPersistence(auth, browserLocalPersistence).catch(err => console.warn("Auth persistence:", err));
     const db = getDatabase(app);
-    const firestore = getFirestore(app);
+    let firestore;
+    try { firestore = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+    catch (e) { console.warn("Offline cache unavailable:", e); firestore = getFirestore(app); }
     const storage = getStorage(app);
     const provider = new GoogleAuthProvider();
     window.__rcFirebaseNormalAuth = {
@@ -1536,6 +1573,10 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     window.fsTimestamp = Timestamp;
     window.fsDeleteDoc = deleteDoc;
     window.fsDoc = doc;
+    window.fsOnSnapshot = onSnapshot;
+    window.fsWhere = where;
+    window.fsLimit = limit;
+    window.fsSetDoc = setDoc;
     window.fsUpdateDoc = updateDoc;
     window.fsArrayUnion = arrayUnion;
     window.fsArrayRemove = arrayRemove;
@@ -2187,128 +2228,145 @@ function timeAgo(ms) {
 }
 
 function paintLike(btn, data) {
-  const user = window.currentFirebaseUser;
+  const me = window.currentFirebaseUser;
   const likes = data.likedBy || [];
-  const liked = !!user && likes.includes(user.uid);
+  const liked = !!me && likes.includes(me.uid);
   btn.classList.toggle('liked', liked);
   btn.innerHTML = `<i class="fa-${liked ? 'solid' : 'regular'} fa-heart"></i> ${likes.length} ${liked ? 'Liked' : 'Useful'}`;
 }
 
-async function toggleTrickLike(id, btn, data) {
-  const user = window.currentFirebaseUser;
-  if (!user) { alert('Please sign in with Google to like a trick.'); return; }
-  const liked = (data.likedBy || []).includes(user.uid);
-  btn.disabled = true;
-  try {
-    await window.fsUpdateDoc(window.fsDoc(window.firestoreDB, 'rc_tricks', id), {
-      likedBy: liked ? window.fsArrayRemove(user.uid) : window.fsArrayUnion(user.uid)
-    });
-    data.likedBy = liked ? data.likedBy.filter(u => u !== user.uid) : [...(data.likedBy || []), user.uid];
-    paintLike(btn, data);
-  } catch (e) { alert('Could not update like: ' + (e.message || e)); }
-  btn.disabled = false;
+function canManageTrick(data) {
+  const me = window.currentFirebaseUser;
+  return !!me && (data.authorUid === me.uid || (typeof isAdminUser === 'function' && isAdminUser()));
 }
 
-async function deleteTrick(id, data, card) {
+async function toggleTrickLike(id, entry) {
+  const me = window.currentFirebaseUser;
+  if (!me) { alert('Please sign in with Google to like a trick.'); return; }
+  const prev = entry.data.likedBy || [];
+  const liked = prev.includes(me.uid);
+  entry.data.likedBy = liked ? prev.filter(u => u !== me.uid) : [...prev, me.uid];
+  paintLike(entry.like, entry.data);
+  try {
+    await window.fsUpdateDoc(window.fsDoc(window.firestoreDB, 'rc_tricks', id), {
+      likedBy: liked ? window.fsArrayRemove(me.uid) : window.fsArrayUnion(me.uid)
+    });
+  } catch (e) {
+    entry.data.likedBy = prev;
+    paintLike(entry.like, entry.data);
+    alert('Could not save your like' + (e.code === 'permission-denied' ? ': publish the latest Firestore rules.' : ': ' + (e.message || e)));
+  }
+}
+
+async function deleteTrick(id, entry) {
   if (!confirm('Delete this trick? This cannot be undone.')) return;
   try {
     await window.fsDeleteDoc(window.fsDoc(window.firestoreDB, 'rc_tricks', id));
-    if (data.storagePath && window.firebaseStorage) {
-      try { await window.fDeleteObject(window.fStorageRef(window.firebaseStorage, data.storagePath)); } catch (_) {}
-    }
-    card.remove();
+    entry.card.remove();
+    trickEntries.delete(id);
   } catch (e) { alert('Could not delete: ' + (e.message || e)); }
 }
 
-async function loadTricksFeed() {
+const trickEntries = new Map();
+let tricksUnsub = null, tricksCleaned = false;
+
+function buildTrickCard(id, data) {
+  const entry = { data };
+  const card = document.createElement('div');
+  card.className = 'trick-card';
+
+  const author = document.createElement('div');
+  author.className = 'trick-author';
+  const av = document.createElement('div');
+  av.className = 'trick-avatar';
+  if (data.authorPhoto && /^(data:image|https?:)/.test(data.authorPhoto)) {
+    const ai = document.createElement('img');
+    ai.src = data.authorPhoto; ai.referrerPolicy = 'no-referrer'; ai.alt = '';
+    ai.onerror = () => { av.innerHTML = '<i class="fa-solid fa-user"></i>'; };
+    av.appendChild(ai);
+  } else av.innerHTML = '<i class="fa-solid fa-user"></i>';
+  const who = document.createElement('div');
+  const nm = document.createElement('strong');
+  nm.textContent = data.authorName || 'RC Driver';
+  const dt = document.createElement('small');
+  dt.textContent = timeAgo(data.createdAt && data.createdAt.toMillis ? data.createdAt.toMillis() : Date.now());
+  who.append(nm, dt);
+  author.append(av, who);
+
+  const img = document.createElement('img');
+  img.src = data.imageUrl || ''; img.alt = data.title || 'RC Trick';
+  img.decoding = 'async'; img.style.marginTop = '12px';
+  img.onerror = () => { img.style.display = 'none'; };
+
+  const body = document.createElement('div');
+  body.className = 'trick-card-body';
+  const h = document.createElement('h3'); h.textContent = data.title || 'Untitled Trick';
+  const p = document.createElement('p'); p.textContent = data.description || '';
+
+  const actions = document.createElement('div');
+  actions.className = 'trick-actions';
+  const like = document.createElement('button');
+  like.className = 'like-btn';
+  const del = document.createElement('button');
+  del.className = 'del-btn';
+  del.innerHTML = '<i class="fa-solid fa-trash"></i>';
+  del.title = 'Delete my trick';
+  actions.append(like, del);
+
+  const share = document.createElement('button');
+  share.className = 'share-trick-btn';
+  share.innerHTML = '<i class="fa-solid fa-share-nodes"></i> Share Trick';
+
+  body.append(h, p, actions, share);
+  card.append(author, img, body);
+  Object.assign(entry, { card, like, del });
+  paintLike(like, data);
+  del.style.display = canManageTrick(data) ? '' : 'none';
+  like.addEventListener('click', () => toggleTrickLike(id, entry));
+  del.addEventListener('click', () => deleteTrick(id, entry));
+  share.addEventListener('click', () => shareTrickPost(id, entry.data));
+  return entry;
+}
+
+function repaintTricks() {
+  trickEntries.forEach(e => { paintLike(e.like, e.data); e.del.style.display = canManageTrick(e.data) ? '' : 'none'; });
+}
+
+function startTricksListener() {
+  if (tricksUnsub || !window.firestoreDB || !window.fsOnSnapshot) return;
   const feed = document.getElementById('tricks-feed');
-  feed.innerHTML = "<p style='color:var(--text-secondary);'>Loading tricks...</p>";
-  try {
-    const q = window.fsQuery(window.fsCollection(window.firestoreDB, 'rc_tricks'), window.fsOrderBy('createdAt', 'desc'));
-    const snap = await window.fsGetDocs(q);
-    await cleanupExpiredTricks(snap);
+  const q = window.fsQuery(window.fsCollection(window.firestoreDB, 'rc_tricks'), window.fsOrderBy('createdAt', 'desc'), window.fsLimit(30));
+  tricksUnsub = window.fsOnSnapshot(q, snap => {
     if (snap.empty) {
+      if (snap.metadata.fromCache) return;
+      trickEntries.clear();
       feed.innerHTML = "<p style='color:var(--text-secondary);'>No community posts yet. Be the first to share an RC trick!</p>";
       return;
     }
-    feed.innerHTML = '';
-    const me = window.currentFirebaseUser;
-    const admin = typeof isAdminUser === 'function' && isAdminUser();
-
+    if (!trickEntries.size) feed.innerHTML = '';
+    const seen = new Set(), order = [];
     snap.forEach(d => {
       const data = d.data();
       data.likedBy = data.likedBy || [];
-      const expiry = data.expiresAt && data.expiresAt.toMillis ? data.expiresAt.toMillis() : (data.expiresAt ? Date.parse(data.expiresAt) : 0);
-      if (expiry && expiry <= Date.now()) return;
-
-      const card = document.createElement('div');
-      card.className = 'trick-card';
-
-      const author = document.createElement('div');
-      author.className = 'trick-author';
-      const av = document.createElement('div');
-      av.className = 'trick-avatar';
-      if (data.authorPhoto && /^(data:image|https?:)/.test(data.authorPhoto)) {
-        const ai = document.createElement('img');
-        ai.src = data.authorPhoto;
-        ai.referrerPolicy = 'no-referrer';
-        ai.alt = '';
-        ai.onerror = () => { av.innerHTML = '<i class="fa-solid fa-user"></i>'; };
-        av.appendChild(ai);
-      } else av.innerHTML = '<i class="fa-solid fa-user"></i>';
-      const who = document.createElement('div');
-      const nm = document.createElement('strong');
-      nm.textContent = data.authorName || 'RC Driver';
-      const dt = document.createElement('small');
-      dt.textContent = timeAgo(data.createdAt && data.createdAt.toMillis ? data.createdAt.toMillis() : 0);
-      who.append(nm, dt);
-      author.append(av, who);
-
-      const img = document.createElement('img');
-      img.src = data.imageUrl || '';
-      img.alt = data.title || 'RC Trick';
-      img.loading = 'lazy';
-      img.style.marginTop = '12px';
-      img.onerror = () => { img.style.display = 'none'; };
-
-      const body = document.createElement('div');
-      body.className = 'trick-card-body';
-      const h = document.createElement('h3');
-      h.textContent = data.title || 'Untitled Trick';
-      const p = document.createElement('p');
-      p.textContent = data.description || '';
-
-      const actions = document.createElement('div');
-      actions.className = 'trick-actions';
-      const like = document.createElement('button');
-      like.className = 'like-btn';
-      paintLike(like, data);
-      like.addEventListener('click', () => toggleTrickLike(d.id, like, data));
-      actions.appendChild(like);
-
-      if (me && (data.authorUid === me.uid || admin)) {
-        const del = document.createElement('button');
-        del.className = 'del-btn';
-        del.innerHTML = '<i class="fa-solid fa-trash"></i>';
-        del.title = 'Delete my trick';
-        del.addEventListener('click', () => deleteTrick(d.id, data, card));
-        actions.appendChild(del);
-      }
-
-      const share = document.createElement('button');
-      share.className = 'share-trick-btn';
-      share.innerHTML = '<i class="fa-solid fa-share-nodes"></i> Share Trick';
-      share.addEventListener('click', () => shareTrickPost(d.id, data));
-
-      body.append(h, p, actions, share);
-      card.append(author, img, body);
-      feed.appendChild(card);
+      const exp = data.expiresAt && data.expiresAt.toMillis ? data.expiresAt.toMillis() : (data.expiresAt ? Date.parse(data.expiresAt) : 0);
+      if (exp && exp <= Date.now()) return;
+      seen.add(d.id);
+      let e = trickEntries.get(d.id);
+      if (e) { e.data = data; paintLike(e.like, data); e.del.style.display = canManageTrick(data) ? '' : 'none'; }
+      else { e = buildTrickCard(d.id, data); trickEntries.set(d.id, e); }
+      order.push(e.card);
     });
-  } catch (err) {
-    console.error('Feed Error:', err);
+    trickEntries.forEach((e, id) => { if (!seen.has(id)) { e.card.remove(); trickEntries.delete(id); } });
+    const cur = Array.from(feed.children);
+    if (cur.length !== order.length || order.some((c, i) => c !== cur[i])) order.forEach(c => feed.appendChild(c));
+    if (!snap.metadata.fromCache && !tricksCleaned) { tricksCleaned = true; cleanupExpiredTricks(snap).catch(() => {}); }
+  }, err => {
+    console.error('Tricks feed:', err);
     feed.innerHTML = "<p style='color:var(--accent-red);'>Unable to load the community feed.</p>";
-  }
+  });
 }
+
+function loadTricksFeed() { startTricksListener(); }
 
 
     /* SRI LANKA RC MAP & GPS FUNCTIONS */
@@ -2401,82 +2459,49 @@ async function loadTricksFeed() {
     }
 
     async function syncDriverProfileToFirebase() {
-      if (!window.firebaseDB) return false;
-      const lat = parseFloat(localStorage.getItem('rc_user_lat'));
-      const lng = parseFloat(localStorage.getItem('rc_user_lng'));
-      const models = (localStorage.getItem('rc_user_models') || '').trim();
-      if (!Number.isFinite(lat) || !Number.isFinite(lng) || !models) return false;
+  const user = window.currentFirebaseUser;
+  if (!user || !window.firestoreDB || !window.fsSetDoc) return false;
+  const lat = parseFloat(localStorage.getItem('rc_user_lat'));
+  const lng = parseFloat(localStorage.getItem('rc_user_lng'));
+  const models = (localStorage.getItem('rc_user_models') || '').trim();
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || !models) return false;
+  await window.fsSetDoc(window.fsDoc(window.firestoreDB, 'rc_drivers', user.uid), {
+    uid: user.uid,
+    name: localStorage.getItem('rc_user_name') || user.displayName || 'RC Driver',
+    photo: await getAvatarThumb(user),
+    models, lat, lng,
+    updatedAt: new Date().toISOString()
+  });
+  return true;
+}
 
-      const driverData = {
-        name: localStorage.getItem('rc_user_name') || '',
-        models,
-        whatsapp: normalizeWhatsAppNumber(localStorage.getItem('rc_user_whatsapp') || ''),
-        lat,
-        lng,
-        updatedAt: new Date().toISOString()
-      };
+async function saveUserMapLocation() {
+  const user = window.currentFirebaseUser;
+  if (!user) { alert('Please sign in with Google first.'); return; }
+  if (!localStorage.getItem('rc_user_name') || !isValidInternationalWhatsAppNumber(localStorage.getItem('rc_user_whatsapp') || '')) {
+    if (window.requireCompleteProfile) window.requireCompleteProfile(user);
+    alert('Please complete your profile first.');
+    return;
+  }
+  const modelsInput = document.getElementById('user-rc-models').value.trim();
+  if (!Number.isFinite(selectedLat) || !Number.isFinite(selectedLng)) { alert('Please select your location using GPS or clicking on the map first!'); return; }
+  if (!modelsInput) { alert('Please enter your RC Models (separated by commas).'); return; }
 
-      await window.dbSet(
-        window.dbRef(window.firebaseDB, 'drivers/' + getCurrentUserId()),
-        driverData
-      );
-      return true;
-    }
+  localStorage.setItem('rc_user_models', modelsInput);
+  localStorage.setItem('rc_user_lat', selectedLat);
+  localStorage.setItem('rc_user_lng', selectedLng);
+  try {
+    await syncDriverProfileToFirebase();
+    localStorage.setItem('rc_map_saved', 'true');
+    alert('Saved! Other drivers can now see you on the map.');
+    toggleMapEditMode(false);
+  } catch (err) {
+    console.error('Map save error:', err);
+    alert('Could not save to the map' + (err.code === 'permission-denied' ? ': publish the latest Firestore rules.' : ': ' + (err.message || err)));
+  }
+}
 
-    async function saveUserMapLocation() {
-      if (!localStorage.getItem('rc_user_name') ||
-          !isValidInternationalWhatsAppNumber(localStorage.getItem('rc_user_whatsapp') || '')) {
-        if (window.currentFirebaseUser) window.requireCompleteProfile(window.currentFirebaseUser);
-        else openProfileModal();
-        alert('Please complete your profile first.');
-        return;
-      }
-
-      const modelsInput = document.getElementById('user-rc-models').value.trim();
-      const userName = localStorage.getItem('rc_user_name') || '';
-      const whatsapp = normalizeWhatsAppNumber(localStorage.getItem('rc_user_whatsapp') || '');
-      const userId = getCurrentUserId();
-
-      if (!Number.isFinite(selectedLat) || !Number.isFinite(selectedLng)) {
-        alert('Please select your location using GPS or clicking on the map first!');
-        return;
-      }
-
-      if (!modelsInput) {
-        alert('Please enter your RC Models (separated by commas).');
-        return;
-      }
-
-      const driverData = {
-        name: userName,
-        models: modelsInput,
-        whatsapp,
-        lat: selectedLat,
-        lng: selectedLng,
-        updatedAt: new Date().toISOString()
-      };
-
-      localStorage.setItem('rc_user_models', modelsInput);
-      localStorage.setItem('rc_user_lat', selectedLat);
-      localStorage.setItem('rc_user_lng', selectedLng);
-      localStorage.setItem('rc_map_saved', 'true');
-
-      if (window.firebaseDB) {
-        try {
-          await window.dbSet(window.dbRef(window.firebaseDB, 'drivers/' + userId), driverData);
-          alert('Location, RC Models & WhatsApp details updated successfully!');
-        } catch (err) {
-          console.error('Map save error:', err);
-          alert('Firebase save failed. Your details were saved locally.');
-        }
-      } else {
-        alert('Location saved locally!');
-      }
-
-      toggleMapEditMode(false);
-    }
-
-    function toggleMapEditMode(enableEdit) {
+function toggleMapEditMode(enableEdit) {
       isEditingMode = enableEdit;
       const modelsField = document.getElementById('user-rc-models');
       const actionContainer = document.getElementById('map-action-container');
@@ -2498,63 +2523,45 @@ async function loadTricksFeed() {
       }
     }
 
-    function loadAllDriversFromFirebase() {
-      if (!window.firebaseDB) return;
-
-      const driversRef = window.dbRef(window.firebaseDB, 'drivers');
-      window.dbOnValue(driversRef, (snapshot) => {
-        const data = snapshot.val();
-        markersGroup.clearLayers();
-
-        if (data) {
-          Object.keys(data).forEach(key => {
-            const driver = data[key];
-            if (Number.isFinite(Number(driver.lat)) && Number.isFinite(Number(driver.lng))) {
-              const safeName = escapeHtml(driver.name || '');
-              const safeModels = escapeHtml(driver.models || 'RC Models not listed');
-              const waNumber = normalizeWhatsAppNumber(driver.whatsapp || '');
-              const waButton = waNumber
-                ? `<a href="https://wa.me/${waNumber}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;padding:8px 11px;border-radius:9px;background:#25D366;color:#061b0d;text-decoration:none;font-weight:700;font-size:0.78rem;box-shadow:0 3px 10px rgba(37,211,102,.22);"><i class="fa-brands fa-whatsapp"></i> Chat via WhatsApp</a>`
-                : `<div style="margin-top:9px;font-size:0.72rem;color:var(--text-secondary);">WhatsApp not added to this profile.</div>`;
-
-              const popupContent = `
-                <div style="min-width:190px;max-width:230px;">
-                  <div style="font-weight:800;color:var(--accent-cyan);font-size:0.95rem;">${safeName}</div>
-                  <div style="font-size:0.8rem;margin-top:6px;line-height:1.45;"><strong>RC:</strong> ${safeModels}</div>
-                  ${waButton}
-                </div>
-              `;
-              L.marker([Number(driver.lat), Number(driver.lng)])
-                .bindPopup(popupContent)
-                .addTo(markersGroup);
-            }
-          });
-        }
+    let driversUnsub = null;
+const rcDriversCache = {};
+function loadAllDriversFromFirebase() {
+  if (window.firestoreDB && window.fsOnSnapshot && !driversUnsub) {
+    driversUnsub = window.fsOnSnapshot(window.fsCollection(window.firestoreDB, 'rc_drivers'), snap => {
+      markersGroup.clearLayers();
+      const me = window.currentFirebaseUser;
+      snap.forEach(d => {
+        const dr = d.data();
+        rcDriversCache[d.id] = dr;
+        if (me && d.id === me.uid) return;
+        const lat = Number(dr.lat), lng = Number(dr.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        const photo = dr.photo && /^(data:image|https?:)/.test(dr.photo)
+          ? `<img class="drv-photo" src="${escapeHtml(dr.photo)}" referrerpolicy="no-referrer" alt="">`
+          : '<div class="drv-photo"><i class="fa-solid fa-user"></i></div>';
+        const popup = `<div style="min-width:190px;max-width:230px;">
+          <div class="drv-head">${photo}<div style="font-weight:800;font-size:.95rem;">${escapeHtml(dr.name || 'RC Driver')}</div></div>
+          <div style="font-size:.8rem;margin-top:8px;line-height:1.45;"><strong>RC:</strong> ${escapeHtml(dr.models || 'RC Models not listed')}</div>
+          <button class="drv-req-btn" onclick="openWaRequest('${escapeHtml(d.id)}')"><i class="fa-brands fa-whatsapp"></i> Request WhatsApp number</button>
+        </div>`;
+        L.marker([lat, lng]).bindPopup(popup).addTo(markersGroup);
       });
+    }, err => console.warn('Drivers listener:', err));
+  }
 
-      const savedModels = localStorage.getItem('rc_user_models');
-      const savedLat = localStorage.getItem('rc_user_lat');
-      const savedLng = localStorage.getItem('rc_user_lng');
-      const isSaved = localStorage.getItem('rc_map_saved');
+  const savedModels = localStorage.getItem('rc_user_models');
+  const savedLat = localStorage.getItem('rc_user_lat');
+  const savedLng = localStorage.getItem('rc_user_lng');
+  if (savedModels) document.getElementById('user-rc-models').value = savedModels;
+  if (savedLat && savedLng) {
+    selectedLat = parseFloat(savedLat);
+    selectedLng = parseFloat(savedLng);
+    updateSelectedPosition(selectedLat, selectedLng);
+  }
+  toggleMapEditMode(localStorage.getItem('rc_map_saved') !== 'true');
+}
 
-      if (savedModels) {
-        document.getElementById('user-rc-models').value = savedModels;
-      }
-
-      if (savedLat && savedLng) {
-        selectedLat = parseFloat(savedLat);
-        selectedLng = parseFloat(savedLng);
-        updateSelectedPosition(selectedLat, selectedLng);
-      }
-
-      if (isSaved === 'true') {
-        toggleMapEditMode(false);
-      } else {
-        toggleMapEditMode(true);
-      }
-    }
-
-    async function searchMapLocation() {
+async function searchMapLocation() {
       const query = document.getElementById('map-search-input').value.trim();
       if (!query) return;
 
@@ -2688,20 +2695,21 @@ async function handleReviewSubmit(e) {
   }
 }
 
-async function loadReviews() {
-  const feed = document.getElementById('reviews-feed');
-  feed.innerHTML = "<p style='color:var(--text-secondary);'>Loading reviews...</p>";
-  try {
-    const q = window.fsQuery(window.fsCollection(window.firestoreDB, 'rc_reviews'), window.fsOrderBy('createdAt', 'desc'));
-    const snap = await window.fsGetDocs(q);
+let reviewsUnsub = null;
+function startReviewsListener() {
+  if (reviewsUnsub || !window.firestoreDB || !window.fsOnSnapshot) return;
+  const q = window.fsQuery(window.fsCollection(window.firestoreDB, 'rc_reviews'), window.fsOrderBy('createdAt', 'desc'), window.fsLimit(60));
+  reviewsUnsub = window.fsOnSnapshot(q, snap => {
+    if (snap.empty && snap.metadata.fromCache) return;
     reviewsCache = [];
     snap.forEach(d => reviewsCache.push({ id: d.id, ...d.data() }));
     renderReviews();
-  } catch (err) {
+  }, err => {
     console.error('Reviews error:', err);
-    feed.innerHTML = "<p style='color:var(--accent-red);'>Unable to load reviews.</p>";
-  }
+    document.getElementById('reviews-feed').innerHTML = "<p style='color:var(--accent-red);'>Unable to load reviews.</p>";
+  });
 }
+function loadReviews() { startReviewsListener(); }
 
 function renderReviews() {
   const feed = document.getElementById('reviews-feed');
@@ -2753,6 +2761,158 @@ async function deleteReview(id) {
     renderReviews();
   } catch (e) { alert('Could not delete: ' + (e.message || e)); }
 }
+
+    /* WHATSAPP REQUESTS + BELL */
+let reqIn = [], reqOut = [], notifUid = '', notifUnsubs = [], reqTarget = null;
+const rcGid = id => document.getElementById(id);
+const rcImg = src => src && /^(data:image|https?:)/.test(src) ? `<img src="${escapeHtml(src)}" referrerpolicy="no-referrer" alt="">` : '<i class="fa-solid fa-user"></i>';
+const rcMs = t => t && t.toMillis ? t.toMillis() : 0;
+
+function rcToast(msg) {
+  let t = rcGid('rc-toast');
+  if (!t) { t = document.createElement('div'); t.id = 'rc-toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 4500);
+}
+
+function openWaRequest(uid) {
+  const me = window.currentFirebaseUser;
+  if (!me) { alert('Please sign in with Google to send a request.'); return; }
+  if (uid === me.uid) { alert('This is your own marker.'); return; }
+  const dr = rcDriversCache[uid];
+  if (!dr) return;
+  reqTarget = { uid, name: dr.name || 'RC Driver', photo: dr.photo || '' };
+  const mine = localStorage.getItem('rc_user_whatsapp') || '';
+  rcGid('wa-request-body').innerHTML = `
+    <div class="rq-head"><div class="rq-avatar">${rcImg(dr.photo)}</div><div><strong>${escapeHtml(reqTarget.name)}</strong><small>${escapeHtml(dr.models || '')}</small></div></div>
+    <p style="font-size:.84rem;margin:12px 0;opacity:.85;">Ask ${escapeHtml(reqTarget.name)} to share their WhatsApp number. They get a notification and can reply to you.</p>
+    <label>Your phone / WhatsApp number</label>
+    <input id="wa-req-phone" type="tel" value="${mine ? '+' + escapeHtml(mine) : ''}" placeholder="+94771234567" inputmode="tel">
+    <label style="margin-top:10px;">Message (optional)</label>
+    <input id="wa-req-msg" maxlength="160" placeholder="e.g. I'm interested in your RC">
+    <button class="btn-primary" id="wa-req-send" onclick="sendWaRequest()" style="margin-top:14px;">Send request</button>`;
+  rcGid('wa-request-modal').style.display = 'flex';
+  if (typeof map !== 'undefined' && map) map.closePopup();
+}
+function closeWaRequest() { rcGid('wa-request-modal').style.display = 'none'; }
+
+async function sendWaRequest() {
+  const me = window.currentFirebaseUser;
+  if (!me || !reqTarget) return;
+  const phoneRaw = rcGid('wa-req-phone').value.trim();
+  if (!isValidInternationalWhatsAppNumber(phoneRaw)) { alert('Enter a valid number with country code, e.g. +94771234567'); return; }
+  const btn = rcGid('wa-req-send');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    await window.fsAddDoc(window.fsCollection(window.firestoreDB, 'rc_requests'), {
+      fromUid: me.uid,
+      fromName: localStorage.getItem('rc_user_name') || me.displayName || 'RC Driver',
+      fromPhoto: await getAvatarThumb(me),
+      fromPhone: normalizeWhatsAppNumber(phoneRaw),
+      message: rcGid('wa-req-msg').value.trim().slice(0, 160),
+      toUid: reqTarget.uid, toName: reqTarget.name, toPhoto: reqTarget.photo,
+      status: 'pending', reply: '', fromSeen: true,
+      createdAt: window.fsServerTimestamp()
+    });
+    closeWaRequest();
+    rcToast('Request sent to ' + reqTarget.name);
+  } catch (e) {
+    alert('Could not send the request' + (e.code === 'permission-denied' ? ': publish the latest Firestore rules.' : ': ' + (e.message || e)));
+    btn.disabled = false; btn.textContent = 'Send request';
+  }
+}
+
+function updateBell() {
+  const n = reqIn.filter(r => r.status !== 'replied').length + reqOut.filter(r => r.reply && r.fromSeen === false).length;
+  const b = rcGid('bell-badge');
+  if (b) { b.textContent = n > 9 ? '9+' : n; b.style.display = n ? 'grid' : 'none'; }
+  if (rcGid('notif-modal') && rcGid('notif-modal').style.display === 'flex') renderNotifs();
+}
+
+function startNotifListeners(uid) {
+  notifUnsubs.forEach(u => u()); notifUnsubs = []; reqIn = []; reqOut = []; updateBell();
+  if (!uid || !window.firestoreDB || !window.fsOnSnapshot) return;
+  const col = window.fsCollection(window.firestoreDB, 'rc_requests');
+  let firstIn = true, firstOut = true;
+  notifUnsubs.push(window.fsOnSnapshot(window.fsQuery(col, window.fsWhere('toUid', '==', uid)), snap => {
+    reqIn = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!firstIn && !snap.metadata.hasPendingWrites) snap.docChanges().forEach(c => { if (c.type === 'added') rcToast('New WhatsApp request from ' + (c.doc.data().fromName || 'a driver')); });
+    firstIn = false; updateBell();
+  }, e => console.warn('requests (in):', e)));
+  notifUnsubs.push(window.fsOnSnapshot(window.fsQuery(col, window.fsWhere('fromUid', '==', uid)), snap => {
+    reqOut = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!firstOut && !snap.metadata.hasPendingWrites) snap.docChanges().forEach(c => { const r = c.doc.data(); if (c.type === 'modified' && r.reply && r.fromSeen === false) rcToast((r.toName || 'A driver') + ' replied to your request'); });
+    firstOut = false; updateBell();
+  }, e => console.warn('requests (out):', e)));
+}
+
+function openNotifPanel() {
+  if (!window.currentFirebaseUser) { alert('Please sign in with Google to see your requests.'); return; }
+  rcGid('notif-modal').style.display = 'flex';
+  renderNotifs();
+  reqOut.filter(r => r.reply && r.fromSeen === false).forEach(r => {
+    window.fsUpdateDoc(window.fsDoc(window.firestoreDB, 'rc_requests', r.id), { fromSeen: true }).catch(() => {});
+  });
+}
+function closeNotifPanel() { rcGid('notif-modal').style.display = 'none'; }
+
+function renderNotifs() {
+  const body = rcGid('notif-body');
+  const byTime = (a, b) => rcMs(b.createdAt) - rcMs(a.createdAt);
+  const inc = [...reqIn].sort(byTime), out = [...reqOut].sort(byTime);
+  let html = '<div class="rq-h">Requests to you</div>';
+  html += inc.length ? inc.map(r => `
+    <div class="rq-card" data-id="${escapeHtml(r.id)}">
+      <div class="rq-head"><div class="rq-avatar">${rcImg(r.fromPhoto)}</div><div><strong>${escapeHtml(r.fromName || 'RC Driver')}</strong><small>${timeAgo(rcMs(r.createdAt))}</small></div></div>
+      <p><strong>${escapeHtml(r.fromName || 'A driver')}</strong> wants your WhatsApp number.</p>
+      <p>Their number: <strong>+${escapeHtml(r.fromPhone || '')}</strong>${r.message ? '<br>&ldquo;' + escapeHtml(r.message) + '&rdquo;' : ''}</p>
+      ${r.reply
+        ? `<div class="rq-reply">You replied: ${escapeHtml(r.reply)}</div>`
+        : `<input class="rq-input" maxlength="300" placeholder="Type your reply or number..." style="margin-top:8px;">
+           <div class="rq-actions"><button data-act="share">Share my number</button><button data-act="send">Send reply</button></div>`}
+      <div class="rq-actions"><a href="https://wa.me/${escapeHtml(r.fromPhone || '')}" target="_blank" rel="noopener noreferrer">Open their WhatsApp</a><button data-act="del">Dismiss</button></div>
+    </div>`).join('') : '<p style="opacity:.7;font-size:.84rem;">No requests yet.</p>';
+  html += '<div class="rq-h">Your requests</div>';
+  html += out.length ? out.map(r => {
+    const m = (r.reply || '').match(/\+?\d[\d\s-]{7,}\d/);
+    const num = m ? m[0].replace(/\D/g, '') : '';
+    return `<div class="rq-card" data-id="${escapeHtml(r.id)}">
+      <div class="rq-head"><div class="rq-avatar">${rcImg(r.toPhoto)}</div><div><strong>${escapeHtml(r.toName || 'RC Driver')}</strong><small>${timeAgo(rcMs(r.createdAt))}</small></div></div>
+      ${r.reply ? `<div class="rq-reply">Reply: ${escapeHtml(r.reply)}</div>` : '<p style="opacity:.7;">Waiting for a reply...</p>'}
+      <div class="rq-actions">${num.length >= 8 && num.length <= 15 ? `<a href="https://wa.me/${num}" target="_blank" rel="noopener noreferrer">Open WhatsApp</a>` : ''}<button data-act="del">Delete</button></div>
+    </div>`;
+  }).join('') : '<p style="opacity:.7;font-size:.84rem;">You have not sent any requests.</p>';
+  body.innerHTML = html;
+}
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('#notif-body button[data-act]');
+  if (!b) return;
+  const card = b.closest('.rq-card'), id = card.dataset.id, act = b.dataset.act;
+  const ref = window.fsDoc(window.firestoreDB, 'rc_requests', id);
+  try {
+    if (act === 'share') { const w = localStorage.getItem('rc_user_whatsapp') || ''; card.querySelector('.rq-input').value = w ? '+' + w : ''; }
+    else if (act === 'send') {
+      const text = card.querySelector('.rq-input').value.trim();
+      if (!text) { alert('Type a reply first.'); return; }
+      await window.fsUpdateDoc(ref, { reply: text.slice(0, 300), status: 'replied', repliedAt: window.fsServerTimestamp(), fromSeen: false });
+      rcToast('Reply sent');
+    } else if (act === 'del') {
+      if (confirm('Remove this request?')) await window.fsDeleteDoc(ref);
+    }
+  } catch (err) { alert('Action failed' + (err.code === 'permission-denied' ? ': publish the latest Firestore rules.' : ': ' + (err.message || err))); }
+});
+
+function startFeeds() {
+  startTricksListener();
+  if (typeof startReviewsListener === 'function') startReviewsListener();
+}
+window.addEventListener('load', () => setTimeout(startFeeds, 0));
+setInterval(() => {
+  startFeeds();
+  const u = window.currentFirebaseUser, id = u ? u.uid : '';
+  if (id !== notifUid) { notifUid = id; startNotifListeners(id); repaintTricks(); }
+}, 1500);
 
     // Dynamic Auth Section UI Switcher
     window.updateAuthUI = function(isLoggedIn) {

@@ -934,6 +934,19 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 .rq-actions button,.rq-actions a{flex:1;text-align:center;padding:9px;border-radius:10px;font-weight:700;font-size:.8rem;cursor:pointer;border:1px solid rgba(255,255,255,.25);text-decoration:none}
 .rq-h{font-size:.72rem;opacity:.7;text-transform:uppercase;margin:14px 0 8px}
 </style>
+<style id="rc-v6-css">
+#account-tab .rc-account-shell{position:relative}
+#account-tab .rc-account-hero{padding-right:48px}
+.rc-x-btn,.rc-x-inline,.rc-pen-btn{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;border-radius:50%;display:grid;place-items:center;cursor:pointer;padding:0}
+.rc-x-btn{position:absolute;top:0;right:0;z-index:2;width:38px;height:38px}
+.rc-x-inline{margin-left:auto;width:34px;height:34px;flex:0 0 34px}
+.rc-pen-btn{margin-left:auto;width:38px;height:38px;flex:0 0 38px}
+.rc-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.1);font-size:.88rem}
+.rc-row span{opacity:.65}
+.rc-photo-row{display:flex;align-items:center;gap:14px}
+.rc-photo-btns{display:grid;gap:8px;flex:1}
+.rc-photo-btns button{margin-top:0!important}
+</style>
 </head>
 <body>
 
@@ -2502,28 +2515,35 @@ async function saveUserMapLocation() {
 }
 
 function toggleMapEditMode(enableEdit) {
-      isEditingMode = enableEdit;
-      const modelsField = document.getElementById('user-rc-models');
-      const actionContainer = document.getElementById('map-action-container');
+  isEditingMode = enableEdit;
+  const modelsField = document.getElementById('user-rc-models');
+  const box = document.getElementById('map-action-container');
+  const saved = localStorage.getItem('rc_map_saved') === 'true';
+  const del = saved ? '<button class="btn-secondary danger-btn" onclick="deleteMyMapLocation()" style="margin-top:8px;"><i class="fa-solid fa-trash"></i> Delete My Location</button>' : '';
+  modelsField.disabled = !enableEdit;
+  box.innerHTML = (enableEdit
+    ? '<button class="btn-primary" id="save-map-btn" onclick="saveUserMapLocation()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>'
+    : '<button class="btn-secondary" onclick="toggleMapEditMode(true)"><i class="fa-solid fa-pen-to-square"></i> Edit Details / Location</button>') + del;
+}
 
-      if (enableEdit) {
-        modelsField.disabled = false;
-        actionContainer.innerHTML = `
-          <button class="btn-primary" id="save-map-btn" onclick="saveUserMapLocation()">
-            <i class="fa-solid fa-floppy-disk"></i> Save Changes
-          </button>
-        `;
-      } else {
-        modelsField.disabled = true;
-        actionContainer.innerHTML = `
-          <button class="btn-secondary" onclick="toggleMapEditMode(true)">
-            <i class="fa-solid fa-pen-to-square"></i> Edit Details / Location
-          </button>
-        `;
-      }
-    }
+async function deleteMyMapLocation() {
+  if (!confirm('Delete your location and RC details from the map?')) return;
+  const user = window.currentFirebaseUser;
+  try {
+    if (user && window.firestoreDB) await window.fsDeleteDoc(window.fsDoc(window.firestoreDB, 'rc_drivers', user.uid));
+    ['rc_user_models', 'rc_user_lat', 'rc_user_lng', 'rc_map_saved'].forEach(k => localStorage.removeItem(k));
+    if (userMarker && map) { map.removeLayer(userMarker); userMarker = null; }
+    selectedLat = null; selectedLng = null;
+    document.getElementById('user-rc-models').value = '';
+    document.getElementById('selected-coords-txt').innerText = '📍 Click on the map or use GPS to pin your location!';
+    toggleMapEditMode(true);
+    alert('Your location and details were removed from the map.');
+  } catch (e) {
+    alert('Could not delete' + (e.code === 'permission-denied' ? ': publish the latest Firestore rules.' : ': ' + (e.message || e)));
+  }
+}
 
-    let driversUnsub = null;
+let driversUnsub = null;
 const rcDriversCache = {};
 function loadAllDriversFromFirebase() {
   if (window.firestoreDB && window.fsOnSnapshot && !driversUnsub) {
@@ -2822,7 +2842,20 @@ async function sendWaRequest() {
   }
 }
 
+const rcPurged = new Set();
+function rcPurge(list) {
+  const now = Date.now();
+  list.forEach(r => {
+    if (rcPurged.has(r.id)) return;
+    const exp = rcMs(r.expireAt), made = rcMs(r.createdAt);
+    if ((exp && exp <= now) || (made && now - made > 30 * 86400000)) {
+      rcPurged.add(r.id);
+      window.fsDeleteDoc(window.fsDoc(window.firestoreDB, 'rc_requests', r.id)).catch(() => {});
+    }
+  });
+}
 function updateBell() {
+  rcPurge(reqIn.concat(reqOut));
   const n = reqIn.filter(r => r.status !== 'replied').length + reqOut.filter(r => r.reply && r.fromSeen === false).length;
   const b = rcGid('bell-badge');
   if (b) { b.textContent = n > 9 ? '9+' : n; b.style.display = n ? 'grid' : 'none'; }
@@ -2851,7 +2884,7 @@ function openNotifPanel() {
   rcGid('notif-modal').style.display = 'flex';
   renderNotifs();
   reqOut.filter(r => r.reply && r.fromSeen === false).forEach(r => {
-    window.fsUpdateDoc(window.fsDoc(window.firestoreDB, 'rc_requests', r.id), { fromSeen: true }).catch(() => {});
+    window.fsUpdateDoc(window.fsDoc(window.firestoreDB, 'rc_requests', r.id), { fromSeen: true, expireAt: window.fsTimestamp.fromMillis(Date.now() + 7 * 86400000) }).catch(() => {});
   });
 }
 function closeNotifPanel() { rcGid('notif-modal').style.display = 'none'; }
@@ -3269,7 +3302,7 @@ setInterval(() => {
     const n=(localStorage.getItem('rc_user_name')||'').trim();
     const p=(localStorage.getItem('rc_user_whatsapp')||'').replace(/\D/g,'');
     const a=(localStorage.getItem('rc_user_avatar')||'').trim();
-    return n.length>=2 && /^\d{8,15}$/.test(p) && !!a && localStorage.getItem('rc_profile_photo_selected')==='1';
+    return n.length>=2 && /^\d{8,15}$/.test(p) ;
   }
 
   function renderPhoto(src){
@@ -3453,126 +3486,160 @@ setInterval(() => {
 
 <script id="rc-account-edit-profile">
 (() => {
-  const $=id=>document.getElementById(id);
+  const $ = id => document.getElementById(id);
+  const notice = m => (typeof rcToast === 'function' ? rcToast(m) : alert(m));
+  let pending = null; // null = unchanged, '' = removed, data URL = new photo
 
-  window.openAccountScreen = window.openAccountScreen || function(){};
+  function setAvatar(el, src) {
+    el.innerHTML = '';
+    if (src) { const i = document.createElement('img'); i.src = src; i.alt = 'Profile photo'; i.referrerPolicy = 'no-referrer'; el.appendChild(i); }
+    else el.innerHTML = '<i class="fa-solid fa-user"></i>';
+  }
+  const currentAvatar = () => localStorage.getItem('rc_user_avatar') || (window.currentFirebaseUser && window.currentFirebaseUser.photoURL) || '';
 
-  // Wrap the existing account renderer so the account page becomes an
-  // editable profile page when the user is already signed in.
-  const originalRender = window.rcRefreshAccount;
-  window.rcRefreshAccount = () => {
-    if(originalRender) originalRender();
-    setTimeout(updateEditUI, 50);
-  };
+  function build() {
+    const signed = $('account-signed-panel');
+    if (!signed || $('rc-acc-edit')) return;
+    const head = signed.querySelector('.rc-profile-head');
+    const done = signed.querySelector('.rc-account-complete');
+    if (done) done.style.display = 'none';
 
-  function updateEditUI(){
-    const user=window.currentFirebaseUser;
-    if(!user)return;
-    const profile=$('account-profile-panel'), signed=$('account-signed-panel');
-    if(!profile || !signed)return;
+    const pen = document.createElement('button');
+    pen.id = 'rc-acc-pen'; pen.className = 'rc-pen-btn'; pen.title = 'Edit profile'; pen.setAttribute('aria-label', 'Edit profile');
+    pen.innerHTML = '<i class="fa-solid fa-pen"></i>';
+    head.appendChild(pen);
 
-    const name=(localStorage.getItem('rc_user_name')||user.displayName||'').trim();
-    const phone=localStorage.getItem('rc_user_whatsapp')||'';
-    const avatar=localStorage.getItem('rc_user_avatar')||user.photoURL||'';
+    const view = document.createElement('div');
+    view.innerHTML = '<div class="rc-row"><span>WhatsApp</span><strong id="rc-v-phone"></strong></div>';
+    const edit = document.createElement('div');
+    edit.id = 'rc-acc-edit'; edit.className = 'rc-edit-profile-area'; edit.style.display = 'none';
+    edit.innerHTML = `
+      <div><label>Display Name</label><input id="rc-e-name" type="text" maxlength="40" autocomplete="name"></div>
+      <div><label><i class="fa-brands fa-whatsapp"></i> WhatsApp Number</label><input id="rc-e-phone" type="tel" maxlength="20" inputmode="tel" autocomplete="tel"></div>
+      <label>Profile Photo</label>
+      <div class="rc-photo-row">
+        <div class="rc-account-avatar" id="rc-e-prev"></div>
+        <div class="rc-photo-btns">
+          <button type="button" class="rc-account-secondary" id="rc-e-choose"><i class="fa-solid fa-camera"></i> Change photo</button>
+          <button type="button" class="rc-account-secondary" id="rc-e-remove"><i class="fa-solid fa-trash"></i> Remove photo</button>
+        </div>
+      </div>
+      <input id="rc-e-file" type="file" accept="image/*" style="display:none">
+      <div class="rc-edit-actions">
+        <button type="button" id="rc-e-save" class="rc-account-primary"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+        <button type="button" id="rc-e-cancel" class="rc-account-secondary">Cancel</button>
+      </div>
+      <div id="rc-e-status" class="rc-account-status"></div>`;
+    head.insertAdjacentElement('afterend', view);
+    view.insertAdjacentElement('afterend', edit);
 
-    if(name && phone && avatar && localStorage.getItem('rc_profile_photo_selected')==='1'){
-      // Turn the "complete" panel into an editable account panel.
-      signed.querySelector('.rc-profile-head h2').textContent=name;
-      signed.querySelector('.rc-profile-head p').textContent=user.email||'';
-      const avatarBox=$('account-signed-avatar');
-      if(avatarBox) avatarBox.innerHTML=avatar ? `<img src="${avatar}" alt="Profile photo">` : '<i class="fa-solid fa-user"></i>';
+    const closeEdit = () => { edit.style.display = 'none'; pending = null; };
+    const openEdit = () => {
+      pending = null;
+      $('rc-e-name').value = localStorage.getItem('rc_user_name') || '';
+      const p = localStorage.getItem('rc_user_whatsapp') || '';
+      $('rc-e-phone').value = p ? '+' + p : '';
+      setAvatar($('rc-e-prev'), currentAvatar());
+      $('rc-e-status').textContent = '';
+      edit.style.display = 'grid';
+    };
+    pen.addEventListener('click', () => (edit.style.display === 'none' ? openEdit() : closeEdit()));
+    $('rc-e-cancel').addEventListener('click', closeEdit);
+    $('rc-e-choose').addEventListener('click', () => $('rc-e-file').click());
+    $('rc-e-remove').addEventListener('click', () => { pending = ''; setAvatar($('rc-e-prev'), (window.currentFirebaseUser && window.currentFirebaseUser.photoURL) || ''); $('rc-e-status').textContent = 'Photo will be removed when you save.'; });
 
-      let edit=signed.querySelector('.rc-edit-profile-area');
-      if(!edit){
-        edit=document.createElement('div');
-        edit.className='rc-edit-profile-area';
-        edit.innerHTML=`
-          <div class="rc-edit-grid">
-            <div>
-              <label>Display Name</label>
-              <input id="edit-account-name" type="text" maxlength="40" autocomplete="name">
-            </div>
-            <div>
-              <label><i class="fa-brands fa-whatsapp"></i> WhatsApp Number</label>
-              <input id="edit-account-phone" type="tel" maxlength="20" inputmode="tel" autocomplete="tel">
-            </div>
-          </div>
-          <label>Profile Photo</label>
-          <input id="edit-account-photo" type="file" accept="image/*">
-          <small>Maximum 5 MB. Larger photos are automatically optimized for the app.</small>
-          <div class="rc-edit-actions">
-            <button id="save-account-edits" class="rc-account-primary"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
-            <button id="cancel-account-edits" class="rc-account-secondary" style="display:none">Cancel</button>
-          </div>
-          <div id="edit-account-status" class="rc-account-status"></div>
-        `;
-        signed.querySelector('.rc-account-complete').insertAdjacentElement('afterend',edit);
+    $('rc-e-file').addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      if (!f.type.startsWith('image/')) { alert('Please select an image file.'); e.target.value = ''; return; }
+      if (f.size > 5 * 1024 * 1024) { alert('Profile photo must be 5 MB or smaller.'); e.target.value = ''; return; }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          const s = Math.min(1, 800 / Math.max(img.width, img.height));
+          const c = document.createElement('canvas');
+          c.width = Math.max(1, Math.round(img.width * s)); c.height = Math.max(1, Math.round(img.height * s));
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          pending = c.toDataURL('image/jpeg', 0.88);
+          setAvatar($('rc-e-prev'), pending);
+          $('rc-e-status').textContent = '';
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(f);
+    });
 
-        $('edit-account-name').value=name;
-        $('edit-account-phone').value=phone ? '+'+phone : '';
-
-        $('edit-account-photo').addEventListener('change', e=>{
-          const f=e.target.files?.[0]; if(!f)return;
-          if(!f.type.startsWith('image/')){alert('Please select an image file.');e.target.value='';return;}
-          if(f.size>5*1024*1024){alert('Profile photo must be 5 MB or smaller.');e.target.value='';return;}
-          const reader=new FileReader();
-          reader.onload=ev=>{
-            const img=new Image();
-            img.onload=()=>{
-              const scale=Math.min(1,1200/Math.max(img.width,img.height));
-              const c=document.createElement('canvas');
-              c.width=Math.max(1,Math.round(img.width*scale));
-              c.height=Math.max(1,Math.round(img.height*scale));
-              c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-              edit.dataset.photo=c.toDataURL('image/jpeg',0.9);
-            };
-            img.src=ev.target.result;
-          };
-          reader.readAsDataURL(f);
-        });
-
-        $('save-account-edits').addEventListener('click',async()=>{
-          const status=$('edit-account-status');
-          const n=$('edit-account-name').value.trim();
-          const raw=$('edit-account-phone').value.trim();
-          const p=typeof normalizeWhatsAppNumber==='function' ? normalizeWhatsAppNumber(raw) : raw.replace(/\D/g,'');
-          const photo=edit.dataset.photo || localStorage.getItem('rc_user_avatar') || '';
-
-          if(n.length<2){status.textContent='Display name is required.';return;}
-          if(!p || (typeof isValidInternationalWhatsAppNumber==='function' && !isValidInternationalWhatsAppNumber(p))){
-            status.textContent='Enter a valid international WhatsApp number.';return;
-          }
-          if(!photo){status.textContent='Please select a profile photo.';return;}
-
-          const btn=$('save-account-edits'); btn.disabled=true; status.textContent='Saving changes...';
-          localStorage.setItem('rc_user_name',n);
-          localStorage.setItem('rc_user_whatsapp',p);
-          localStorage.setItem('rc_user_avatar',photo);
-          localStorage.setItem('rc_profile_photo_selected','1');
-          if (window.refreshHeaderAvatar) window.refreshHeaderAvatar();
-          localStorage.setItem('rc_garage_sl_profile_complete_v3','1');
-          localStorage.setItem('rc_profile_complete','true');
-
-          try{
-            if(typeof syncDriverProfileToFirebase==='function') await syncDriverProfileToFirebase();
-          }catch(e){console.warn('Profile sync:',e)}
-
-          // Update all visible avatars.
-          const h=$('header-avatar-container');
-          if(h)h.innerHTML=`<img src="${photo}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-          const a=$('account-signed-avatar');
-          if(a)a.innerHTML=`<img src="${photo}" alt="Profile photo">`;
-          signed.querySelector('.rc-profile-head h2').textContent=n;
-          status.textContent='Profile updated successfully.';
-          btn.disabled=false;
-        });
-      }
-    }
+    $('rc-e-save').addEventListener('click', async () => {
+      const st = $('rc-e-status');
+      const n = $('rc-e-name').value.trim();
+      const raw = $('rc-e-phone').value.trim();
+      const p = typeof normalizeWhatsAppNumber === 'function' ? normalizeWhatsAppNumber(raw) : raw.replace(/\D/g, '');
+      if (n.length < 2) { st.textContent = 'Display name is required.'; return; }
+      if (!p || (typeof isValidInternationalWhatsAppNumber === 'function' && !isValidInternationalWhatsAppNumber(p))) { st.textContent = 'Enter a valid international WhatsApp number.'; return; }
+      const btn = $('rc-e-save'); btn.disabled = true; st.textContent = 'Saving...';
+      localStorage.setItem('rc_user_name', n);
+      localStorage.setItem('rc_user_whatsapp', p);
+      if (pending === '') { localStorage.removeItem('rc_user_avatar'); localStorage.removeItem('rc_profile_photo_selected'); }
+      else if (pending) { localStorage.setItem('rc_user_avatar', pending); localStorage.setItem('rc_profile_photo_selected', '1'); }
+      localStorage.setItem('rc_garage_sl_profile_complete_v3', '1');
+      localStorage.setItem('rc_profile_complete', 'true');
+      try { if (typeof syncDriverProfileToFirebase === 'function') await syncDriverProfileToFirebase(); } catch (e) { console.warn('Profile sync:', e); }
+      if (window.refreshHeaderAvatar) window.refreshHeaderAvatar();
+      pending = null; btn.disabled = false;
+      closeEdit(); sync();
+      notice('Profile updated');
+    });
   }
 
-  // Run after Firebase/profile data settles.
-  addEventListener('load',()=>setTimeout(updateEditUI,1200));
-  addEventListener('rc-google-auth-success',()=>setTimeout(updateEditUI,300));
+  function sync() {
+    build();
+    const user = window.currentFirebaseUser;
+    const signed = $('account-signed-panel');
+    if (!signed || !user) return;
+    signed.querySelector('.rc-profile-head h2').textContent = (localStorage.getItem('rc_user_name') || user.displayName || 'R/C Garage User').trim();
+    signed.querySelector('.rc-profile-head p').textContent = user.email || '';
+    setAvatar($('account-signed-avatar'), currentAvatar());
+    const p = localStorage.getItem('rc_user_whatsapp') || '';
+    $('rc-v-phone').textContent = p ? '+' + p : 'Not added';
+  }
+
+  // Keep the view fresh whenever the account screen is shown or refreshed
+  const oRef = window.rcRefreshAccount;
+  window.rcRefreshAccount = () => { if (oRef) oRef(); setTimeout(sync, 50); };
+  const oOpen = window.openAccountScreen;
+  window.openAccountScreen = function () { if (oOpen) oOpen.apply(this, arguments); setTimeout(sync, 60); };
+  addEventListener('rc-google-auth-success', () => setTimeout(sync, 300));
+  addEventListener('load', () => setTimeout(sync, 1200));
+
+  // Close (X) buttons
+  const shell = document.querySelector('#account-tab .rc-account-shell');
+  if (shell && !$('rc-acc-x')) {
+    const x = document.createElement('button');
+    x.id = 'rc-acc-x'; x.className = 'rc-x-btn'; x.setAttribute('aria-label', 'Close'); x.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    x.addEventListener('click', () => {
+      if (typeof openNormalApp === 'function') openNormalApp();
+      if ($('account-tab').classList.contains('active')) notice('Please sign in and complete your profile first.');
+    });
+    shell.insertBefore(x, shell.firstChild);
+  }
+  const adminTitle = document.querySelector('#admin-tab .card-title');
+  if (adminTitle && !$('rc-admin-x')) {
+    const x = document.createElement('button');
+    x.id = 'rc-admin-x'; x.className = 'rc-x-inline'; x.setAttribute('aria-label', 'Close'); x.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    x.addEventListener('click', () => { if (typeof openNormalApp === 'function') openNormalApp(); });
+    adminTitle.appendChild(x);
+  }
+
+  // Tap outside a popup, or press Esc, to close it
+  document.addEventListener('click', e => {
+    const t = e.target;
+    if (t.classList && t.classList.contains('modal-overlay') && t.id !== 'profile-modal') t.style.display = 'none';
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.modal-overlay').forEach(m => { if (m.style.display === 'flex' && m.id !== 'profile-modal') m.style.display = 'none'; });
+  });
 })();
 </script>
 

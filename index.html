@@ -948,6 +948,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 .rc-photo-btns button{margin-top:0!important}
 </style>
 <style>#admin-tab{max-width:700px;margin:0 auto;padding:20px 16px}</style>
+<style>#admin-tab{max-width:700px;margin:0 auto;padding:20px 16px}</style>
 </head>
 <body>
 
@@ -3242,6 +3243,7 @@ setInterval(() => {
 
     function escapeHtml(value) {
       value = (value === undefined || value === null) ? '' : value;
+      value = (value === undefined || value === null) ? '' : value;
       return String(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -3656,5 +3658,87 @@ setInterval(() => {
 })();
 </script>
 
+<script id="rc-cloud-profile">
+
+(function(){
+  var syncedUid=null;
+  function shrink(src,side){
+    return new Promise(function(res){
+      if(!src||src.indexOf('data:image')!==0) return res(src||'');
+      var i=new Image();
+      i.onload=function(){
+        var s=Math.min(1,side/Math.max(i.width,i.height));
+        var c=document.createElement('canvas');
+        c.width=Math.max(1,Math.round(i.width*s));
+        c.height=Math.max(1,Math.round(i.height*s));
+        c.getContext('2d').drawImage(i,0,0,c.width,c.height);
+        res(c.toDataURL('image/jpeg',0.8));
+      };
+      i.onerror=function(){res('');};
+      i.src=src;
+    });
+  }
+  function complete(){
+    var n=(localStorage.getItem('rc_user_name')||'').trim();
+    var p=(localStorage.getItem('rc_user_whatsapp')||'').replace(/\D/g,'');
+    return n.length>=2&&/^\d{8,15}$/.test(p);
+  }
+  async function saveCloud(){
+    var u=window.currentFirebaseUser;
+    if(!u||!window.firestoreDB||!complete()) return;
+    var avatar=await shrink(localStorage.getItem('rc_user_avatar')||'',400);
+    await window.fsSetDoc(window.fsDoc(window.firestoreDB,'rc_users',u.uid),{
+      uid:u.uid,
+      name:(localStorage.getItem('rc_user_name')||'').trim(),
+      whatsapp:localStorage.getItem('rc_user_whatsapp')||'',
+      avatar:avatar,
+      updatedAt:new Date().toISOString()
+    });
+  }
+  function refreshUI(){
+    try{ if(window.loadProfileData) window.loadProfileData(); }catch(e){}
+    try{ if(window.refreshHeaderAvatar) window.refreshHeaderAvatar(); }catch(e){}
+    try{ if(window.rcRefreshAccount) window.rcRefreshAccount(); }catch(e){}
+    var tab=document.getElementById('account-tab');
+    var standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+    if(standalone&&tab&&tab.classList.contains('active')&&complete()&&window.openNormalApp) window.openNormalApp();
+  }
+  async function loadCloud(u){
+    if(!window.firestoreDB||!window.fsGetDoc) return;
+    try{
+      var snap=await window.fsGetDoc(window.fsDoc(window.firestoreDB,'rc_users',u.uid));
+      if(snap.exists()){
+        var d=snap.data();
+        if(d.name) localStorage.setItem('rc_user_name',d.name);
+        if(d.whatsapp) localStorage.setItem('rc_user_whatsapp',d.whatsapp);
+        if(d.avatar){ localStorage.setItem('rc_user_avatar',d.avatar); localStorage.setItem('rc_profile_photo_selected','1'); }
+        localStorage.setItem('rc_garage_sl_profile_complete_v3','1');
+        localStorage.setItem('rc_profile_complete','true');
+      } else if(complete()){
+        await saveCloud();
+      }
+    }catch(e){ console.warn('Cloud profile load:',e); }
+    refreshUI();
+  }
+  function check(){
+    var u=window.currentFirebaseUser;
+    if(!u){ syncedUid=null; return; }
+    if(syncedUid===u.uid) return;
+    syncedUid=u.uid;
+    loadCloud(u);
+  }
+  window.addEventListener('rc-auth-ready',check);
+  window.addEventListener('rc-google-auth-success',check);
+  var orig=window.syncDriverProfileToFirebase;
+  window.syncDriverProfileToFirebase=async function(){
+    var err=null,r=false;
+    try{ if(orig) r=await orig.apply(this,arguments); }catch(e){ err=e; }
+    try{ await saveCloud(); }catch(e){ console.warn('Cloud profile save:',e); }
+    if(err) throw err;
+    return r;
+  };
+})();
+
+</script>
 </body>
 </html>

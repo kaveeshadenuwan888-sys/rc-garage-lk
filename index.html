@@ -947,6 +947,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 .rc-photo-btns{display:grid;gap:8px;flex:1}
 .rc-photo-btns button{margin-top:0!important}
 </style>
+<style>#admin-tab{max-width:700px;margin:0 auto;padding:20px 16px}</style>
 </head>
 <body>
 
@@ -997,7 +998,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
       <!-- TOOL 1: BATTERY RUNTIME TESTER (mAh ONLY) -->
       <div class="glass-card">
         <div class="card-title">
-          <span><i class="fa-solid fa-battery-charging-full"></i> Battery Runtime Calculator</span>
+          <span><i class="fa-solid fa-battery-full"></i> Battery Runtime Calculator</span>
         </div>
         <div class="form-group">
           <label>Battery Capacity (mAh)</label>
@@ -1559,7 +1560,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
         // header returns to the default user icon for the signed-out state.
         ['rc_is_logged_in','rc_user_uid','rc_user_name','rc_user_whatsapp',
          'rc_user_avatar','rc_google_avatar_preview','rc_profile_photo_selected',
-         'rc_garage_sl_profile_complete_v3','rc_profile_complete'].forEach(key => localStorage.removeItem(key));
+         'rc_garage_sl_profile_complete_v3','rc_profile_complete','rc_user_models','rc_user_lat','rc_user_lng','rc_map_saved'].forEach(key => localStorage.removeItem(key));
         window.currentFirebaseUser=null;
         if(window.refreshHeaderAvatar) window.refreshHeaderAvatar();
         if(window.rcRefreshAccount) window.rcRefreshAccount();
@@ -1669,7 +1670,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
         await signOut(auth);
         ['rc_is_logged_in','rc_user_uid','rc_user_name','rc_user_whatsapp',
          'rc_user_avatar','rc_google_avatar_preview','rc_profile_photo_selected',
-         'rc_garage_sl_profile_complete_v3','rc_profile_complete'].forEach(key => localStorage.removeItem(key));
+         'rc_garage_sl_profile_complete_v3','rc_profile_complete','rc_user_models','rc_user_lat','rc_user_lng','rc_map_saved'].forEach(key => localStorage.removeItem(key));
         window.updateAuthUI(false);
         if (window.refreshHeaderAvatar) window.refreshHeaderAvatar();
         if (window.rcRefreshAccount) window.rcRefreshAccount();
@@ -1723,7 +1724,7 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
         localStorage.removeItem('rc_user_uid');
         // Clear cached account photo/details when Firebase confirms sign-out.
         ['rc_user_name','rc_user_whatsapp','rc_user_avatar','rc_google_avatar_preview',
-         'rc_profile_photo_selected','rc_garage_sl_profile_complete_v3','rc_profile_complete']
+         'rc_profile_photo_selected','rc_garage_sl_profile_complete_v3','rc_profile_complete','rc_user_models','rc_user_lat','rc_user_lng','rc_map_saved']
           .forEach(key => localStorage.removeItem(key));
         window.updateAuthUI(false);
       }
@@ -3108,7 +3109,7 @@ setInterval(() => {
       const modalPreview = document.getElementById('modal-avatar-preview');
 
       if(url) {
-        const imgHtml = `<img src="${url}" alt="Profile">`;
+        const imgHtml = `<img src="${escapeHtml(url)}" alt="Profile">`;
         headerContainer.innerHTML = imgHtml;
         modalPreview.innerHTML = imgHtml;
       } else {
@@ -3168,8 +3169,8 @@ setInterval(() => {
       const modelList=document.getElementById('spec-model-list');
       if(!brandList||!modelList) return;
       const brands=[...new Map(list.map(s=>[s.brand,s])).values()].sort((a,b)=>a.brand.localeCompare(b.brand));
-      brandList.innerHTML=brands.map(s=>`<div class="spec-brand-card" onclick="document.getElementById('spec-search').value='${escapeHtml(s.brand)}';filterSpecs()"><strong>${escapeHtml(s.brand)}</strong><span>${list.filter(x=>x.brand===s.brand).length} models</span></div>`).join('') || '<p style="color:var(--text-secondary)">No models found.</p>';
-      modelList.innerHTML=list.sort((a,b)=>(a.brand+' '+a.model).localeCompare(b.brand+' '+b.model)).map(s=>`<div class="model-card" onclick='renderSpecDetails(${JSON.stringify(s).replace(/'/g,"&#39;")})'><h3>${escapeHtml(s.brand)} ${escapeHtml(s.model)}</h3><p>${escapeHtml(specValue(s.category))} · Motor: ${escapeHtml(specValue(s.motor))}</p></div>`).join('') || '<p style="color:var(--text-secondary)">No models found.</p>';
+      brandList.innerHTML=brands.map(s=>`<div class="spec-brand-card" onclick="document.getElementById('spec-search').value=${escapeHtml(JSON.stringify(s.brand))};filterSpecs()"><strong>${escapeHtml(s.brand)}</strong><span>${list.filter(x=>x.brand===s.brand).length} models</span></div>`).join('') || '<p style="color:var(--text-secondary)">No models found.</p>';
+      modelList.innerHTML=list.sort((a,b)=>(a.brand+' '+a.model).localeCompare(b.brand+' '+b.model)).map(s=>`<div class="model-card" onclick='renderSpecDetails(${escapeHtml(JSON.stringify(s))})'><h3>${escapeHtml(s.brand)} ${escapeHtml(s.model)}</h3><p>${escapeHtml(specValue(s.category))} · Motor: ${escapeHtml(specValue(s.motor))}</p></div>`).join('') || '<p style="color:var(--text-secondary)">No models found.</p>';
       const badge=document.getElementById('spec-count-badge'); if(badge) badge.textContent=`${list.length} models`;
     }
 
@@ -3240,6 +3241,7 @@ setInterval(() => {
     
 
     function escapeHtml(value) {
+      value = (value === undefined || value === null) ? '' : value;
       return String(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -3250,7 +3252,7 @@ setInterval(() => {
 
     // Periodic cleanup keeps Firestore documents and Storage images from accumulating.
     // For guaranteed server-side cleanup, also enable Firestore TTL on `expiresAt` and deploy a scheduled Storage cleanup function.
-    setInterval(() => { if (window.firestoreDB) loadTricksFeed().catch(() => {}); }, 24 * 60 * 60 * 1000);
+    setInterval(() => { if (window.firestoreDB) { try { loadTricksFeed(); } catch (_) {} } }, 24 * 60 * 60 * 1000);
 
     function forceAppUpdate() {
       window.location.reload();

@@ -1704,6 +1704,8 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 
     onAuthStateChanged(auth, (user) => {
       window.currentFirebaseUser = user || null;
+      window.__rcAuthReady = true;
+      window.dispatchEvent(new Event('rc-auth-ready'));
       const adminBtn = document.getElementById('admin-nav-btn');
       if (adminBtn) adminBtn.style.display = (user && String(user.email || '').toLowerCase() === 'kaveeshadenuwan888@gmail.com') ? 'flex' : 'none';
       if (user) {
@@ -3345,14 +3347,22 @@ setInterval(() => {
     window.scrollTo({top:0,behavior:'smooth'});
   };
 
+  const authReady = () => window.__rcAuthReady === true;
+
   function forceAccountIfNeeded(){
     if(!standalone()) return;
+    // Wait until Firebase has finished restoring the saved login
+    if(!authReady()){
+      addEventListener('rc-auth-ready', forceAccountIfNeeded, {once:true});
+      return;
+    }
     if(!window.currentFirebaseUser || !completeStoredProfile()) window.openAccountScreen();
   }
 
   // Replace the old modal-based required-profile behavior.
   window.requireCompleteProfile=function(user){
     if(!standalone()) return true;
+    if(!authReady()) return true; // login still restoring - do not judge yet
     renderAccount(user || window.currentFirebaseUser || null);
     if(!user || !completeStoredProfile()){
       window.openAccountScreen();
@@ -3458,7 +3468,7 @@ setInterval(() => {
   // Prevent navigation away from Account until Google + profile are complete.
   const originalSwitchTab=window.switchTab;
   window.switchTab=function(tabId,btn){
-    if(standalone() && (!window.currentFirebaseUser || !completeStoredProfile()) && tabId!=='account-tab'){
+    if(standalone() && authReady() && (!window.currentFirebaseUser || !completeStoredProfile()) && tabId!=='account-tab'){
       openAccountScreen();
       return;
     }
@@ -3472,13 +3482,14 @@ setInterval(() => {
     setTimeout(()=>renderAccount(window.currentFirebaseUser || null),100);
   });
 
+  function afterAuthReady(){
+    if(!standalone()) return;
+    if(window.currentFirebaseUser && completeStoredProfile()) openNormalApp();
+    else window.openAccountScreen();
+  }
   addEventListener('load',()=>{
-    setTimeout(()=>{
-      if(standalone()){
-        if(window.currentFirebaseUser && completeStoredProfile()) openNormalApp();
-        else forceAccountIfNeeded();
-      }
-    },800);
+    if(authReady()) afterAuthReady();
+    else addEventListener('rc-auth-ready', afterAuthReady, {once:true});
   });
 })();
 </script>

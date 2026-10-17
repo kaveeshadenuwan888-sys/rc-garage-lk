@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "rc-garage-sl",
     "public": ".",
     "ignore": [
       "firebase.json",

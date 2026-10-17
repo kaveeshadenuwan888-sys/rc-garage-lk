@@ -416,6 +416,8 @@
     }
 
     .news-body { padding: 16px; }
+    .news-noimg { display: grid; place-items: center; height: 110px; background: rgba(255,255,255,0.06); font-size: 2rem; }
+    .news-noimg i { opacity: .35; }
 
     .news-meta {
       display: flex;
@@ -949,17 +951,23 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 </style>
 <style>#admin-tab{max-width:700px;margin:0 auto;padding:20px 16px}</style>
 <style>#admin-tab{max-width:700px;margin:0 auto;padding:20px 16px}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&display=swap" rel="stylesheet">
+<style id="rc-logo-beside-style">
+.logo{min-width:0}
+.logo .site-logo-image{width:auto;height:36px;max-width:72px;object-fit:contain}
+.logo .logo-text{font-family:'Rajdhani','Arial Narrow',Impact,sans-serif;font-weight:700;font-size:1.4rem;line-height:1;letter-spacing:.06em;color:#fff!important;white-space:nowrap;text-shadow:0 0 18px rgba(255,255,255,.18)}
+@media(max-width:520px){.logo{gap:6px}.logo .site-logo-image{height:30px;max-width:48px}.logo .logo-text{font-size:1.05rem;letter-spacing:.04em}.header-actions{gap:6px}header{padding:10px 12px}}
+</style>
 </head>
 <body>
 
   <!-- Header -->
   <header>
     <div class="logo" aria-label="R/C Garage SL">
-      <img
-        src="assets/rc-garage-sl-logo.svg"
-        alt="R/C Garage SL"
-        class="site-logo-image"
-      >
+      <img src="assets/rc-garage-sl-logo.svg" alt="R/C Garage SL" class="site-logo-image">
+      <span class="logo-text">R/C Garage SL</span>
     </div>
     <div class="header-actions">
       <button id="native-install-btn" class="pwa-reload-btn" onclick="triggerAppInstallPrompt()" style="display:inline-flex;align-items:center;gap:6px;" title="Install R/C Garage SL" aria-label="Install R/C Garage SL">
@@ -2549,9 +2557,16 @@ async function searchMapLocation() {
       { name: 'RC Car Action', url: 'https://www.rccaraction.com/feed/' }
     ];
 
+    function newsPlaceholderHtml() {
+      return '<div class="news-img news-noimg"><i class="fa-solid fa-newspaper"></i></div>';
+    }
+    function rcNewsNoImg(img) {
+      img.outerHTML = newsPlaceholderHtml();
+    }
+
     async function fetchLiveRcNews() {
       const container = document.getElementById('news-container');
-      const defaultImg = "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=600&q=80";
+      
       const toTime = s => { const t = Date.parse(String(s || '').replace(' ', 'T') + 'Z'); return Number.isFinite(t) ? t : 0; };
 
       const results = await Promise.allSettled(RC_NEWS_FEEDS.map(async f => {
@@ -2581,14 +2596,14 @@ async function searchMapLocation() {
         let imgUrl = item.thumbnail || (item.enclosure && item.enclosure.link) || '';
         if (!imgUrl) {
           const m = String(item.content || item.description || '').match(/<img[^>]+src="([^">]+)"/);
-          imgUrl = m ? m[1] : defaultImg;
+          imgUrl = m ? m[1] : '';
         }
         const desc = String(item.description || '').replace(/<[^>]*>?/gm, '').trim().substring(0, 120) + '...';
         const t = toTime(item.pubDate);
         const date = t ? new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
         return `
           <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" class="news-card">
-            <img src="${escapeHtml(imgUrl)}" class="news-img" alt="RC News" onerror="this.src='${defaultImg}'">
+            ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" class="news-img" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="rcNewsNoImg(this)">` : newsPlaceholderHtml()}
             <div class="news-body">
               <div class="news-meta">
                 <span class="news-tag">${escapeHtml(item.source)}</span>

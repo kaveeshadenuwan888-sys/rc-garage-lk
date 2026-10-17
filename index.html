@@ -960,6 +960,12 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
 .logo .logo-text{font-family:'Rajdhani','Arial Narrow',Impact,sans-serif;font-weight:700;font-size:1.4rem;line-height:1;letter-spacing:.06em;color:#fff!important;white-space:nowrap;text-shadow:0 0 18px rgba(255,255,255,.18)}
 @media(max-width:520px){.logo{gap:6px}.logo .site-logo-image{height:30px;max-width:48px}.logo .logo-text{font-size:1.05rem;letter-spacing:.04em}.header-actions{gap:6px}header{padding:10px 12px}}
 </style>
+<style id="rc-phone-map-style">
+.rc-phone-row{display:flex;gap:8px;align-items:stretch}
+.rc-phone-row select{flex:0 0 44%!important;width:auto!important;min-width:0!important;min-height:46px;font-size:.82rem}
+.rc-phone-row input{flex:1 1 auto!important;width:1%!important;min-width:0!important}
+select option{background:#111;color:#fff}
+</style>
 </head>
 <body>
 
@@ -1121,12 +1127,12 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
     <div id="map-tab" class="tab-content">
       <div class="glass-card">
         <div class="card-title">
-          <span><i class="fa-solid fa-map-location-dot"></i> Sri Lanka RC Drivers Map</span>
+          <span><i class="fa-solid fa-map-location-dot"></i> RC Drivers Map</span>
         </div>
 
         <!-- Search Bar -->
         <div class="search-row">
-          <input type="text" id="map-search-input" placeholder="Search location (e.g. Wennappuwa)...">
+          <input type="text" id="map-search-input" placeholder="Search any city or country (e.g. Wennappuwa, Dubai)...">
           <button class="pwa-reload-btn" style="padding: 0 16px; background: var(--accent-cyan); color: #000; font-weight:700;" onclick="searchMapLocation()">Search</button>
         </div>
 
@@ -1144,6 +1150,11 @@ html.rc-hard-lock #profile-modal.profile-required{display:none!important}
             <label>Your RC Models (Separated by Commas)</label>
             <input type="text" id="user-rc-models" placeholder="e.g. MN300 Tank 300, MN82, WLtoys 104311">
           </div>
+
+          <label style="display:flex;align-items:flex-start;gap:10px;text-transform:none;font-size:.82rem;font-weight:500;margin-bottom:12px;cursor:pointer;">
+            <input type="checkbox" id="map-hide-exact" checked style="width:18px;height:18px;padding:0;margin:2px 0 0;flex:0 0 18px;">
+            <span>Hide my exact location (other drivers see only an approximate spot about 0.5 to 1.5 km away)</span>
+          </label>
 
           <div style="font-size:0.75rem; color:var(--accent-cyan); margin-bottom:12px;" id="selected-coords-txt">
             📍 Click on the map or use GPS to pin your location!
@@ -2398,6 +2409,112 @@ function loadTricksFeed() { startTricksListener(); }
       );
     }
 
+    const RC_COUNTRY_DATA = "Afghanistan:93,Albania:355,Algeria:213,Andorra:376,Angola:244,Argentina:54,Armenia:374,Australia:61,Austria:43,Azerbaijan:994,Bahamas:1,Bahrain:973,Bangladesh:880,Barbados:1,Belarus:375,Belgium:32,Belize:501,Benin:229,Bermuda:1,Bhutan:975,Bolivia:591,Bosnia and Herzegovina:387,Botswana:267,Brazil:55,Brunei:673,Bulgaria:359,Burkina Faso:226,Burundi:257,Cambodia:855,Cameroon:237,Canada:1,Cape Verde:238,Cayman Islands:1,Central African Republic:236,Chad:235,Chile:56,China:86,Colombia:57,Comoros:269,Congo:242,Costa Rica:506,Croatia:385,Cuba:53,Cyprus:357,Czech Republic:420,DR Congo:243,Denmark:45,Djibouti:253,Dominican Republic:1,Ecuador:593,Egypt:20,El Salvador:503,Equatorial Guinea:240,Eritrea:291,Estonia:372,Eswatini:268,Ethiopia:251,Faroe Islands:298,Fiji:679,Finland:358,France:33,French Polynesia:689,Gabon:241,Gambia:220,Georgia:995,Germany:49,Ghana:233,Greece:30,Greenland:299,Guam:1,Guatemala:502,Guinea:224,Guyana:592,Haiti:509,Honduras:504,Hong Kong:852,Hungary:36,Iceland:354,India:91,Indonesia:62,Iran:98,Iraq:964,Ireland:353,Israel:972,Italy:39,Ivory Coast:225,Jamaica:1,Japan:81,Jordan:962,Kazakhstan:7,Kenya:254,Kuwait:965,Kyrgyzstan:996,Laos:856,Latvia:371,Lebanon:961,Lesotho:266,Liberia:231,Libya:218,Liechtenstein:423,Lithuania:370,Luxembourg:352,Macau:853,Madagascar:261,Malawi:265,Malaysia:60,Maldives:960,Mali:223,Malta:356,Mauritania:222,Mauritius:230,Mexico:52,Moldova:373,Monaco:377,Mongolia:976,Montenegro:382,Morocco:212,Mozambique:258,Myanmar:95,Namibia:264,Nepal:977,Netherlands:31,New Caledonia:687,New Zealand:64,Nicaragua:505,Niger:227,Nigeria:234,North Korea:850,North Macedonia:389,Norway:47,Oman:968,Pakistan:92,Palestine:970,Panama:507,Papua New Guinea:675,Paraguay:595,Peru:51,Philippines:63,Poland:48,Portugal:351,Puerto Rico:1,Qatar:974,Reunion:262,Romania:40,Russia:7,Rwanda:250,Samoa:685,San Marino:378,Saudi Arabia:966,Senegal:221,Serbia:381,Seychelles:248,Sierra Leone:232,Singapore:65,Slovakia:421,Slovenia:386,Solomon Islands:677,Somalia:252,South Africa:27,South Korea:82,South Sudan:211,Spain:34,Sri Lanka:94,Sudan:249,Suriname:597,Sweden:46,Switzerland:41,Syria:963,Taiwan:886,Tajikistan:992,Tanzania:255,Thailand:66,Timor-Leste:670,Togo:228,Tonga:676,Trinidad and Tobago:1,Tunisia:216,Turkey:90,Turkmenistan:993,Uganda:256,Ukraine:380,United Arab Emirates:971,United Kingdom:44,United States:1,Uruguay:598,Uzbekistan:998,Vanuatu:678,Venezuela:58,Vietnam:84,Yemen:967,Zambia:260,Zimbabwe:263";
+    const RC_COUNTRIES = RC_COUNTRY_DATA.split(',').map(s => { const i = s.lastIndexOf(':'); return { n: s.slice(0, i), c: s.slice(i + 1) }; });
+    const RC_PREF = { '1': 'United States', '7': 'Russia' };
+    function rcCountryByName(n) { return RC_COUNTRIES.find(k => k.n === n); }
+
+    // Old numbers typed like 0771234567 are treated as Sri Lankan (+94)
+    function rcFixDigits(d) {
+      d = String(d || '').replace(/\D/g, '');
+      if (d.startsWith('00')) return d.slice(2);
+      if (d.startsWith('0')) return '94' + d.replace(/^0+/, '');
+      return d;
+    }
+    (function () {
+      const w = localStorage.getItem('rc_user_whatsapp');
+      if (w && /^0/.test(w)) localStorage.setItem('rc_user_whatsapp', rcFixDigits(w));
+    })();
+
+    function rcSplitPhone(digits) {
+      digits = String(digits || '').replace(/\D/g, '');
+      const saved = localStorage.getItem('rc_user_country') || 'Sri Lanka';
+      const score = k => k.c.length * 10 + (k.n === saved ? 2 : (k.n === RC_PREF[k.c] ? 1 : 0));
+      let best = null;
+      for (const k of RC_COUNTRIES) {
+        if (digits.startsWith(k.c) && (!best || score(k) > score(best))) best = k;
+      }
+      if (!best) return { k: rcCountryByName(saved) || rcCountryByName('Sri Lanka'), nat: digits };
+      return { k: best, nat: digits.slice(best.c.length) };
+    }
+
+    function rcEnhancePhone(id) {
+      const inp = document.getElementById(id);
+      if (!inp || inp.dataset.rcPhone) return;
+      inp.dataset.rcPhone = '1';
+      const wrap = document.createElement('div');
+      wrap.className = 'rc-phone-row';
+      const sel = document.createElement('select');
+      sel.id = id + '-cc';
+      sel.setAttribute('aria-label', 'Country code');
+      sel.innerHTML = RC_COUNTRIES.map(k => '<option value="' + k.n + '">' + k.n + ' (+' + k.c + ')</option>').join('');
+      sel.value = localStorage.getItem('rc_user_country') || 'Sri Lanka';
+      inp.parentNode.insertBefore(wrap, inp);
+      wrap.appendChild(sel);
+      wrap.appendChild(inp);
+      inp.placeholder = 'Number, e.g. 77 123 4567';
+      inp.setAttribute('inputmode', 'tel');
+    }
+
+    function rcPhoneSet(id, digits) {
+      const inp = document.getElementById(id), sel = document.getElementById(id + '-cc');
+      if (!inp) return;
+      digits = String(digits || '').replace(/\D/g, '');
+      if (!digits) { inp.value = ''; if (sel) sel.value = localStorage.getItem('rc_user_country') || 'Sri Lanka'; return; }
+      const p = rcSplitPhone(digits);
+      if (sel) sel.value = p.k.n;
+      inp.value = p.nat;
+    }
+
+    // Returns the full international number as digits (e.g. 94771234567), or ''
+    function rcPhoneValue(id) {
+      const inp = document.getElementById(id), sel = document.getElementById(id + '-cc');
+      if (!inp) return '';
+      const compact = inp.value.trim().replace(/[\s().-]/g, '');
+      if (!compact) return '';
+      let full;
+      if (/^(\+|00)/.test(compact)) {
+        full = compact.replace(/\D/g, '');
+        if (compact.startsWith('00')) full = full.slice(2);
+        const p = rcSplitPhone(full);
+        if (sel) sel.value = p.k.n;
+        inp.value = p.nat;
+      } else {
+        const k = rcCountryByName(sel ? sel.value : 'Sri Lanka') || rcCountryByName('Sri Lanka');
+        full = k.c + compact.replace(/\D/g, '').replace(/^0+/, '');
+        if (full === k.c) return '';
+      }
+      if (sel) localStorage.setItem('rc_user_country', sel.value);
+      return full;
+    }
+
+    // Approximate location: a private random shift of 0.5 to 1.5 km, kept on this device only
+    function rcPublicLocation(lat, lng) {
+      if (localStorage.getItem('rc_map_hide_exact') === '0') return { lat: lat, lng: lng, approx: false };
+      let off = null;
+      try { off = JSON.parse(localStorage.getItem('rc_map_offset') || 'null'); } catch (e) {}
+      if (!off || !isFinite(off.a) || !isFinite(off.d)) {
+        const u = new Uint32Array(2);
+        crypto.getRandomValues(u);
+        off = { a: u[0] / 4294967296 * 2 * Math.PI, d: 500 + u[1] / 4294967296 * 1000 };
+        localStorage.setItem('rc_map_offset', JSON.stringify(off));
+      }
+      const dLat = off.d * Math.cos(off.a) / 111320;
+      const dLng = off.d * Math.sin(off.a) / (111320 * Math.max(0.2, Math.cos(lat * Math.PI / 180)));
+      return { lat: lat + dLat, lng: lng + dLng, approx: true };
+    }
+
+    // Existing map users: publish the approximate spot once
+    window.addEventListener('rc-auth-ready', () => {
+      setTimeout(async () => {
+        try {
+          if (window.currentFirebaseUser && localStorage.getItem('rc_map_saved') === 'true' && !localStorage.getItem('rc_map_privacy_v1')) {
+            if (await syncDriverProfileToFirebase()) localStorage.setItem('rc_map_privacy_v1', '1');
+          }
+        } catch (e) { console.warn('Map privacy re-sync:', e); }
+      }, 2000);
+    });
+
     function normalizeWhatsAppNumber(raw) {
       let value = String(raw || '').trim().replace(/[\s().-]/g, '');
       if (!value) return '';
@@ -2408,7 +2525,9 @@ function loadTricksFeed() { startTricksListener(); }
 
     function isValidInternationalWhatsAppNumber(raw) {
       const digits = normalizeWhatsAppNumber(raw);
-      return /^\d{8,15}$/.test(digits);
+      if (!/^\d{8,15}$/.test(digits) || digits.startsWith('0')) return false;
+      if (digits.startsWith('94') && digits.length !== 11) return false;
+      return true;
     }
 
     function getCurrentUserId() {
@@ -2427,11 +2546,12 @@ function loadTricksFeed() { startTricksListener(); }
   const lng = parseFloat(localStorage.getItem('rc_user_lng'));
   const models = (localStorage.getItem('rc_user_models') || '').trim();
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || !models) return false;
+  const pub = rcPublicLocation(lat, lng);
   await window.fsSetDoc(window.fsDoc(window.firestoreDB, 'rc_drivers', user.uid), {
     uid: user.uid,
     name: localStorage.getItem('rc_user_name') || user.displayName || 'RC Driver',
     photo: await getAvatarThumb(user),
-    models, lat, lng,
+    models, lat: pub.lat, lng: pub.lng, approx: pub.approx,
     updatedAt: new Date().toISOString()
   });
   return true;
@@ -2449,6 +2569,7 @@ async function saveUserMapLocation() {
   if (!Number.isFinite(selectedLat) || !Number.isFinite(selectedLng)) { alert('Please select your location using GPS or clicking on the map first!'); return; }
   if (!modelsInput) { alert('Please enter your RC Models (separated by commas).'); return; }
 
+  localStorage.setItem('rc_map_hide_exact', (document.getElementById('map-hide-exact') || {}).checked === false ? '0' : '1');
   localStorage.setItem('rc_user_models', modelsInput);
   localStorage.setItem('rc_user_lat', selectedLat);
   localStorage.setItem('rc_user_lng', selectedLng);
@@ -2470,6 +2591,8 @@ function toggleMapEditMode(enableEdit) {
   const saved = localStorage.getItem('rc_map_saved') === 'true';
   const del = saved ? '<button class="btn-secondary danger-btn" onclick="deleteMyMapLocation()" style="margin-top:8px;"><i class="fa-solid fa-trash"></i> Delete My Location</button>' : '';
   modelsField.disabled = !enableEdit;
+  const hx = document.getElementById('map-hide-exact');
+  if (hx) hx.disabled = !enableEdit;
   box.innerHTML = (enableEdit
     ? '<button class="btn-primary" id="save-map-btn" onclick="saveUserMapLocation()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>'
     : '<button class="btn-secondary" onclick="toggleMapEditMode(true)"><i class="fa-solid fa-pen-to-square"></i> Edit Details / Location</button>') + del;
@@ -2518,6 +2641,8 @@ function loadAllDriversFromFirebase() {
     }, err => console.warn('Drivers listener:', err));
   }
 
+  const hxEl = document.getElementById('map-hide-exact');
+  if (hxEl) hxEl.checked = localStorage.getItem('rc_map_hide_exact') !== '0';
   const savedModels = localStorage.getItem('rc_user_models');
   const savedLat = localStorage.getItem('rc_user_lat');
   const savedLng = localStorage.getItem('rc_user_lng');
@@ -2535,15 +2660,17 @@ async function searchMapLocation() {
       if (!query) return;
 
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Sri Lanka')}`);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
         const data = await res.json();
 
         if (data && data.length > 0) {
           const lat = parseFloat(data[0].lat);
           const lon = parseFloat(data[0].lon);
-          map.setView([lat, lon], 12);
+          const bb = data[0].boundingbox;
+          if (bb && bb.length === 4) map.fitBounds([[+bb[0], +bb[2]], [+bb[1], +bb[3]]], { maxZoom: 13 });
+          else map.setView([lat, lon], 12);
         } else {
-          alert('Location not found in Sri Lanka. Try another search.');
+          alert('Location not found. Try another search.');
         }
       } catch (e) {
         alert('Search service error. Try again.');
@@ -2763,10 +2890,11 @@ function openWaRequest(uid) {
     <div class="rq-head"><div class="rq-avatar">${rcImg(dr.photo)}</div><div><strong>${escapeHtml(reqTarget.name)}</strong><small>${escapeHtml(dr.models || '')}</small></div></div>
     <p style="font-size:.84rem;margin:12px 0;opacity:.85;">Ask ${escapeHtml(reqTarget.name)} to share their WhatsApp number. They get a notification and can reply to you.</p>
     <label>Your phone / WhatsApp number</label>
-    <input id="wa-req-phone" type="tel" value="${mine ? '+' + escapeHtml(mine) : ''}" placeholder="+94771234567" inputmode="tel">
+    <input id="wa-req-phone" type="tel" placeholder="77 123 4567" inputmode="tel">
     <label style="margin-top:10px;">Message (optional)</label>
     <input id="wa-req-msg" maxlength="160" placeholder="e.g. I'm interested in your RC">
     <button class="btn-primary" id="wa-req-send" onclick="sendWaRequest()" style="margin-top:14px;">Send request</button>`;
+  rcEnhancePhone('wa-req-phone'); rcPhoneSet('wa-req-phone', mine);
   rcGid('wa-request-modal').style.display = 'flex';
   if (typeof map !== 'undefined' && map) map.closePopup();
 }
@@ -2775,7 +2903,7 @@ function closeWaRequest() { rcGid('wa-request-modal').style.display = 'none'; }
 async function sendWaRequest() {
   const me = window.currentFirebaseUser;
   if (!me || !reqTarget) return;
-  const phoneRaw = rcGid('wa-req-phone').value.trim();
+  const phoneRaw = rcPhoneValue('wa-req-phone');
   if (!isValidInternationalWhatsAppNumber(phoneRaw)) { alert('Enter a valid number with country code, e.g. +94771234567'); return; }
   const btn = rcGid('wa-req-send');
   btn.disabled = true; btn.textContent = 'Sending...';
@@ -2854,17 +2982,17 @@ function renderNotifs() {
     <div class="rq-card" data-id="${escapeHtml(r.id)}">
       <div class="rq-head"><div class="rq-avatar">${rcImg(r.fromPhoto)}</div><div><strong>${escapeHtml(r.fromName || 'RC Driver')}</strong><small>${timeAgo(rcMs(r.createdAt))}</small></div></div>
       <p><strong>${escapeHtml(r.fromName || 'A driver')}</strong> wants your WhatsApp number.</p>
-      <p>Their number: <strong>+${escapeHtml(r.fromPhone || '')}</strong>${r.message ? '<br>&ldquo;' + escapeHtml(r.message) + '&rdquo;' : ''}</p>
+      <p>Their number: <strong>+${escapeHtml(rcFixDigits(r.fromPhone || ''))}</strong>${r.message ? '<br>&ldquo;' + escapeHtml(r.message) + '&rdquo;' : ''}</p>
       ${r.reply
         ? `<div class="rq-reply">You replied: ${escapeHtml(r.reply)}</div>`
         : `<input class="rq-input" maxlength="300" placeholder="Type your reply or number..." style="margin-top:8px;">
            <div class="rq-actions"><button data-act="share">Share my number</button><button data-act="send">Send reply</button></div>`}
-      <div class="rq-actions"><a href="https://wa.me/${escapeHtml(r.fromPhone || '')}" target="_blank" rel="noopener noreferrer">Open their WhatsApp</a><button data-act="del">Dismiss</button></div>
+      <div class="rq-actions"><a href="https://wa.me/${escapeHtml(rcFixDigits(r.fromPhone || ''))}" target="_blank" rel="noopener noreferrer">Open their WhatsApp</a><button data-act="del">Dismiss</button></div>
     </div>`).join('') : '<p style="opacity:.7;font-size:.84rem;">No requests yet.</p>';
   html += '<div class="rq-h">Your requests</div>';
   html += out.length ? out.map(r => {
     const m = (r.reply || '').match(/\+?\d[\d\s-]{7,}\d/);
-    const num = m ? m[0].replace(/\D/g, '') : '';
+    const num = m ? rcFixDigits(m[0].replace(/\D/g, '')) : '';
     return `<div class="rq-card" data-id="${escapeHtml(r.id)}">
       <div class="rq-head"><div class="rq-avatar">${rcImg(r.toPhoto)}</div><div><strong>${escapeHtml(r.toName || 'RC Driver')}</strong><small>${timeAgo(rcMs(r.createdAt))}</small></div></div>
       ${r.reply ? `<div class="rq-reply">Reply: ${escapeHtml(r.reply)}</div>` : '<p style="opacity:.7;">Waiting for a reply...</p>'}
@@ -3288,7 +3416,7 @@ setInterval(() => {
     }else{
       profile.style.display='block'; signed.style.display='none';
       $('account-name-input').value=localStorage.getItem('rc_user_name') || user.displayName || '';
-      $('account-phone-input').value=localStorage.getItem('rc_user_whatsapp') ? '+'+localStorage.getItem('rc_user_whatsapp') : '';
+      rcEnhancePhone('account-phone-input'); rcPhoneSet('account-phone-input', localStorage.getItem('rc_user_whatsapp') || '');
       const saved=localStorage.getItem('rc_user_avatar') || user.photoURL || '';
       if(saved){ photoData=saved; renderPhoto(saved); }
       $('account-save-status').textContent='Complete all fields to continue.';
@@ -3373,7 +3501,7 @@ setInterval(() => {
     const user=window.currentFirebaseUser;
     const status=$('account-save-status');
     const name=$('account-name-input').value.trim();
-    const phoneRaw=$('account-phone-input').value.trim();
+    const phoneRaw=rcPhoneValue('account-phone-input');
     const phone=typeof normalizeWhatsAppNumber==='function' ? normalizeWhatsAppNumber(phoneRaw) : phoneRaw.replace(/\D/g,'');
     const avatar=photoData || localStorage.getItem('rc_user_avatar') || '';
 
@@ -3505,7 +3633,7 @@ setInterval(() => {
       pending = null;
       $('rc-e-name').value = localStorage.getItem('rc_user_name') || '';
       const p = localStorage.getItem('rc_user_whatsapp') || '';
-      $('rc-e-phone').value = p ? '+' + p : '';
+      rcEnhancePhone('rc-e-phone'); rcPhoneSet('rc-e-phone', p);
       setAvatar($('rc-e-prev'), currentAvatar());
       $('rc-e-status').textContent = '';
       edit.style.display = 'grid';
@@ -3540,7 +3668,7 @@ setInterval(() => {
     $('rc-e-save').addEventListener('click', async () => {
       const st = $('rc-e-status');
       const n = $('rc-e-name').value.trim();
-      const raw = $('rc-e-phone').value.trim();
+      const raw = rcPhoneValue('rc-e-phone');
       const p = typeof normalizeWhatsAppNumber === 'function' ? normalizeWhatsAppNumber(raw) : raw.replace(/\D/g, '');
       if (n.length < 2) { st.textContent = 'Display name is required.'; return; }
       if (!p || (typeof isValidInternationalWhatsAppNumber === 'function' && !isValidInternationalWhatsAppNumber(p))) { st.textContent = 'Enter a valid international WhatsApp number.'; return; }
@@ -3662,7 +3790,7 @@ setInterval(() => {
       if(snap.exists()){
         var d=snap.data();
         if(d.name) localStorage.setItem('rc_user_name',d.name);
-        if(d.whatsapp) localStorage.setItem('rc_user_whatsapp',d.whatsapp);
+        if(d.whatsapp){ var wf=rcFixDigits(d.whatsapp); localStorage.setItem('rc_user_whatsapp',wf); if(wf!==d.whatsapp) setTimeout(function(){ saveCloud().catch(function(){}); },500); }
         if(d.avatar){ localStorage.setItem('rc_user_avatar',d.avatar); localStorage.setItem('rc_profile_photo_selected','1'); }
         localStorage.setItem('rc_garage_sl_profile_complete_v3','1');
         localStorage.setItem('rc_profile_complete','true');

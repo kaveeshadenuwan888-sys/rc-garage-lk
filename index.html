@@ -2752,19 +2752,54 @@ async function searchMapLocation() {
         }
       };
 
-      const loadFeed = async feed => {
-        // Primary service; if it is rate-limited or unavailable, try a raw RSS proxy.
-        try {
-          const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feed.url);
-          const response = await fetchWithTimeout(apiUrl);
-          if (!response.ok) throw new Error('RSS2JSON HTTP ' + response.status);
-          const data = await response.json();
-          if (data.status !== 'ok' || !Array.isArray(data.items)) {
-            throw new Error(data.message || 'RSS2JSON returned no items');
+      // RSS2JSON supports JSONP. Loading it as a script avoids browser CORS
+      // restrictions that can block fetch() even when the API URL opens directly.
+      const loadRcNewsJsonp = (feedUrl, timeoutMs = 15000) => new Promise((resolve, reject) => {
+        const callbackName = 'rcNewsJsonp_' + Date.now() + '_' +
+          Math.random().toString(36).slice(2, 10);
+        const script = document.createElement('script');
+        let finished = false;
+
+        const cleanup = () => {
+          if (finished) return;
+          finished = true;
+          clearTimeout(timer);
+          script.onerror = null;
+          script.remove();
+          try { delete window[callbackName]; } catch (_) { window[callbackName] = undefined; }
+        };
+
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new Error('RSS2JSON JSONP request timed out'));
+        }, timeoutMs);
+
+        window[callbackName] = data => {
+          cleanup();
+          if (!data || data.status !== 'ok' || !Array.isArray(data.items)) {
+            reject(new Error((data && data.message) || 'RSS2JSON returned no items'));
+            return;
           }
+          resolve(data);
+        };
+
+        script.onerror = () => {
+          cleanup();
+          reject(new Error('RSS2JSON JSONP script failed to load'));
+        };
+        script.src = 'https://api.rss2json.com/v1/api.json?rss_url=' +
+          encodeURIComponent(feedUrl) + '&callback=' + encodeURIComponent(callbackName);
+        script.async = true;
+        document.head.appendChild(script);
+      });
+
+      const loadFeed = async feed => {
+        // Primary service uses JSONP to avoid CORS. If unavailable, try a raw RSS proxy.
+        try {
+          const data = await loadRcNewsJsonp(feed.url);
           return data.items.slice(0, 8).map(item => ({ ...item, source: feed.name }));
         } catch (primaryError) {
-          console.warn('RSS2JSON failed for ' + feed.name + '; trying fallback:', primaryError);
+          console.warn('RSS2JSON JSONP failed for ' + feed.name + '; trying fallback:', primaryError);
         }
 
         const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(feed.url);

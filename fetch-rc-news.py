@@ -48,7 +48,19 @@ def parse_feed(source, url):
         if not title or not link.startswith(('http://', 'https://')): continue
         desc = child_text(node, ['description', 'summary', 'encoded', 'content'])
         pub = child_text(node, ['pubdate', 'published', 'updated', 'date', 'issued'])
+        
         thumb = get_attr(node, 'url') or get_attr(node, 'href')
+        if not thumb:
+            image_match = re.search(
+                r'<img[^>]+src=["\']([^"\']+)["\']',
+                desc,
+                re.IGNORECASE
+            )
+            if image_match:
+                thumb = unescape(image_match.group(1))
+        if thumb.startswith('//'):
+            thumb = 'https:' + thumb
+
         out.append({"title": unescape(title), "link": link, "pubDate": pub,
                     "description": unescape(desc), "content": unescape(desc),
                     "thumbnail": thumb, "source": source})

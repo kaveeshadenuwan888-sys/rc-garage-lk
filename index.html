@@ -2693,54 +2693,152 @@ async function searchMapLocation() {
 
     async function fetchLiveRcNews() {
       const container = document.getElementById('news-container');
-      
-      const toTime = s => { const t = Date.parse(String(s || '').replace(' ', 'T') + 'Z'); return Number.isFinite(t) ? t : 0; };
+      if (!container) return;
 
-      const results = await Promise.allSettled(RC_NEWS_FEEDS.map(async f => {
-        const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f.url));
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        if (data.status !== 'ok' || !Array.isArray(data.items)) throw new Error('Invalid feed');
-        return data.items.slice(0, 8).map(i => ({ ...i, source: f.name }));
-      }));
+      container.innerHTML = `
+        <div class="skeleton-card">
+          <div class="skeleton-img"></div>
+          <div class="skeleton-line" style="width:80%"></div>
+          <div class="skeleton-line" style="width:55%"></div>
+        </div>`;
 
-      const items = results.filter(r => r.status === 'fulfilled').flatMap(r => r.value)
-        .filter(i => /^https?:\/\//.test(i.link || ''))
-        .sort((a, b) => toTime(b.pubDate) - toTime(a.pubDate))
-        .slice(0, 20);
+      const toTime = value => {
+        const time = Date.parse(String(value || ''));
+        return Number.isFinite(time) ? time : 0;
+      };
 
-      if (!items.length) {
+      const readXmlValue = (element, names) => {
+        for (const name of names) {
+          let node = element.getElementsByTagName(name)[0];
+          if (!node) {
+            node = Array.from(element.getElementsByTagName('*'))
+              .find(candidate => (candidate.localName || '').toLowerCase() === name.toLowerCase());
+          }
+          if (node && node.textContent) return node.textContent.trim();
+        }
+        return '';
+      };
+
+      const parseXmlFeed = (xmlText, feedName) => {
+        const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
+        if (xml.querySelector('parsererror')) throw new Error('The RSS feed returned invalid XML');
+        const nodes = Array.from(xml.querySelectorAll('item, entry'));
+        return nodes.slice(0, 8).map(node => {
+          const linkNode = node.querySelector('link');
+          const atomLink = linkNode && (linkNode.getAttribute('href') || linkNode.textContent);
+          const enclosure = node.querySelector('enclosure');
+          const mediaImage = Array.from(node.getElementsByTagName('*')).find(el =>
+            ['thumbnail', 'content'].includes((el.localName || '').toLowerCase()) &&
+            /media/i.test(el.prefix || '') && el.getAttribute('url'));
+          return {
+            title: readXmlValue(node, ['title']),
+            link: String(atomLink || readXmlValue(node, ['link'])).trim(),
+            pubDate: readXmlValue(node, ['pubDate', 'published', 'updated', 'date']),
+            description: readXmlValue(node, ['description', 'summary', 'content:encoded', 'encoded', 'content']),
+            content: readXmlValue(node, ['content:encoded', 'encoded', 'content']),
+            thumbnail: (enclosure && enclosure.getAttribute('url')) || (mediaImage && mediaImage.getAttribute('url')) || '',
+            source: feedName
+          };
+        });
+      };
+
+      const fetchWithTimeout = async (url, timeoutMs = 12000) => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          return await fetch(url, { signal: controller.signal, cache: 'no-store' });
+        } finally {
+          clearTimeout(timer);
+        }
+      };
+
+      const loadFeed = async feed => {
+        // Primary service; if it is rate-limited or unavailable, try a raw RSS proxy.
+        try {
+          const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feed.url);
+          const response = await fetchWithTimeout(apiUrl);
+          if (!response.ok) throw new Error('RSS2JSON HTTP ' + response.status);
+          const data = await response.json();
+          if (data.status !== 'ok' || !Array.isArray(data.items)) {
+            throw new Error(data.message || 'RSS2JSON returned no items');
+          }
+          return data.items.slice(0, 8).map(item => ({ ...item, source: feed.name }));
+        } catch (primaryError) {
+          console.warn('RSS2JSON failed for ' + feed.name + '; trying fallback:', primaryError);
+        }
+
+        const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(feed.url);
+        const response = await fetchWithTimeout(proxyUrl);
+        if (!response.ok) throw new Error(feed.name + ' fallback HTTP ' + response.status);
+        const xmlText = await response.text();
+        const items = parseXmlFeed(xmlText, feed.name);
+        if (!items.length) throw new Error(feed.name + ' feed contained no articles');
+        return items;
+      };
+
+      try {
+        const results = await Promise.allSettled(RC_NEWS_FEEDS.map(loadFeed));
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            console.warn('Could not load RC news feed:', RC_NEWS_FEEDS[index].name, result.reason);
+          }
+        });
+
+        const items = results
+          .filter(result => result.status === 'fulfilled')
+          .flatMap(result => result.value)
+          .filter(item => /^https?:\/\//i.test(item.link || '') && item.title)
+          .sort((a, b) => toTime(b.pubDate) - toTime(a.pubDate))
+          .slice(0, 20);
+
+        if (!items.length) {
+          container.innerHTML = `
+            <div class="glass-card" style="text-align:center; padding:30px;">
+              <i class="fa-solid fa-wifi" style="font-size:2rem; color:var(--text-muted); margin-bottom:10px;"></i>
+              <div style="font-size:0.9rem; color:var(--text-secondary);">RC News is temporarily unavailable. Please try again shortly.</div>
+              <button class="pwa-reload-btn" style="margin-top:12px;" onclick="fetchLiveRcNews()">Try Again</button>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = items.map(item => {
+          let imgUrl = item.thumbnail || (item.enclosure && item.enclosure.link) || '';
+          if (!imgUrl) {
+            const imageMatch = String(item.content || item.description || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+            imgUrl = imageMatch ? imageMatch[1] : '';
+          }
+          const descDocument = new DOMParser().parseFromString(String(item.description || item.content || ''), 'text/html');
+          descDocument.querySelectorAll('script, style').forEach(node => node.remove());
+          const desc = (descDocument.body.textContent || '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .substring(0, 120);
+          const dateValue = toTime(item.pubDate);
+          const date = dateValue
+            ? new Date(dateValue).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            : '';
+          return `
+            <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" class="news-card">
+              ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" class="news-img" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="rcNewsNoImg(this)">` : newsPlaceholderHtml()}
+              <div class="news-body">
+                <div class="news-meta">
+                  <span class="news-tag">${escapeHtml(item.source)}</span>
+                  <span class="news-date"><i class="fa-regular fa-clock"></i> ${date}</span>
+                </div>
+                <div class="news-title">${escapeHtml(item.title || '')}</div>
+                <div class="news-desc">${escapeHtml(desc)}${desc.length >= 120 ? '…' : ''}</div>
+              </div>
+            </a>`;
+        }).join('');
+      } catch (error) {
+        console.error('RC News loading failed:', error);
         container.innerHTML = `
           <div class="glass-card" style="text-align:center; padding:30px;">
             <i class="fa-solid fa-wifi" style="font-size:2rem; color:var(--text-muted); margin-bottom:10px;"></i>
-            <div style="font-size:0.9rem; color:var(--text-secondary);">Unable to load latest news right now.</div>
+            <div style="font-size:0.9rem; color:var(--text-secondary);">RC News could not connect. Check your connection and try again.</div>
             <button class="pwa-reload-btn" style="margin-top:12px;" onclick="fetchLiveRcNews()">Try Again</button>
           </div>`;
-        return;
       }
-
-      container.innerHTML = items.map(item => {
-        let imgUrl = item.thumbnail || (item.enclosure && item.enclosure.link) || '';
-        if (!imgUrl) {
-          const m = String(item.content || item.description || '').match(/<img[^>]+src="([^">]+)"/);
-          imgUrl = m ? m[1] : '';
-        }
-        const desc = String(item.description || '').replace(/<[^>]*>?/gm, '').trim().substring(0, 120) + '...';
-        const t = toTime(item.pubDate);
-        const date = t ? new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-        return `
-          <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" class="news-card">
-            ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" class="news-img" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="rcNewsNoImg(this)">` : newsPlaceholderHtml()}
-            <div class="news-body">
-              <div class="news-meta">
-                <span class="news-tag">${escapeHtml(item.source)}</span>
-                <span class="news-date"><i class="fa-regular fa-clock"></i> ${date}</span>
-              </div>
-              <div class="news-title">${escapeHtml(item.title || '')}</div>
-              <div class="news-desc">${escapeHtml(desc)}</div>
-            </div>
-          </a>`;
-      }).join('');
     }
 
     /* RC REVIEWS */

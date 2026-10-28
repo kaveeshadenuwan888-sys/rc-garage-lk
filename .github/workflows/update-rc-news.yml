@@ -1,0 +1,27 @@
+name: Update RC News and Deploy
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  update_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch RSS feeds into static JSON
+        run: python3 fetch-rc-news.py
+
+      - name: Deploy website and generated RC News JSON
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_RC_GARAGE_LK }}'
+          channelId: live
+          projectId: rc-garage-lk-4092e

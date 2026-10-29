@@ -1,3 +1,4 @@
+
 name: Deploy to Firebase Hosting
 
 on:
@@ -8,15 +9,25 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Generate RC News JSON
         run: python3 fetch-rc-news.py
-        
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+
+      - name: Verify RC News JSON
+        run: |
+          test -s rc-news.json
+          python3 -c "import json; d=json.load(open('rc-news.json')); print('Articles:', len(d.get('items', [])))"
+          ls -lh rc-news.json
+
+      - name: Deploy to R/C Garage SL
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_RC_GARAGE_LK }}'
           channelId: live
           projectId: rc-garage-lk-4092e
+          siteId: rc-garage-sl
